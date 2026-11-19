@@ -37,10 +37,10 @@ function minutesToTime(m: number): string {
  * idempotent and never touches booked or operator-blocked slots, so replaying
  * the window is the whole fix.
  */
-export async function regenerateUpcoming(courseId: string, days?: number): Promise<void> {
+export async function regenerateUpcoming(courseId: string, days?: number, now: Date = new Date()): Promise<void> {
   // SD-3: "today" is the course's today, not the server's UTC day.
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } });
-  const today = todayIn(course?.timezone);
+  const today = todayIn(course?.timezone, now);
   // Revamp 3 fix 5 (Cam 2026-10-29): every day a golfer can book, not just 8 —
   // a price saved today reached days 1–8 while days 9+ (bookable) kept the old one.
   const n = days ?? await regenerationDays(courseId);
@@ -49,10 +49,14 @@ export async function regenerateUpcoming(courseId: string, days?: number): Promi
   }
 }
 
-/** How many days ahead a schedule change rebuilds: the course's widest booking window plus one, never below 8 (as the nightly run). */
+/**
+ * How many days ahead a schedule change rebuilds: the same days the nightly run makes, its horizon (the widest booking
+ * window plus one, never below 8) plus the one extra day (generateForAllCourses). Any fewer and a save between the
+ * nightly run and local midnight would leave that extra day, the window's last day by morning, on the old prices.
+ */
 export async function regenerationDays(courseId: string): Promise<number> {
   const c = await prisma.course.findUnique({ where: { id: courseId }, select: { publicAdvanceDays: true, memberAdvanceDays: true, residentAdvanceDays: true, hasResidentPricing: true, membershipTiers: { select: { advanceBookingDays: true, windowPublic: true } } } });
-  return c ? Math.max(8, generationHorizonDays(c, c.membershipTiers)) : 8;
+  return (c ? Math.max(8, generationHorizonDays(c, c.membershipTiers)) : 8) + 1;
 }
 
 export type ScheduleForSlots = {

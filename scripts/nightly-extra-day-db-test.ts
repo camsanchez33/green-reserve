@@ -4,7 +4,7 @@
 // Run: npx tsx scripts/nightly-extra-day-db-test.ts (needs DATABASE_URL)
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
-import { generateForAllCourses } from '../src/lib/tee-sheet-engine';
+import { generateForAllCourses, regenerateUpcoming, regenerationDays } from '../src/lib/tee-sheet-engine';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
 import { lastBookableDate } from '../src/lib/booking-window';
 
@@ -45,6 +45,17 @@ async function cleanup() {
   // Horizon 8 (a 7-day window plus one) plus the extra day: 9 days from the run's day, nothing past.
   const dates = (await prisma.teeTime.groupBy({ by: ['date'], where: { courseId: c.id } })).map(g => g.date).sort();
   ok('nine days from the run\'s day, nothing past', dates.length === 9 && dates[0] === runDay && dates[8] === addDaysStr(runDay, 8), dates);
+
+  // A schedule save between the nightly run and local midnight rebuilds the same days, the extra one included:
+  // otherwise that day, the window's last by morning, kept the old price, or a paused schedule's times stayed on sale.
+  await prisma.teeTimeSchedule.updateMany({ where: { courseId: c.id }, data: { greenFeeWeekdayCents: 9000, greenFeeWeekendCents: 9000 } });
+  await regenerateUpcoming(c.id, undefined, run);
+  const extra = await prisma.teeTime.findMany({ where: { courseId: c.id, date: addDaysStr(runDay, 8) } });
+  ok('a price saved that evening reaches the extra day', extra.length === 4 && extra.every(t => t.greenFeeCents === 9000), extra.map(t => t.greenFeeCents));
+  ok('a schedule save rebuilds as many days as the nightly run makes', (await regenerationDays(c.id)) === 9);
+  await prisma.teeTimeSchedule.updateMany({ where: { courseId: c.id }, data: { active: false } });
+  await regenerateUpcoming(c.id, undefined, run);
+  ok('a paused schedule leaves no open times on any day, the extra one included', (await prisma.teeTime.count({ where: { courseId: c.id } })) === 0);
 
   await cleanup();
   await prisma.$disconnect();
