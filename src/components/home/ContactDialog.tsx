@@ -44,7 +44,8 @@ export default function ContactDialog() {
           hp: hp.current?.value ?? '',
         }),
       });
-      if (res.ok) { setSent(true); return; }
+      // Cleared, so reopening starts fresh and a second Send can't post the same question twice.
+      if (res.ok) { setSent(true); setF({ name: '', email: '', course: '', city: '', state: '', message: '' }); return; }
       const d = await res.json().catch(() => ({} as { error?: string }));
       setErr(res.status === 429 && d.error ? d.error
         : d.error === 'invalid_email' ? 'That email doesn’t look right. Check it, then send.'
