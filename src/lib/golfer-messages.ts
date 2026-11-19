@@ -5,6 +5,7 @@
 // confirmed bookings in that window, never a list, so no marketing consent is
 // involved. Email always; a text too when Twilio is configured and the course
 // asks. Each golfer is messaged once however many bookings they hold.
+import { courseNoticeText } from './sms-copy';
 import { consentedPhones } from './sms-consent';
 import { prisma } from './prisma';
 import { sendCourseNoticeEmail, isPlaceholderEmail } from './email';
@@ -24,7 +25,8 @@ export type Window = { date: string; from?: string | null; to?: string | null };
 export type Via = 'email' | 'text' | 'both';
 export const isVia = (v: unknown): v is Via => v === 'email' || v === 'text' || v === 'both';
 /** The text exactly as it is sent (the STOP line is always on it — SMS-1). */
-export const noticeText = (courseName: string, body: string) => `GreenReserve (${courseName}): ${body} Reply STOP to opt out.`;
+/** The text version of a course notice (lib/sms-copy): "<Course> update: <body> Reply STOP to opt out." */
+export const noticeText = (courseName: string, body: string) => courseNoticeText(courseName, body);
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 

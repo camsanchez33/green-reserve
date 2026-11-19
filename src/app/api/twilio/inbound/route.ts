@@ -11,8 +11,9 @@
 // Anything else is ignored — this number isn't a support inbox.
 import { NextRequest, NextResponse } from 'next/server';
 import twilio from 'twilio';
-import { recordSmsConsent, optInByReply } from '@/lib/sms-consent';
-import { SMS_CONFIRMATION, ALERT_SMS_CONFIRMATION, SMS_HELP, smsKeyword } from '@/lib/sms-consent-copy';
+import { recordSmsConsent, optInByReply, lastConsentCourse } from '@/lib/sms-consent';
+import { smsKeyword } from '@/lib/sms-consent-copy';
+import { optInText, alertOptInText, helpText } from '@/lib/sms-copy';
 
 const STOP = new Set(['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT', 'REVOKE', 'OPTOUT']);
 const START = new Set(['START', 'UNSTOP', 'YES']);
@@ -49,8 +50,13 @@ export async function POST(req: NextRequest) {
   if (START.has(word)) {
     // ALERTS-2: back into only the kinds of text this number had agreed to (lib/sms-consent).
     const changed = await optInByReply(from);
-    return twiml(changed.includes('bookings') ? SMS_CONFIRMATION : changed.includes('alerts') ? ALERT_SMS_CONFIRMATION : undefined);
+    // Emails and texts redo: the replies name the course this number last agreed for (GreenReserve if none).
+    const course = changed.length ? await lastConsentCourse(from) : null;
+    return twiml(changed.includes('bookings') ? optInText(course?.name) : changed.includes('alerts') ? alertOptInText(course?.name) : undefined);
   }
-  if (HELP.has(word)) return twiml(SMS_HELP);
+  if (HELP.has(word)) {
+    const course = await lastConsentCourse(from);
+    return twiml(helpText(course?.name, course?.phone));
+  }
   return twiml();
 }

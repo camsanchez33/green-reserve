@@ -19,6 +19,8 @@
 // Openings are checked where tee times open (cancellation, a move off a time, a smaller
 // party, staff adding or reopening times) and by the hourly sweep, which also catches
 // times the generator adds and ends expired alerts. Every send is awaited.
+import { alertText } from './sms-copy';
+import { shortLink } from './short-links';
 import { randomBytes } from 'crypto';
 import { prisma } from './prisma';
 import { todayIn, clockIn, addDaysStr } from './course-time';
@@ -27,8 +29,9 @@ import { withinWindow, windowFor } from './booking-window';
 import { rulesFor } from './booking-rules';
 import { membershipLive, liveMembershipWhere } from './member-rates';
 import { liveMembershipFor, canLogIn } from './member-session';
-import { consentPhone, recordSmsConsent, type SmsScope } from './sms-consent';
-import { ALERT_SMS_CONSENT_VERSION, ALERT_SMS_CONFIRMATION, alertSmsConsentText } from './sms-consent-copy';
+import { consentPhone, recordSmsConsent, textCourse, type SmsScope } from './sms-consent';
+import { ALERT_SMS_CONSENT_VERSION, alertSmsConsentText } from './sms-consent-copy';
+import { alertOptInText } from './sms-copy';
 import { formatTeeDay, formatTeeTime } from './format';
 
 /** Parts of the day as the approved sheet draws them (7–11 AM, 11 AM–2 PM, 2–5 PM). Times
@@ -263,7 +266,8 @@ async function recordAlertTextConsent(a: { phone: string | null; textConsentAt: 
 export async function sendAlertTextEnrollment(phone: string, courseId: string): Promise<void> {
   const { sendSms, smsConfigured } = await import('./twilio');
   if (!smsConfigured()) return;
-  try { await sendSms(phone, ALERT_SMS_CONFIRMATION, { kind: 'alert_sms_confirmation', courseId, consentScope: SMS_SCOPE }); }
+  const course = await textCourse(courseId);
+  try { await sendSms(phone, alertOptInText(course?.name), { kind: 'alert_sms_confirmation', courseId, consentScope: SMS_SCOPE }); }
   catch (err) { console.error(JSON.stringify({ ev: 'alerts.text_enroll.fail', error: err instanceof Error ? err.message : String(err) })); }
 }
 
@@ -413,8 +417,11 @@ async function notifyInner(courseId: string, dates: string[], now: Date, maxSend
           const { sendSms, smsConfigured } = await import('./twilio');
           if (smsConfigured()) {
             const base = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
-            await sendSms(a.phone,
-              `GreenReserve: a tee time opened at ${course.name}, ${formatTeeDay(date)} ${formatTeeTime(hit.time)} for ${a.players}. First to book gets it: ${base}/courses/${course.slug}?date=${date}&players=${a.players} Reply STOP to cancel.`,
+            // The short link ends with the alert: a day and a half after its last date.
+            const last = alertDates(a).slice(-1)[0] ?? date;
+            const expiresAt = new Date(Date.parse(`${last}T12:00:00Z`) + 36 * 3600_000);
+            const link = await shortLink('a', `${base}/courses/${course.slug}?date=${date}&players=${a.players}`, { courseId: course.id, expiresAt });
+            await sendSms(a.phone, alertText(course.name, formatTeeDay(date).replace(',', ''), formatTeeTime(hit.time), a.players, link),
               { kind: 'tee_time_alert_text', courseId: course.id, consentScope: SMS_SCOPE });
           }
         } catch (err) {

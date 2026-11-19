@@ -110,7 +110,27 @@ export async function optInAndConfirm(raw: string, ctx: { method: ConsentMethod;
   if (!changed) return;
   const { sendSms, smsConfigured } = await import('./twilio');
   if (!smsConfigured()) return;
-  const { SMS_CONFIRMATION } = await import('./sms-consent-copy');
-  try { await sendSms(consentPhone(raw)!, SMS_CONFIRMATION, { kind: 'sms_consent_confirmation', courseId: ctx.courseId ?? undefined, bookingId: ctx.bookingId ?? undefined }); }
+  const { optInText } = await import('./sms-copy');
+  const course = await textCourse(ctx.courseId);
+  try { await sendSms(consentPhone(raw)!, optInText(course?.name), { kind: 'sms_consent_confirmation', courseId: ctx.courseId ?? undefined, bookingId: ctx.bookingId ?? undefined }); }
   catch (err) { console.error(JSON.stringify({ ev: 'sms_consent.confirm.fail', error: err instanceof Error ? err.message : String(err) })); }
+}
+
+/** Emails and texts redo (Cam 2026-11-19): the course a text names — its full name and pro shop phone. Never throws. */
+export async function textCourse(courseId: string | null | undefined): Promise<{ name: string; phone: string } | null> {
+  if (!courseId) return null;
+  try {
+    const c = await prisma.course.findUnique({ where: { id: courseId }, select: { name: true, phone: true, proShopPhone: true } });
+    return c ? { name: c.name, phone: (c.proShopPhone || c.phone || '').trim() } : null;
+  } catch { return null; }
+}
+
+/** The course this number most recently agreed to texts for (the HELP and START replies name it). Never throws. */
+export async function lastConsentCourse(raw: string): Promise<{ name: string; phone: string } | null> {
+  const phone = consentPhone(raw);
+  if (!phone) return null;
+  try {
+    const row = await prisma.smsConsent.findFirst({ where: { phone, action: 'opt_in', courseId: { not: null } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { courseId: true } });
+    return textCourse(row?.courseId);
+  } catch { return null; }
 }

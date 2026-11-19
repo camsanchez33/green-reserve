@@ -1,3 +1,5 @@
+import { payLinkText, roundReceiptText } from '@/lib/sms-copy';
+import { shortLink } from '@/lib/short-links';
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 import { requireRegisterOpen } from '@/lib/register-open';
 import { cashRefused } from '@/lib/takes-cash';
@@ -277,7 +279,7 @@ export async function PATCH(req: NextRequest) {
       if (smsConsent === 'verbal') await optInAndConfirm(to, { method: 'verbal', courseId: session.courseId, bookingId: id, recordedBy: session.staffId ?? `operator:${session.operatorId}` });
       try {
         // Every non-code text carries the opt-out line (legal rewrite 2026-10-19).
-        await sendSms(to, `GreenReserve: check in and pay for your ${formatTeeTime(b.teeTime.time)} tee time at ${b.course.name} here (Apple Pay, Google Pay or card): ${url} Reply STOP to opt out.`, { kind: 'pay_link_text', bookingId: id });
+        await sendSms(to, payLinkText(b.course.name, formatTeeTime(b.teeTime.time), await shortLink('p', url, { courseId: session.courseId }), roundChargeCents(b)), { kind: 'pay_link_text', bookingId: id });
       } catch (err) {
         if (err instanceof SmsNoConsentError) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
         return NextResponse.json({ error: `The text didn’t send (${err instanceof Error ? err.message : 'SMS error'}) — try email, or take payment at the counter.` }, { status: 502 });
@@ -297,7 +299,7 @@ export async function PATCH(req: NextRequest) {
   // Only for a round that has been paid; a text goes only to a number that agreed (SMS-1, sendSms refuses others).
   if (action === 'send_receipt') {
     const via = viaRaw === 'sms' ? 'sms' : viaRaw === 'print' ? 'print' : 'email';
-    const b = await prisma.booking.findUnique({ where: { id }, select: { golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, status: true, paymentStatus: true, course: { select: { name: true } }, teeTime: { select: { date: true, time: true } } } });
+    const b = await prisma.booking.findUnique({ where: { id }, select: { golferName: true, golferEmail: true, golferPhone: true, checkInToken: true, status: true, paymentStatus: true, roundChargedCents: true, course: { select: { name: true } }, teeTime: { select: { date: true, time: true } } } });
     const paid = !!b && b.paymentStatus !== 'refunded' && (b.status === 'completed' || ['paid', 'paid_offline', 'on_account'].includes(b.paymentStatus));
     if (!b || !paid) return NextResponse.json({ error: 'A receipt is for a round that’s been paid.' }, { status: 409 });
     let token = b.checkInToken;
@@ -314,7 +316,7 @@ export async function PATCH(req: NextRequest) {
       const to = normalizePhone(phone);
       if (smsConsent === 'verbal') await optInAndConfirm(to, { method: 'verbal', courseId: session.courseId, bookingId: id, recordedBy: session.staffId ?? `operator:${session.operatorId}` });
       try {
-        await sendSms(to, `GreenReserve: your receipt from ${b.course.name}: ${url} Reply STOP to opt out.`, { kind: 'round_receipt_text', bookingId: id });
+        await sendSms(to, roundReceiptText(b.course.name, await shortLink('r', url, { courseId: session.courseId }), b.roundChargedCents), { kind: 'round_receipt_text', bookingId: id });
       } catch (err) {
         if (err instanceof SmsNoConsentError) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
         return NextResponse.json({ error: `The text didn’t send (${err instanceof Error ? err.message : 'SMS error'}) — try email or print it.` }, { status: 502 });

@@ -1,3 +1,4 @@
+import { staffCodeText } from './sms-copy';
 import twilio from 'twilio';
 import { logSent, type SendMeta } from './sent-messages';
 import { hasSmsConsent, recordSmsConsent, type SmsScope } from './sms-consent';
@@ -30,7 +31,7 @@ export async function sendSmsOtp(to: string, code: string) {
     const msg = await getClient().messages.create({
       to,
       from,
-      body: `Your GreenReserve code is: ${code}. Expires in 10 minutes.`,
+      body: staffCodeText(code),
     });
     console.log('[twilio] message sent — SID:', msg.sid, '| status:', msg.status);
     // BRAIN-1b: the send log keeps that a code went out, never the code.
