@@ -58,9 +58,9 @@ async function cleanup() {
   const other = await mk('other');
   await sched(a.id); await sched(other.id);
   const today = todayIn('UTC');
-  await regenerateUpcoming(a.id); // what the nightly run made: 8 days
+  await regenerateUpcoming(a.id); // what the nightly run made: 9 days (horizon 8 plus its extra day)
   const before = await windowHorizonDays(a.id);
-  ok('before: an 8-day horizon, nothing past day 7', before === 8 && (await count(a.id, addDaysStr(today, 7))) > 0 && (await count(a.id, addDaysStr(today, 8))) === 0, { before });
+  ok('before: an 8-day horizon plus the nightly run\'s extra day (9), nothing past day 8', before === 9 && (await count(a.id, addDaysStr(today, 8))) > 0 && (await count(a.id, addDaysStr(today, 9))) === 0, { before });
   const otherBefore = await count(other.id);
 
   // Unchanged window: nothing runs.
@@ -71,11 +71,11 @@ async function cleanup() {
   await prisma.course.update({ where: { id: a.id }, data: { publicAdvanceDays: 20 } });
   const r = await generateForLongerWindow(a.id, before);
   ok('a longer window runs and finishes', r.ran && r.complete && r.failedDays === 0, r);
-  ok('it makes only the new days: from one before the old end (day 7) to the window\'s last day', r.ran && r.from === addDaysStr(today, 7) && r.to === addDaysStr(today, 20) && r.days === 14, r);
+  ok('it makes only the new days: from one before the old end (day 8) to the window\'s last day plus the extra day (21)', r.ran && r.from === addDaysStr(today, 8) && r.to === addDaysStr(today, 21) && r.days === 14, r);
   ok('the window\'s last day (today + 20) has tee times', (await count(a.id, addDaysStr(today, 20))) === 4);
   ok('every day from today to today + 20 has its 4 times', (await prisma.teeTime.groupBy({ by: ['date'], where: { courseId: a.id, date: { gte: today, lte: addDaysStr(today, 20) } }, _count: true })).every(g => g._count === 4)
     && (await prisma.teeTime.groupBy({ by: ['date'], where: { courseId: a.id, date: { gte: today, lte: addDaysStr(today, 20) } } })).length === 21);
-  ok('nothing past the horizon', (await count(a.id, addDaysStr(today, 21))) === 0);
+  ok('nothing past the horizon', (await count(a.id, addDaysStr(today, 22))) === 0);
   ok('never a day already gone: nothing made before today', (await count(a.id, addDaysStr(today, -1))) === 0);
   ok('only this course: the other course is untouched', (await count(other.id)) === otherBefore);
   const again = await generateForLongerWindow(a.id, await windowHorizonDays(a.id));
@@ -139,8 +139,8 @@ async function cleanup() {
   const clock = () => (tick++ < 4 ? 0 : WINDOW_GENERATION_BUDGET_MS + 1); // three days fit, then the budget is spent
   const br = await generateForLongerWindow(b.id, hB, { clock });
   ok('past the budget it stops without throwing and reports it', br.ran && !br.complete && br.days === 3, br);
-  ok('the far end came first: days 60, 59, 58 made, 57 not', (await count(b.id, addDaysStr(today, 60))) === 4 && (await count(b.id, addDaysStr(today, 58))) === 4
-    && (await count(b.id, addDaysStr(today, 57))) === 0);
+  ok('the far end came first: days 61, 60, 59 made, 58 not', (await count(b.id, addDaysStr(today, 61))) === 4 && (await count(b.id, addDaysStr(today, 59))) === 4
+    && (await count(b.id, addDaysStr(today, 58))) === 0);
 
   // A day already gone is never touched, even when the schedule changed since it was made.
   const past = await mk('past');
@@ -163,7 +163,7 @@ async function cleanup() {
   const now = new Date(`${today}T05:00:00Z`); // 9 PM the evening before in Los Angeles
   const wr = await generateForLongerWindow(west.id, hW, { now });
   const laToday = todayIn('America/Los_Angeles', now);
-  ok('a western course counts from its own today', wr.ran && wr.from === addDaysStr(laToday, 7) && wr.to === addDaysStr(laToday, 9), { wr, laToday });
+  ok('a western course counts from its own today', wr.ran && wr.from === addDaysStr(laToday, 8) && wr.to === addDaysStr(laToday, 10), { wr, laToday });
 
   ok('an unknown course does nothing', (await generateForLongerWindow('nope', 1)).ran === false);
 
