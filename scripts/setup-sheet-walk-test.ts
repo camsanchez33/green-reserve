@@ -39,9 +39,9 @@ ok('the restore runs once, not when skipped sections are shown', page.includes('
 ok('the step is saved with the answers and restored from the server first', page.includes('_lastSection: sections[activeIdx + 1]?.id') && page.includes('sections.findIndex(sec => sec.id === resumeSection)'));
 ok('every card is the soft card (no ruled white boxes)', !/bg-white rounded-lg[^"]*border border-line|rounded-lg border border-line/.test(page) && !page.includes('bg-paper border border-line rounded-md p-4'));
 ok('the done screen keeps the header and shows the recap', /if \(submitted\) \{[\s\S]{0,400}<PlainHeader \/>[\s\S]{0,2000}sheetRecap/.test(page) || (page.includes('const recap = sheetRecap(') && page.includes('Your setup sheet is in.')));
-const email = readFileSync('src/lib/email.ts', 'utf8');
-const conf = email.slice(email.indexOf('export async function sendDetailsSheetConfirmationEmail'), email.indexOf('// CG-1 (Cam 2026-09-29)'));
-ok('the confirmation email uses the same recap and next steps', conf.includes('sheetRecap(data.details)') && conf.includes('SHEET_NEXT_STEPS') && !conf.includes('DETAIL_LABELS'));
+const email = readFileSync('src/lib/email-staff.ts', 'utf8');
+const conf = email.slice(email.indexOf('export function detailsSheetConfirmationEmail'), email.indexOf('export function detailsRequestEmail'));
+ok('the confirmation email uses the same recap and next steps', conf.includes('sheetRecap(d.details)') && conf.includes('SHEET_NEXT_STEPS') && !conf.includes('DETAIL_LABELS'));
 
 if (failed) { console.error(`${failed} failed`); process.exit(1); }
 console.log('setup-sheet-walk: all passed');

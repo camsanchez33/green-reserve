@@ -14,6 +14,12 @@ export const ADMIN_EMAIL = 'admin@greenreserve.app';
 /** Money: receipts, charges, refunds, pay links, membership dues. */
 export const BILLING_EMAIL = 'billing@greenreserve.app';
 
-/** From address for codes, sign-in links and security alerts. Deliberately NOT
- *  a Workspace alias: replies bounce. Never show it as a contact. */
+/** From address for golfer emails (sent in the course's name), codes, sign-in links,
+ *  security alerts and routine staff notices. Deliberately NOT a Workspace alias:
+ *  replies bounce. Never show it as a contact. */
 export const NOREPLY_EMAIL = 'noreply@greenreserve.app';
+
+/** Outreach (emails redo, Cam 2026-11-19): GreenReserve's postal address, printed in the footer of every
+ *  outreach email as CAN-SPAM requires. Cam still owes it. While it is empty, sendOutreachEmail() refuses
+ *  to send — an outreach email without it would break the law. Fill it in here, nowhere else. */
+export const OUTREACH_POSTAL_ADDRESS = '';

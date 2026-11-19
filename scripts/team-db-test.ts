@@ -21,12 +21,12 @@ process.env.RESEND_API_KEY = 're_test_fake';
 process.env.NEXT_PUBLIC_URL = 'https://greenreserve.test';
 
 // Email stub: capture what goes to Resend; failMail makes Resend refuse.
-const sent: { to: string; subject: string; html: string }[] = [];
+const sent: { to: string; subject: string; html: string; text: string }[] = [];
 let failMail = false;
 globalThis.fetch = (async (_u: unknown, init?: { body?: unknown }) => {
   if (failMail) return new Response(JSON.stringify({ name: 'validation_error', message: 'refused' }), { status: 422, headers: { 'content-type': 'application/json' } });
   const b = JSON.parse(String(init?.body ?? '{}'));
-  sent.push({ to: Array.isArray(b.to) ? b.to[0] : b.to, subject: b.subject, html: b.html });
+  sent.push({ to: Array.isArray(b.to) ? b.to[0] : b.to, subject: b.subject, html: b.html, text: b.text });
   return new Response(JSON.stringify({ id: `em_${sent.length}` }), { status: 200, headers: { 'content-type': 'application/json' } });
 }) as typeof fetch;
 
@@ -95,8 +95,8 @@ async function course(n: string) {
   const alex = await prisma.courseStaff.findUniqueOrThrow({ where: { id: alexId } });
   ok('…lower-cased email, phone kept, role set, Invited (no password set)', alex.email === `${TAG}-alex@t.local` && alex.phone === '+18455550123' && alex.roleId === fdId && !!alex.invitedAt && !alex.passwordSetAt);
   const mail = sent[0];
-  ok('the welcome email goes to them, from the owner, naming the course and role', mail?.to === alex.email && mail.subject === 'Jordan added you to Pine Hollow a on GreenReserve' && mail.html.includes('Your role: Front desk.') && mail.html.includes('Set my password'), mail?.subject);
-  const link = /href="(https:\/\/greenreserve\.test\/dashboard\/reset-password\?token=([^"&]+)&welcome=1)"/.exec(mail?.html ?? '');
+  ok('the welcome email goes to them, from the owner, naming the course and role', mail?.to === alex.email && mail.subject === 'Jordan added you to Pine Hollow a on GreenReserve' && mail.html.includes('added you to Pine Hollow a as Front desk.') && mail.html.includes('Set your password&nbsp;&rarr;') && mail.text.includes('Set your password: https://'), mail?.subject);
+  const link = /href="(https:\/\/greenreserve\.test\/dashboard\/reset-password\?token=([^"&]+)&amp;welcome=1)"/.exec(mail?.html ?? '');
   ok('…with a set-your-password link that verifies for this person', !!link && (await verifyStaffResetToken(decodeURIComponent(link[2]), async () => alex.password)) === alexId);
   ok('…and never a password', !/temporary password|tempPassword/i.test(mail?.html ?? ''));
   const tInv = (await loadTeam(A.c.id, A.op.id))!.people.find(p => p.id === alexId)!;
@@ -181,8 +181,8 @@ async function course(n: string) {
 
   const { invitePreview } = await import('../src/lib/team');
   const pv = await invitePreview(A.ctx, fdId, 'Kelly Brandt');
-  ok('the invite preview is the real email for that role, with a dead link', pv.ok && pv.subject === 'Jordan added you to Pine Hollow a on GreenReserve' && pv.html.includes('Hi Kelly,') && pv.html.includes('Your role: Front desk.') && pv.html.includes('href="#"'), pv);
-  ok('…and says what the role can do from its areas', pv.ok && /You can: use some of tee sheet &amp; bookings, see payments &amp; refunds and use some of pro shop &amp; register\./.test(pv.html), pv.ok ? pv.html.match(/You can:[^<]*/)?.[0] : pv);
+  ok('the invite preview is the real email for that role, with a dead link', pv.ok && pv.subject === 'Jordan added you to Pine Hollow a on GreenReserve' && pv.html.includes('You’ve been added to the team.') && pv.html.includes('as Front desk.') && pv.html.includes('href="#"'), pv);
+  ok('…and says what the role can do from its areas', pv.ok && /You can use some of tee sheet &amp; bookings, see payments &amp; refunds and use some of pro shop &amp; register\./.test(pv.html), pv.ok ? pv.html.match(/You can [^<]*/)?.[0] : pv);
   ok('B can’t preview with A’s role', (await invitePreview(B.ctx, fdId, 'x') as { status?: number }).status === 404);
 
   // ── Isolation: course B reaches nothing of A's ─────────────────────────────

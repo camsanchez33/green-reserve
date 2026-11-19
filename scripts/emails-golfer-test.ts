@@ -32,6 +32,12 @@ const sat = '2026-11-21';
   check('button text reads on the accent (white on dark, ink on yellow)', textOn('#1E6B45') === '#FFFFFF' && textOn('#E3B640') !== '#FFFFFF');
   check('tee dates and times are written for people', emailDate(sat) === 'Sat, Nov 21' && emailTime('14:05') === '2:05 PM' && emailTime('09:00') === '9:00 AM' && emailDate('Today') === 'Today');
   check('esc covers & < > " \'', esc(`&<>"'`) === '&amp;&lt;&gt;&quot;&#39;');
+  check('From name: every control character is taken out', courseFrom('A\u0000B\u001bC\u007f', 'n@x') === '"A B C" <n@x>', courseFrom('A\u0000B\u001bC\u007f', 'n@x'));
+  const m = letterEmail({ from: 'course', course, line: 'x', rows: [{ label: 'Paid', value: '$1.00' }, { label: 'Paid with', value: 'Visa' }, { label: 'Due by', value: 'May 1' }, { label: 'Charged to your card', value: 'May 2' }] });
+  check('money rows are larger; "Paid with", "Due by", "Charged to your card" are not', m.html.includes('font:600 18px/1.4') && (m.html.match(/font:600 18px\/1\.4/g) ?? []).length === 1);
+  const noTok = G.cancellationFeeChargedEmail({ courseName: course.name, date: sat, time: '11:40', feeAmount: 2500, bookingId: 'b1' }, course);
+  check('the hold email only says "the button below" when there is a button', !noTok.html.includes('button below') && !noTok.html.includes('&rarr;</a>'));
+  check('the Message golfers preview passes the course footer, as the send does', readFileSync('src/app/api/operator/golfer-messages/route.ts', 'utf8').includes('courseNoticeEmail({ courseName, dateLabel: formatTeeDay(w.date), teeTime, body: body || \'…\', course: footer })'));
 }
 
 // ---------- Every golfer email ----------

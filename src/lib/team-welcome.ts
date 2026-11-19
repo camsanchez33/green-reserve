@@ -19,10 +19,11 @@ export interface WelcomeInput {
 
 export interface WelcomeParts {
   subject: string;
-  greeting: string;
+  preheader: string;
+  /** The headline (emails redo, mockup "Staff invite"). */
+  line: string;
   intro: string;
-  role: string;
-  steps: string[];
+  rows: { label: string; value: string }[];
   button: string;
   footer: string;
 }
@@ -36,15 +37,17 @@ export function welcomeParts(w: WelcomeInput): WelcomeParts {
   const can = w.roleCan.trim().replace(/\.$/, '');
   return {
     subject: `${hasOwner ? ownerFirst : 'The course owner'} added you to ${w.courseName} on GreenReserve`,
-    greeting: `Hi ${first(w.personName)},`,
-    intro: `${owner} added you to ${w.courseName} on GreenReserve, the system the course uses for its tee sheet, the pro shop register and golfer bookings.`,
-    role: `Your role: ${w.roleName}.${can ? ` You can: ${can.charAt(0).toLowerCase()}${can.slice(1)}.` : ''} Your manager can change this any time.`,
-    steps: [
-      `Set your password with the button below. The link works for ${INVITE_LINK_HOURS} hours.`,
-      'Sign in at greenreserve.app/dashboard on the counter computer or your phone.',
-      'Start on Today → Tee sheet to see the day’s groups.',
+    preheader: 'Set your password to get started.',
+    line: 'You’ve been added to the team.',
+    intro: `${owner} added you to ${w.courseName} as ${w.roleName}. Set your password to sign in to the dashboard.`
+      + `${can ? ` You can ${can.charAt(0).toLowerCase()}${can.slice(1)}.` : ''} Your manager can change this any time.`,
+    rows: [
+      { label: 'Course', value: w.courseName },
+      { label: 'Role', value: w.roleName },
+      { label: 'Added by', value: owner },
+      { label: 'Link works for', value: `${INVITE_LINK_HOURS} hours` },
     ],
-    button: 'Set my password',
+    button: 'Set your password',
     footer: `Questions about your shifts or the course? Ask ${ownerFirst}. Trouble signing in? Reply to this email or write to ${ADMIN_EMAIL}.`,
   };
 }

@@ -13,7 +13,7 @@ import type { CoursePlan } from './course-plan';
 import { checkSchedule } from './schedule-conflict';
 
 // The preview covers the same days regenerateUpcoming() rebuilds (regenerationDays: the
-// course's widest booking window plus one — Revamp 3 fix 5, it used to stop at 8).
+// course's widest booking window plus one, plus the nightly run's extra day — Revamp 3 fix 5, it used to stop at 8).
 
 export type ScheduleChange =
   | { op: 'create'; body: Record<string, unknown> }

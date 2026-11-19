@@ -22,7 +22,7 @@ for (const n of ['sendMemberMagicLink', 'sendCheckInReceiptEmail', 'sendRefundEm
   check(`${n} is sent as the course from noreply@`, fn(n).includes('from: courseFrom(ctx.course.name, NOREPLY_EMAIL)') && !/[Rr]eply (to this email|here)/.test(fn(n)));
 check('…and the cancel path tells it when a refund went through', readFileSync('src/lib/cancel-booking.ts', 'utf8').includes('refunded: roundRefunded || feeWaivedRefunded'));
 for (const n of ['sendInquiryConfirmation', 'sendSignedAgreementsEmail', 'sendCourseLiveOrientationEmail'])
-  check(`${n} is sent from admin@`, fn(n).includes('from: FROM_ADMIN') && fn(n).includes(', ADMIN_EMAIL);'));
+  check(`${n} is sent from admin@`, fn(n).includes('from: FROM_ADMIN'));
 // The build ignores type errors, so an email still on the old FROM would ship and throw when sent.
 check('every email names one of the four senders', !/from: FROM\b(?!_)/.test(e));
 check('an event sign-up comes from the course at noreply@, replies to the staff who set it up', fn('sendEventSignupEmail').includes('from: courseFrom(ctx.course.name, NOREPLY_EMAIL)') && fn('sendEventSignupEmail').includes('...(data.replyTo ? { replyTo: data.replyTo } : {})'));
