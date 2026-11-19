@@ -31,8 +31,6 @@ export async function sendWelcome(membershipId: string): Promise<void> {
     courseName: m.course.name || 'your course',
     groupName: m.tier?.name ?? m.membershipType ?? 'Member',
     coursePageUrl: `${process.env.NEXT_PUBLIC_URL}/courses/${m.course.slug}`,
-    // Members pricing off (lib/pricing-switch): no member rate is charged, so the invite promises none and reads
-    // "Log in at <page> with this email to book." (Build 2026-11-18).
     // Members pricing off (Build 2026-11-19): no rate is promised, but the window and guest passes still hold.
     benefits: memberBenefitsLine(m.tier && !memberPricingOn(m.course) ? withoutRates(m.tier) : m.tier, m.course),
     memberPricing: memberPricingOn(m.course),
