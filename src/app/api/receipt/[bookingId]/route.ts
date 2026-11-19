@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { bookingLookOf } from '@/lib/booking-look';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS } from '@/lib/admin-session';
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     where: { id: bookingId },
     include: {
       teeTime: { select: { date: true, time: true, holes: true, product: { select: { label: true } } } },
-      course: { select: { name: true, number: true, slug: true, city: true, state: true, brandColor: true, stripeAccountId: true, timezone: true } },
+      course: { select: { name: true, number: true, slug: true, city: true, state: true, brandColor: true, bookingLook: true, bookingAccent: true, stripeAccountId: true, timezone: true } },
     },
   });
 
@@ -83,6 +84,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     courseSlug: booking.course.slug,
     // Reskin batch (U-G shared change): the receipt's CourseHeaderBar wears the course's own color.
     brandColor: booking.course.brandColor,
+    // Booking page look (BOOKING-LOOK-1): accent null until the course sets one; the page then uses brandColor.
+    booking_look: bookingLookOf(booking.course),
     courseLocation: [booking.course.city, booking.course.state].filter(Boolean).join(', '),
     date: booking.teeTime.date,
     time: booking.teeTime.time,
