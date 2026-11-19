@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server';
+import { bookingLookOf } from '@/lib/booking-look';
 import { prisma } from '@/lib/prisma';
 import { stripe, chargeOneIntent } from '@/lib/stripe';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   return NextResponse.json({
     period: st.period, totalCents: st.totalCents, status: st.status === 'paid_offline' ? 'paid' : st.status, dueAt: st.dueAt, paidAt: st.paidAt,
     autoChargeAt: st.status === 'open' && st.membership.accountPaymentMethodId && auto ? nextCharge(st) : null,
-    courseName: st.course.name, brandColor: st.course.brandColor, logoUrl: st.course.logoUrl,
+    courseName: st.course.name, brandColor: st.course.brandColor, booking_look: bookingLookOf(st.course), logoUrl: st.course.logoUrl,
     canPay: !!st.course.stripeAccountId && st.course.stripeAccountActive,
     offerSaveCard: auto, cardSaved: !!st.membership.accountPaymentMethodId, cardTerms: auto ? statementCardTerms(st.course.name) : '',
     lines: lines.map(l => ({ at: l.createdAt, note: l.note || l.kind, amountCents: l.amountCents })),
