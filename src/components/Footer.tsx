@@ -5,9 +5,11 @@ import { usePathname } from 'next/navigation';
 import { isBookingMode, isCourseWorld } from '@/lib/booking-mode';
 import { SUPPORT_EMAIL } from '@/lib/contact';
 
-/** BOOKING-LOOK-1: the golfer pages that wear the course look and carry their own footer in it (LookFooter). */
+/** BOOKING-LOOK-1: the golfer pages that wear the course look and carry their own footer in it (LookFooter): manage,
+ *  check-in, the receipt, the shop receipt, the event and shop pay links and the statement. */
 function wearsCourseLook(pathname: string): boolean {
-  return /^\/(manage|checkin|receipt)\/[^/]+\/?$/.test(pathname) && pathname !== '/receipt/shop' && pathname !== '/receipt/shop/';
+  if (/^\/(manage|checkin|receipt)\/[^/]+\/?$/.test(pathname) && pathname !== '/receipt/shop' && pathname !== '/receipt/shop/') return true;
+  return /^\/(receipt\/shop|pay\/event|pay\/shop|statement)\/[^/]+\/?$/.test(pathname);
 }
 
 /** The booking-mode footer lockup (also LookFooter's, for a course that hasn't picked a look). */
@@ -40,7 +42,7 @@ export default function Footer() {
   if (/^\/courses\/[^/]+(\/info|\/login|\/member)?\/?$/.test(pathname)) return null;
   // The Book page wears the course's look (Light or Dark) and carries its own footer in it (BookClient).
   if (pathname === '/book' || pathname === '/book/') return null;
-  // Manage, the tee-time pay page and the receipt wear the course look and carry their own footer (LookFooter).
+  // The golfer pages on the course look carry their own footer (LookFooter; wearsCourseLook above).
   if (wearsCourseLook(pathname)) return null;
 
   // Course-world pages (course page, member portal, golfer portal) get the
