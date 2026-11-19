@@ -81,6 +81,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     name: m.inviteName,
     email: m.inviteEmail,
     courseName: m.course.name,
+    courseId: m.courseId,
     tierName: m.tier?.name ?? m.membershipType,
     amountPaid: chargedCents / 100,
     serviceFee: due.feeCents / 100,
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // MEM-RENEW: the terms they agreed to, in writing, with how to turn it off.
   if (m.tier?.autoRenew && recorded) {
     after(sendAutoRenewOnEmail({
-      name: m.inviteName, email: m.inviteEmail, courseName: m.course.name, tierName: m.tier.name, terms: autoTerms,
+      name: m.inviteName, email: m.inviteEmail, courseName: m.course.name, courseId: m.courseId, tierName: m.tier.name, terms: autoTerms,
       renewsOn: updated.expiresAt, totalCents: renewalCents(m.tier).totalCents,
       manageLink: `${process.env.NEXT_PUBLIC_URL}/membership/${m.id}?token=${m.payToken}`,
     }).catch(console.error));

@@ -329,7 +329,7 @@ export async function PATCH(req: NextRequest) {
     const who = await prisma.courseMembership.findUnique({ where: { id }, select: { inviteName: true, inviteEmail: true, expiresAt: true, golfer: { select: { email: true, firstName: true, lastName: true } }, course: { select: { name: true } } } });
     const to = who ? memberContact(who) : null;
     if (who && to?.email) {
-      try { await sendAutoRenewOffEmail({ name: to.name, email: to.email, courseName: who.course.name, tierName: membership.tier?.name ?? 'membership', endsOn: who.expiresAt }); }
+      try { await sendAutoRenewOffEmail({ name: to.name, email: to.email, courseName: who.course.name, courseId: membership.courseId, tierName: membership.tier?.name ?? 'membership', endsOn: who.expiresAt }); }
       catch (err) { console.error(JSON.stringify({ ev: 'membership.autorenew.tier_change_email_fail', membershipId: id, error: err instanceof Error ? err.message : String(err) })); }
     }
   }

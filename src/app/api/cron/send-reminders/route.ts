@@ -78,6 +78,7 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
         name: m.inviteName || [m.golfer?.firstName, m.golfer?.lastName].filter(Boolean).join(' '),
         email: to,
         courseName: m.course.name,
+        courseId: m.courseId,
         tierName: m.tier.name,
         // MP-3 B2a: column is cents; sendMembershipPaymentLinkEmail renders
         // dollars ($${annualFee.toFixed(2)}), unlike the booking emails which
@@ -103,7 +104,7 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
     const to = memberContact(m);
     if (!to.email || !m.expiresAt || !m.tier) continue;
     try {
-      await sendAutoRenewReminderEmail({ name: to.name, email: to.email, courseName: m.course.name, tierName: m.tier.name, renewsOn: m.expiresAt, totalCents: renewalCents(m.tier).totalCents, manageLink: link(m) });
+      await sendAutoRenewReminderEmail({ name: to.name, email: to.email, courseName: m.course.name, courseId: m.courseId, tierName: m.tier.name, renewsOn: m.expiresAt, totalCents: renewalCents(m.tier).totalCents, manageLink: link(m) });
       await markReminded(m.id, m.expiresAt, renewalCents(m.tier).totalCents, now);
       autoReminders++;
     } catch (err) { console.error(JSON.stringify({ ev: 'membership.autorenew.reminder_fail', membershipId: m.id, error: err instanceof Error ? err.message : String(err) })); }
@@ -114,14 +115,14 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
     if (r.status === 'paid') {
       autoRenewed++;
       if (to.email && m.tier) {
-        try { await sendMembershipReceiptEmail({ name: to.name, email: to.email, courseName: m.course.name, tierName: m.tier.name, amountPaid: r.amountCents / 100, serviceFee: renewalCents(m.tier).feeCents / 100, expiresAt: r.expiresAt }); }
+        try { await sendMembershipReceiptEmail({ name: to.name, email: to.email, courseName: m.course.name, courseId: m.courseId, tierName: m.tier.name, amountPaid: r.amountCents / 100, serviceFee: renewalCents(m.tier).feeCents / 100, expiresAt: r.expiresAt }); }
         catch (err) { console.error(JSON.stringify({ ev: 'membership.autorenew.receipt_fail', membershipId: m.id, error: err instanceof Error ? err.message : String(err) })); }
       }
     } else if (r.status === 'declined') {
       autoDeclined++;
       console.error(JSON.stringify({ ev: 'membership.autorenew.declined', membershipId: m.id, retry: r.retry, error: r.error }));
       if (to.email && m.tier) {
-        try { await sendAutoRenewDeclinedEmail({ name: to.name, email: to.email, courseName: m.course.name, tierName: m.tier.name, totalCents: renewalCents(m.tier).totalCents, payLink: link(m), retryOn: r.retry ? new Date(now.getTime() + RETRY_DAYS * 86_400_000) : null }); }
+        try { await sendAutoRenewDeclinedEmail({ name: to.name, email: to.email, courseName: m.course.name, courseId: m.courseId, tierName: m.tier.name, totalCents: renewalCents(m.tier).totalCents, payLink: link(m), retryOn: r.retry ? new Date(now.getTime() + RETRY_DAYS * 86_400_000) : null }); }
         catch (err) { console.error(JSON.stringify({ ev: 'membership.autorenew.declined_email_fail', membershipId: m.id, error: err instanceof Error ? err.message : String(err) })); }
       }
     }
@@ -147,10 +148,10 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
     else if (r.status === 'declined') {
       statementsDeclined++;
       console.error(JSON.stringify({ ev: 'member_statement.auto.declined', statementId: s.id, retry: !!r.retryAt, error: r.error }));
-      const st = await prisma.memberStatement.findUniqueOrThrow({ where: { id: s.id }, select: { id: true, payToken: true, period: true, totalCents: true, dueAt: true, course: { select: { name: true } }, membership: { select: { inviteName: true, inviteEmail: true, golfer: { select: { email: true, firstName: true, lastName: true } } } } } });
+      const st = await prisma.memberStatement.findUniqueOrThrow({ where: { id: s.id }, select: { id: true, courseId: true, payToken: true, period: true, totalCents: true, dueAt: true, course: { select: { name: true } }, membership: { select: { inviteName: true, inviteEmail: true, golfer: { select: { email: true, firstName: true, lastName: true } } } } } });
       const to = memberContact(st.membership);
       if (to.email) {
-        try { await sendStatementDeclinedEmail({ name: to.name, email: to.email, courseName: st.course.name, period: st.period, totalCents: st.totalCents, dueAt: st.dueAt, retryOn: r.retryAt ?? null, payLink: statementLink(st) }); }
+        try { await sendStatementDeclinedEmail({ name: to.name, email: to.email, courseName: st.course.name, courseId: st.courseId, period: st.period, totalCents: st.totalCents, dueAt: st.dueAt, retryOn: r.retryAt ?? null, payLink: statementLink(st) }); }
         catch (err) { console.error(JSON.stringify({ ev: 'member_statement.declined_email_fail', statementId: s.id, error: err instanceof Error ? err.message : String(err) })); }
       }
     }

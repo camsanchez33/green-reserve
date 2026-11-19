@@ -20,7 +20,7 @@ async function sendLink(course: { id: string; name: string; timezone: string | n
   if (!who) return;
   const token = await signMemberMagicToken({ courseId: course.id, email });
   const magicLink = `${process.env.NEXT_PUBLIC_URL}/api/member/${courseSlug}/verify?token=${encodeURIComponent(token)}`;
-  await sendMemberMagicLink({ name: who.name, email, courseName: course.name, magicLink });
+  await sendMemberMagicLink({ name: who.name, email, courseName: course.name, courseId: course.id, magicLink });
 }
 
 // Log in with a code (GOLFER-LOGIN-1, Cam 2026-11-18): the same check, then a 6-digit code (lib/member-login-code)
@@ -28,7 +28,7 @@ async function sendLink(course: { id: string; name: string; timezone: string | n
 async function sendCode(course: { id: string; name: string; timezone: string | null; hasResidentPricing: boolean }, email: string) {
   if (!(await canLogIn(course, email))) return;
   const code = await issueLoginCode(course.id, email);
-  await sendMemberLoginCode({ email, courseName: course.name, code });
+  await sendMemberLoginCode({ email, courseName: course.name, courseId: course.id, code });
 }
 
 export async function POST(

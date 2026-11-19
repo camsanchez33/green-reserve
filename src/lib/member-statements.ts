@@ -180,7 +180,7 @@ export async function markStatementPaidOffline(courseId: string, statementId: st
 
 /** Email one statement to its member (the cron, right after it closes; staff "Email statement"). */
 export async function emailStatement(statementId: string): Promise<'sent' | 'no_email' | 'not_found'> {
-  const st = await prisma.memberStatement.findUnique({ where: { id: statementId }, select: { id: true, period: true, totalCents: true, dueAt: true, autoChargeAt: true, autoFailedAt: true, autoRetryAt: true, status: true, payToken: true, course: { select: { name: true } }, membership: { select: { inviteName: true, inviteEmail: true, golfer: { select: { email: true, firstName: true, lastName: true } } } }, _count: { select: { lines: true } } } });
+  const st = await prisma.memberStatement.findUnique({ where: { id: statementId }, select: { id: true, courseId: true, period: true, totalCents: true, dueAt: true, autoChargeAt: true, autoFailedAt: true, autoRetryAt: true, status: true, payToken: true, course: { select: { name: true } }, membership: { select: { inviteName: true, inviteEmail: true, golfer: { select: { email: true, firstName: true, lastName: true } } } }, _count: { select: { lines: true } } } });
   if (!st) return 'not_found';
   // GOLFER-LOGIN-1: the member's own email first, an older linked account's only where none was typed.
   const email = st.membership.inviteEmail || st.membership.golfer?.email;
@@ -188,7 +188,7 @@ export async function emailStatement(statementId: string): Promise<'sent' | 'no_
   const { sendStatementEmail } = await import('./email');
   await sendStatementEmail({
     name: st.membership.inviteName || [st.membership.golfer?.firstName, st.membership.golfer?.lastName].filter(Boolean).join(' '),
-    email, courseName: st.course.name, period: st.period, totalCents: st.totalCents, lineCount: st._count.lines, dueAt: st.dueAt,
+    email, courseName: st.course.name, courseId: st.courseId, period: st.period, totalCents: st.totalCents, lineCount: st._count.lines, dueAt: st.dueAt,
     chargeOn: st.status === 'open' ? nextCharge(st) : null, payLink: statementLink(st),
   });
   return 'sent';

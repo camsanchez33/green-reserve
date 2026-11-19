@@ -32,8 +32,8 @@ const sale = (courseId: string, extra: Record<string, unknown> = {}) =>
 async function main() {
   // ONE reference everywhere a receipt prints it (final review): the page, the staff view and the email.
   ok('saleRef: "#18" for a numbered sale, else the last 8 of its id', saleRef('cmabcdefgh12345678', 18) === '#18' && saleRef('cmabcdefgh12345678', null) === '12345678');
-  const email = readFileSync('src/lib/email.ts', 'utf8');
-  ok('the emailed receipt prints saleRef(saleId, saleNumber), not the id suffix', email.includes('saleRef(data.saleId, data.saleNumber)') && !email.includes('data.saleId.slice(-8)'));
+  const email = readFileSync('src/lib/email-golfer.ts', 'utf8');
+  ok('the emailed receipt prints saleRef(saleId, saleNumber), not the id suffix', email.includes('saleRef(d.saleId, d.saleNumber)') && !email.includes('saleId.slice(-8)'));
   ok('…and the route passes the sale\'s number', readFileSync('src/app/api/operator/shop-sales/route.ts', 'utf8').includes('saleId: s.id, saleNumber: s.number,'));
 
   const a = await course('a', true), b = await course('b');
