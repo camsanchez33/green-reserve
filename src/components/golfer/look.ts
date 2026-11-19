@@ -40,7 +40,7 @@ function lookOf(course: { booking_look?: Partial<CourseLook> | null; brand_color
 }
 
 /** Light or Dark, for things drawn outside the page's CSS. */
-/** The accent as one hex, for screens not yet on the look tokens (the confirmation): the preset's Light accent, or brand_color. */
+/** The accent as one hex, for things drawn outside the look tokens (the Stripe card field): the preset's Light accent, or brand_color. */
 export function lookAccentHex(course: { booking_look?: Partial<CourseLook> | null; brand_color?: string | null }): string {
   const { accent, hex } = lookOf(course);
   return accent ? BOOKING_ACCENT_COLOURS[accent].light.acc : hex;
