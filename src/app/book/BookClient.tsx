@@ -246,7 +246,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
     Promise.all([
       fetch(`/api/courses/${courseSlug}`).then(r => r.ok ? r.json() : null),
-      fetch(`/api/courses/${courseSlug}/tee-times?date=${date}`).then(r => r.ok ? r.json() : []),
+      fetch(`/api/courses/${courseSlug}/tee-times?date=${date}&viewer=1`).then(r => r.ok ? r.json() : []),
     ]).then(([courseData, teeTimes]) => {
       if (!courseData) { setLoadError('Course not found.'); setLoadingInfo(false); return; }
       setCourse(courseData);

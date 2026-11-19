@@ -4,7 +4,9 @@
 import { todayIn, clockIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
 import { centsToDollarsOr0 } from '@/lib/money';
-import { windowFor, withinWindow, outsideWindowBody } from '@/lib/booking-window';
+import { windowFor, withinWindow, outsideWindowBody, residentWindowDays } from '@/lib/booking-window';
+import { loggedInAt, liveMembershipFor, residentOn } from '@/lib/member-session';
+import { residentPricingOn } from '@/lib/pricing-switch';
 import { rulesFor, walkingAllowedAt, type RuleCourse } from '@/lib/booking-rules';
 import { dealPct, type DealCourse } from '@/lib/last-minute';
 import { demandPctAt, onlinePublicSeat, dealWins, loadDemand, type DemandCourse, type DemandMap } from '@/lib/demand-pricing';
@@ -68,8 +70,27 @@ export type PublicTeeTimes =
   | { ok: true; teeTimes: ReturnType<typeof normalizeDbTeeTime>[] }
   | { ok: false; status: number; body: Record<string, unknown> };
 
-/** Bookable public tee times for a course on a date — the API's exact rules. */
-export async function loadPublicTeeTimes(slug: string, date: string): Promise<PublicTeeTimes> {
+/**
+ * The window of whoever is logged in to this course (gr_member): their live membership here and a resident card good on
+ * `date` — exactly what POST /api/bookings enforces. No log-in here (or another course's) = the public window.
+ */
+async function viewerWindow(course: Parameters<typeof windowFor>[0] & Parameters<typeof liveMembershipFor>[0], date: string) {
+  const session = await loggedInAt(course.id);
+  if (!session) return windowFor(course, null);
+  // A lapsed membership (past its end date + grace days) is the public window, as booking charges.
+  const membership = await liveMembershipFor(course, session.email);
+  const resident = residentPricingOn(course) && residentWindowDays(course) != null
+    ? !!(await residentOn(course.id, session.email, date)) : false;
+  return windowFor(course, membership ? { tier: membership.tier } : null, { resident });
+}
+
+/**
+ * Bookable public tee times for a course on a date — the API's exact rules.
+ * `opts.viewer` (the Book page): the logged-in golfer's own window at this course instead of the public one, so a
+ * member or resident can open a time past the public window that booking would allow. The rows stay public-shaped
+ * (public prices); the member and resident prices come from their own routes.
+ */
+export async function loadPublicTeeTimes(slug: string, date: string, opts: { viewer?: boolean } = {}): Promise<PublicTeeTimes> {
   const dbCourse = await prisma.course.findUnique({ where: { slug } });
   if (!dbCourse || !dbCourse.active || dbCourse.liveStatus !== 'live') {
     return { ok: false, status: 404, body: { error: 'Course not found' } };
@@ -77,7 +98,7 @@ export async function loadPublicTeeTimes(slug: string, date: string): Promise<Pu
 
   // BOOKING WINDOWS: the public sees the sheet only as far ahead as the course
   // allows. Enforced here, not just in the picker — the picker reads this.
-  const win = windowFor(dbCourse, null);
+  const win = opts.viewer ? await viewerWindow(dbCourse, date) : windowFor(dbCourse, null);
   if (!withinWindow(date, win.days, new Date(), dbCourse.timezone)) {
     return { ok: false, status: 403, body: outsideWindowBody(win.days, win.scope, dbCourse) as Record<string, unknown> };
   }
@@ -96,8 +117,10 @@ export async function loadPublicTeeTimes(slug: string, date: string): Promise<Pu
   const visible = (date === todayLocal
     ? teeTimes.filter(t => t.time > nowLocal)
     : teeTimes)
-    // A round with a shorter window of its own isn't shown past it.
-    .filter(t => withinWindow(date, rulesFor(dbCourse, t.product).publicAdvanceDays, new Date(), dbCourse.timezone));
+    // A round with a shorter window of its own isn't shown past it — except to a viewer with a window of their own
+    // (a member not on the public window, or a resident window past the public): Memberships item 3, as the member
+    // tee-times route and /api/bookings apply it.
+    .filter(t => win.ownWindow || withinWindow(date, rulesFor(dbCourse, t.product).publicAdvanceDays, new Date(), dbCourse.timezone));
 
   const demand = await loadDemand(dbCourse);
   return { ok: true, teeTimes: visible.map(t => normalizeDbTeeTime(t, dbCourse, demand)) };
