@@ -25,8 +25,8 @@ type BookingInfo = {
   courseAddress: string;
   coursePhone?: string;
   brandColor: string;
-  /** BOOKING-LOOK-1: the course's look (Course.bookingLook / bookingAccent); absent or no accent = today's light page. */
-  bookingLook?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null;
+  /** BOOKING-LOOK-1: the course's look (Course.booking_look / bookingAccent); absent or no accent = today's light page. */
+  booking_look?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null;
   heroImageUrl?: string; logoUrl?: string;
   date: string;
   time: string;
@@ -131,7 +131,7 @@ function ManagePageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =>
   const [info, setInfo] = useState<BookingInfo | null>(null);
   // The page's footer sits outside this component: hand it the look once the booking has loaded.
   useEffect(() => {
-    onLook(info ? lookSiteVars({ booking_look: info.bookingLook?.accent ? { look: info.bookingLook.look, accent: info.bookingLook.accent } : null, brand_color: info.brandColor }) : undefined);
+    onLook(info ? lookSiteVars({ booking_look: info.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info.brandColor }) : undefined);
   }, [info, onLook]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -206,6 +206,18 @@ function ManagePageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =>
     setSlotsLoading(false);
   }
 
+  // The updated confirmation email, after a change is saved. Its failure is said on the "Booking updated" page; it
+  // never undoes the change. (It never throws, so the change's own error handling isn't reached.)
+  const [emailState, setEmailState] = useState<'sending' | 'sent' | 'failed'>('sent');
+  async function sendModifiedEmail() {
+    setEmailState('sending');
+    const r = await fetch(`/api/manage/${bookingId}/send-modified-email`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    }).catch(() => null);
+    setEmailState(r && r.ok ? 'sent' : 'failed');
+  }
+
   async function handleSwapTime() {
     if (!selectedSlot) return;
     setSwapping(true); setSwapError('');
@@ -219,11 +231,8 @@ function ManagePageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =>
       setModifyResult(data);
       if (info) setInfo({ ...info, time: data.time, greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount });
       setView('modified');
-      // Re-send confirmation email
-      fetch('/api/manage/' + bookingId + '/send-modified-email', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      }).catch(() => undefined);
+      // The change is saved; now the updated confirmation email, and say if it didn't go.
+      await sendModifiedEmail();
     } catch { setSwapError('Something went wrong. Please try again.'); }
     setSwapping(false);
   }
@@ -242,10 +251,7 @@ function ManagePageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =>
       setModifyResult(updated);
       setInfo({ ...info, players: data.players, greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount });
       setView('modified');
-      fetch('/api/manage/' + bookingId + '/send-modified-email', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      }).catch(() => undefined);
+      await sendModifiedEmail();
     } catch { setPlayersError('Something went wrong. Please try again.'); }
     setChangingPlayers(false);
   }
@@ -253,7 +259,7 @@ function ManagePageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =>
   if (loading) return <div className="min-h-screen bg-paper flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>;
 
   // BOOKING-LOOK-1: this page wears the course look (visual only); without a picked look it is today's light page.
-  const lookCourse = { booking_look: info?.bookingLook?.accent ? { look: info.bookingLook.look, accent: info.bookingLook.accent } : null, brand_color: info?.brandColor };
+  const lookCourse = { booking_look: info?.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info?.brandColor };
   const lookVars = lookSiteVars(lookCourse);
   const band = lookBandHex(lookCourse);
   const headerStyle = { backgroundColor: band };
@@ -313,7 +319,9 @@ function ManagePageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =>
           <CourseHeaderBar courseName={info.courseName} accent={band} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
           <div className="p-8 text-center">
             <h1 className="text-[30px] font-serif leading-none text-ink mb-3">Booking updated</h1>
-            <p className="text-ink-soft text-sm mb-6">A confirmation email has been sent with your updated details.</p>
+            {emailState === 'failed'
+              ? <p className="text-bad text-sm mb-6" role="alert">We couldn&apos;t send the email. Your change is saved.</p>
+              : <p className="text-ink-soft text-sm mb-6" role="status">{emailState === 'sending' ? 'Sending your updated confirmation email…' : 'A confirmation email has been sent with your updated details.'}</p>}
             <div className="bg-paper/70 rounded-md p-4 mb-6 text-left space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{fmtDate(modifyResult.date)}</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">Time</span><span className="font-medium text-ink">{fmtTime(modifyResult.time)}</span></div>

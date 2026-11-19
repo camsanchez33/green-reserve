@@ -26,7 +26,7 @@ const pages = {
   receipt: readFileSync('src/app/receipt/[bookingId]/page.tsx', 'utf8'),
 };
 for (const [name, src] of Object.entries(pages)) {
-  check(`${name}: reads bookingLook (accent null = no look) into lookSiteVars`, src.includes("bookingLook?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null;") && src.includes('lookSiteVars('));
+  check(`${name}: reads booking_look (accent null = no look) into lookSiteVars`, src.includes("booking_look?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null;") && src.includes('lookSiteVars('));
   check(`${name}: no white card or white-on-accent text left (both follow the look)`, !src.includes('${CARD}') && !/\bbg-white\b(?!\/)/.test(src.replace('print:bg-white', '')) && !/text-white[^/]/.test(src.replace(/className="text-white[^"]*"/g, '').replace(/<span className="text-white font-medium">/g, '')));
   check(`${name}: the page roots wear the look`, (src.match(/<div style=\{lookVars\} className="min-h-screen bg-paper/g) ?? []).length >= 1);
   check(`${name}: its footer is in the look (LookFooter), handed the look once loaded`, src.includes('<LookFooter vars={lookVars} />') && src.includes('onLook={setLookVars}'));
@@ -38,6 +38,12 @@ check('the cancel button keeps a readable label on Dark (card colour on red, whi
 check('the receipt still prints black on white whatever the look', pages.receipt.includes('.receipt-card * { color: #000 !important; background: transparent !important;') && pages.receipt.includes('print:bg-white') && pages.receipt.includes('.no-print, footer, nextjs-portal { display: none !important; }'));
 const footer = readFileSync('src/components/Footer.tsx', 'utf8');
 check('the site footer skips the three pages (not the shop receipt)', footer.includes('if (wearsCourseLook(pathname)) return null;') && footer.includes("!pathname.startsWith('/receipt/shop')"));
+
+// Build 2026-11-19: the "booking changed" email is awaited and its failure said; the change stays saved.
+check('manage: the updated-booking email is awaited, never fire-and-forget', !pages.manage.includes('.catch(() => undefined);') && (pages.manage.match(/await sendModifiedEmail\(\);/g) ?? []).length === 2 && pages.manage.includes("setEmailState(r && r.ok ? 'sent' : 'failed');"));
+check('manage: a failed email says so, and that the change is saved; it never claims a sent email early', pages.manage.includes("We couldn&apos;t send the email. Your change is saved.") && pages.manage.includes("emailState === 'sending' ? 'Sending your updated confirmation email…'"));
+// Build 2026-11-19: no resident window is promised until the server grants one.
+check('the calendar note promises no resident window yet', !readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8').includes('Residents (with a resident card)'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

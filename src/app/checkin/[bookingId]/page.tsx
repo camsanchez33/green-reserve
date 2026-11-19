@@ -38,8 +38,8 @@ function cardStyleFor(look: 'light' | 'dark') {
 
 type CheckInInfo = {
   golferName: string; courseName: string; courseSlug: string; courseAddress: string; brandColor: string; heroImageUrl?: string; logoUrl?: string;
-  /** BOOKING-LOOK-1: the course's look (Course.bookingLook / bookingAccent); absent or no accent = today's light page. */
-  bookingLook?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null;
+  /** BOOKING-LOOK-1: the course's look (Course.booking_look / bookingAccent); absent or no accent = today's light page. */
+  booking_look?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null;
   date: string; time: string; players: number; holes: number; productLabel?: string | null; status: string;
   totalAmount: number; greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number;
   /** POS-1a: pro-shop items the course added to the round; totalAmount includes them and their fee. */
@@ -190,7 +190,7 @@ function CheckInPageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =
   const [info, setInfo] = useState<CheckInInfo | null>(null);
   // The page's footer sits outside this component: hand it the look once the booking has loaded.
   useEffect(() => {
-    onLook(info ? lookSiteVars({ booking_look: info.bookingLook?.accent ? { look: info.bookingLook.look, accent: info.bookingLook.accent } : null, brand_color: info.brandColor }) : undefined);
+    onLook(info ? lookSiteVars({ booking_look: info.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info.brandColor }) : undefined);
   }, [info, onLook]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -244,7 +244,7 @@ function CheckInPageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =
   if (!info) return null;
 
   // BOOKING-LOOK-1: this page wears the course look (visual only); without a picked look it is today's light page.
-  const lookCourse = { booking_look: info?.bookingLook?.accent ? { look: info.bookingLook.look, accent: info.bookingLook.accent } : null, brand_color: info?.brandColor };
+  const lookCourse = { booking_look: info?.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info?.brandColor };
   const lookVars = lookSiteVars(lookCourse);
   const band = lookBandHex(lookCourse);
   // R-GOLF-011: a cancelled booking has nothing to pay — never show it the pay form.

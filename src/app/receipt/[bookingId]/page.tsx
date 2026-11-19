@@ -20,7 +20,7 @@ type ReceiptData = {
   timezone?: string;
   bookingId: string; bookingRef?: string; golferName: string; courseName: string; courseSlug: string; courseLocation: string; brandColor?: string;
   /** BOOKING-LOOK-1: the course's look; absent or no accent = today's light page. It always prints light. */
-  bookingLook?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null;
+  booking_look?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null;
   date: string; time: string; holes: number; productLabel?: string | null; players: number; cartSelected: boolean;
   /** CART-4: shown when the course puts the cart ticket on the receipt. */
   cartTicket?: { riders: number } | null;
@@ -64,7 +64,7 @@ function ReceiptPageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =
   const [data, setData] = useState<ReceiptData | null>(null);
   // The page's footer sits outside this component: hand it the look once the booking has loaded.
   useEffect(() => {
-    onLook(data ? lookSiteVars({ booking_look: data.bookingLook?.accent ? { look: data.bookingLook.look, accent: data.bookingLook.accent } : null, brand_color: data.brandColor }) : undefined);
+    onLook(data ? lookSiteVars({ booking_look: data.booking_look?.accent ? { look: data.booking_look.look, accent: data.booking_look.accent } : null, brand_color: data.brandColor }) : undefined);
   }, [data, onLook]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -138,7 +138,7 @@ function ReceiptPageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =
     : 'Estimated total due at course';
 
   // BOOKING-LOOK-1: the receipt wears the course look on screen (visual only); print forces black on white below.
-  const lookCourse = { booking_look: data.bookingLook?.accent ? { look: data.bookingLook.look, accent: data.bookingLook.accent } : null, brand_color: data.brandColor };
+  const lookCourse = { booking_look: data.booking_look?.accent ? { look: data.booking_look.look, accent: data.booking_look.accent } : null, brand_color: data.brandColor };
   const lookVars = lookSiteVars(lookCourse);
   return (
     <>
