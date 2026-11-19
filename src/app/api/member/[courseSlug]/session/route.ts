@@ -16,7 +16,7 @@ export async function GET(
 
   const course = await prisma.course.findUnique({
     where: { slug: courseSlug },
-    select: { id: true, slug: true, memberAdvanceDays: true, publicAdvanceDays: true, timezone: true, memberGraceDays: true, hasResidentPricing: true, hasMemberPricing: true, minPlayers: true, maxPlayers: true },
+    select: { id: true, slug: true, memberAdvanceDays: true, publicAdvanceDays: true, residentAdvanceDays: true, timezone: true, memberGraceDays: true, hasResidentPricing: true, hasMemberPricing: true, minPlayers: true, maxPlayers: true },
   });
   if (!course) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -47,7 +47,7 @@ export async function GET(
   if (!membership) {
     return NextResponse.json({
       source: 'member',
-      windowDays: windowFor(course, null).days,
+      windowDays: windowFor(course, null, { resident: true }).days,
       email: fallbackEmail,
       name: resident!.name || 'Resident',
       // The current member page shows membershipType as the group name.
@@ -64,7 +64,8 @@ export async function GET(
     source: 'member',
     // BOOKING WINDOWS: how far ahead this member can book (tier, else course default).
     // Memberships item 3: a membership on "the public window" books as far ahead as the public (lib/booking-window).
-    windowDays: windowFor(course, live ? { tier: membership.tier } : null).days,
+    // A resident card good today adds the resident window (lib/booking-window): the longer one is enforced.
+    windowDays: windowFor(course, live ? { tier: membership.tier } : null, { resident: !!resident }).days,
     email: fallbackEmail ?? membership.golfer?.email ?? membership.inviteEmail,
     name: membership.inviteName || (membership.golfer ? `${membership.golfer.firstName} ${membership.golfer.lastName}`.trim() : '') || 'Member',
     membershipType: membership.membershipType,

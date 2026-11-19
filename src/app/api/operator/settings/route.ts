@@ -66,6 +66,8 @@ export async function PATCH(req: NextRequest) {
     'holes','par','yardage','slope','courseRating','type',
     'hasMemberPricing','memberAdvanceDays','memberGraceDays','counterMemberRate',
     'hasResidentPricing','residentCounty','residentState','residentProofRequired',
+    // GOLFER-LOGIN-1 2b (Build 2026-11-19): the resident booking window (lib/booking-window); logged below.
+    'residentAdvanceDays',
     'walkingAllowed','walkingNote','cartRequired','cartPricing',
     // CART-4: how the course runs carts at the starter (not prices — anyone with settings.edit).
     'cartNumbers','cartTicket','starterColumns',
@@ -120,7 +122,21 @@ export async function PATCH(req: NextRequest) {
     }
   }
   Object.assign(data, money);
-  const updated = await prisma.course.update({ where: { id: session.courseId }, data });
+  // The resident booking window is logged when it changes (CourseSettingChange). The Settings page sends the whole
+  // row on every save, so only a real change writes a row. The actor is the signed-in login's own row, never the request.
+  const actor = 'residentAdvanceDays' in data
+    ? session.isStaff
+      ? { type: 'staff' as const, id: session.staffId ?? '', name: (await prisma.courseStaff.findUnique({ where: { id: session.staffId ?? '' }, select: { name: true } }))?.name ?? '' }
+      : { type: 'operator' as const, id: session.operatorId ?? '', name: (await prisma.courseOperator.findUnique({ where: { id: session.operatorId ?? '' }, select: { name: true } }))?.name ?? '' }
+    : null;
+  const updated = await prisma.$transaction(async tx => {
+    const before = actor ? await tx.course.findUnique({ where: { id: session.courseId }, select: { residentAdvanceDays: true } }) : null;
+    const row = await tx.course.update({ where: { id: session.courseId }, data });
+    if (actor && before && before.residentAdvanceDays !== row.residentAdvanceDays) {
+      await tx.courseSettingChange.create({ data: { courseId: session.courseId, actorType: actor.type, actorId: actor.id, actorName: actor.name.slice(0, 120), field: 'residentAdvanceDays', before: before.residentAdvanceDays == null ? '' : String(before.residentAdvanceDays), after: row.residentAdvanceDays == null ? '' : String(row.residentAdvanceDays) } });
+    }
+    return row;
+  });
 
   // 2FA settings live on CourseOperator, not Course — can't go in the whitelist above.
   if (session.operatorId && ('twoFactorMethod' in body || 'twoFactorPhone' in body)) {

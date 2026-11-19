@@ -18,12 +18,12 @@ import { chargeBookingFee, releaseUnpaidBooking } from '@/lib/booking-fee';
 import { randomUUID } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { centsToDollars } from '@/lib/money';
-import { loggedInAt, loggedInResident, liveMembershipFor } from '@/lib/member-session';
+import { loggedInAt, loggedInResident, liveMembershipFor, residentOn } from '@/lib/member-session';
 import { stripe, ACCESS_FEE_CENTS } from '@/lib/stripe';
 import { sendBookingConfirmation, sendOperatorBookingNotification, sendCancellationWarningEmail, sendCheckInAvailableEmail } from '@/lib/email';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { claimTeeTime, TeeTimeClaimError, findDoubleTap, type ClaimResult } from '@/lib/claim-tee-time';
-import { windowFor, withinWindow } from '@/lib/booking-window';
+import { windowFor, withinWindow, residentWindowDays } from '@/lib/booking-window';
 import { rulesFor, groupSizeError, walkingAllowedAt } from '@/lib/booking-rules';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import { termsVersionNow } from '@/lib/terms';
@@ -159,7 +159,11 @@ export async function POST(req: NextRequest) {
   // BOOKING WINDOWS: enforced at creation, not only in the picker — a crafted
   // request for a date past the viewer's window is refused like a past one.
   // A round may set its own public window; a member never sees less than the public.
-  const baseWindow = windowFor({ ...teeTimeFull.course, publicAdvanceDays: rules.publicAdvanceDays }, viewerMembership);
+  // A logged-in resident whose card is good on the date gets the longer of that and the resident window (GOLFER-LOGIN-1
+  // 2b; Resident pricing on, lib/booking-window), whatever rate applies.
+  const residentForWindow = memberSession && residentPricingOn(teeTimeFull.course) && residentWindowDays(teeTimeFull.course) != null
+    ? !!(await residentOn(teeTimeFull.courseId, memberSession.email, teeTimeFull.date)) : false;
+  const baseWindow = windowFor({ ...teeTimeFull.course, publicAdvanceDays: rules.publicAdvanceDays }, viewerMembership, { resident: residentForWindow });
   const bookingWindow = baseWindow.scope === 'member' ? { ...baseWindow, days: Math.max(baseWindow.days, rules.publicAdvanceDays) } : baseWindow;
   if (!withinWindow(teeTimeFull.date, bookingWindow.days, new Date(), teeTimeFull.course.timezone)) {
     return NextResponse.json({
