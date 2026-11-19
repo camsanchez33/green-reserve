@@ -21,6 +21,7 @@ import { teeToUtcMs } from '@/lib/tee-time-utils';
 import { LIKE_UNSAFE_EMAIL } from '@/lib/like-exact';
 import { SUPPORT_EMAIL } from '@/lib/contact';
 import { golferLookVars, lookAccentHex, lookMode, lookText, type BookingLook, type CourseLook } from '@/components/golfer/look';
+import { LookBackground } from '@/components/golfer/useLookBackground';
 import g from '@/components/golfer/golfer.module.css';
 import { loginOffered } from '@/app/courses/[slug]/login/login-helpers';
 
@@ -246,7 +247,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
 
     Promise.all([
       fetch(`/api/courses/${courseSlug}`).then(r => r.ok ? r.json() : null),
-      fetch(`/api/courses/${courseSlug}/tee-times?date=${date}`).then(r => r.ok ? r.json() : []),
+      fetch(`/api/courses/${courseSlug}/tee-times?date=${date}&viewer=1`).then(r => r.ok ? r.json() : []),
     ]).then(([courseData, teeTimes]) => {
       if (!courseData) { setLoadError('Course not found.'); setLoadingInfo(false); return; }
       setCourse(courseData);
@@ -934,6 +935,7 @@ export default function BookClient({ initial }: { initial?: BookInitial }) {
         <BookPageInner initial={initial} />
       </Suspense>
       <BookFooter course={initial?.course} />
+      <LookBackground course={initial?.course} />
     </>
   );
 }

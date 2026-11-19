@@ -3,7 +3,7 @@
 // the staff verbal script, the confirmation text and the HELP reply all read from here,
 // and every consent row stores SMS_CONSENT_VERSION so we can show what a person agreed
 // to. Change any sentence → bump the version.
-import { SUPPORT_EMAIL } from './contact';
+import { optInText, alertOptInText, helpText } from './sms-copy';
 
 // 2026-11-05 (Twilio campaign review): consent names GreenReserve, the registered brand, as the sender,
 // says "text messages (SMS)", and uses the carriers' own disclosure phrases.
@@ -26,13 +26,11 @@ export function smsVerbalScript(courseName: string): string {
     `Msg & data rates may apply. Reply STOP to cancel, HELP for help. The terms and privacy policy are at ${SITE}/terms and ${SITE}/privacy. Is that a yes?”`;
 }
 
-/** The enrollment confirmation, sent once when a number opts in. */
-export const SMS_CONFIRMATION =
-  `GreenReserve: you're signed up for text messages about your tee time bookings, ${SMS_FREQUENCY}. Msg & data rates may apply. Reply STOP to cancel, HELP for help.`;
+/** The enrollment confirmation with no course to name (emails and texts redo: the course's own is optInText(name)). */
+export const SMS_CONFIRMATION = optInText(null);
 
-/** The reply to HELP. */
-export const SMS_HELP =
-  `GreenReserve: text messages about your tee time bookings, ${SMS_FREQUENCY}. Help: ${SUPPORT_EMAIL} or ${SITE}. Msg & data rates may apply. Reply STOP to cancel.`;
+/** The reply to HELP with no course to name (the course's own is helpText(name, phone)). */
+export const SMS_HELP = helpText(null, null);
 
 /** Shown where a text can't go because the number never agreed. */
 export const SMS_NO_CONSENT = 'This number hasn’t agreed to texts yet.';
@@ -60,6 +58,5 @@ export function alertSmsConsentText(courseName: string): string {
     `up to 1 message per date I picked, only for this alert and separate from booking texts. Msg & data rates may apply. Reply STOP to cancel, HELP for help.`;
 }
 
-/** The enrollment confirmation, sent once when a number first agrees to alert texts. */
-export const ALERT_SMS_CONFIRMATION =
-  `GreenReserve: you'll get a text when a tee time opens for your alert, up to 1 message per date you picked. Msg & data rates may apply. Reply STOP to cancel, HELP for help.`;
+/** The alert enrollment confirmation with no course to name (the course's own is alertOptInText(name)). */
+export const ALERT_SMS_CONFIRMATION = alertOptInText(null);

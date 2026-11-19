@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { withPriceSwitch } from '@/lib/pricing-switch';
+import { withPriceSwitchAndWindow } from '@/lib/window-generation';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { listSchedules, createSchedule, updateSchedule, deleteSchedule, ScheduleConflictError, ScheduleProductError } from '@/lib/schedule-service';
 import { withAudit } from '@/lib/admin-audit';
 
-// A schedule change rebuilds every bookable day (lib/tee-sheet-engine regenerateUpcoming), up to a year ahead.
-export const maxDuration = 120;
+// A schedule change rebuilds every bookable day (lib/tee-sheet-engine regenerateUpcoming), up to a year ahead; a
+// window it opens (Resident pricing switched on) is generated after the response (lib/window-generation, 120 s).
+export const maxDuration = 300;
 
 // L2: the service refuses a save that would double-book a nine (409) or names a
 // product this course does not own (400); everything else is unchanged.
@@ -45,7 +46,7 @@ async function addSchedule(req: NextRequest) {
   if (!body.startTime || !body.endTime) return NextResponse.json({ error: 'First and last tee are required' }, { status: 400 });
 
   // A newly set member / resident price switches it on (lib/pricing-switch).
-  try { return NextResponse.json(await withPriceSwitch(courseId, () => createSchedule(courseId, body, { actor: session.name }))); }
+  try { return NextResponse.json(await withPriceSwitchAndWindow(courseId, () => createSchedule(courseId, body, { actor: session.name }))); }
   catch (err) { const r = scheduleError(err); if (r) return r; throw err; }
 }
 
@@ -61,7 +62,7 @@ async function editSchedule(req: NextRequest) {
 
   try {
     const owner = await prisma.teeTimeSchedule.findUnique({ where: { id }, select: { courseId: true } });
-    const updated = owner ? await withPriceSwitch(owner.courseId, () => updateSchedule(id, data, { actor: session.name })) : null;
+    const updated = owner ? await withPriceSwitchAndWindow(owner.courseId, () => updateSchedule(id, data, { actor: session.name })) : null;
     if (!updated) return NextResponse.json({ error: 'Schedule not found' }, { status: 404 });
     return NextResponse.json(updated);
   } catch (err) { const r = scheduleError(err); if (r) return r; throw err; }

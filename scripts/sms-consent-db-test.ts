@@ -64,7 +64,7 @@ async function main() {
   const stop = await call({ From: B, Body: ' Stop please' });
   ok('STOP opts out (first word, any case)', stop.status === 200 && !(await hasSmsConsent(B)));
   const help = await call({ From: B, Body: 'HELP' });
-  ok('HELP answers with the help text and changes nothing', help.text.includes('support@greenreserve.app') && help.text.includes(SMS_FREQUENCY) && SMS_HELP.includes('STOP') && !(await hasSmsConsent(B)));
+  ok('HELP answers with the help text and changes nothing', help.text.includes('support@greenreserve.app') && help.text.includes('booking texts') && help.text.includes('Msg &amp; data rates may apply') && SMS_HELP.includes('STOP') && SMS_FREQUENCY.includes('4') && !(await hasSmsConsent(B)));
   ok('keywords read the first word only', smsKeyword('stop.') === 'STOP' && smsKeyword('  help me') === 'HELP' && smsKeyword('') === '');
 
   // 4. every door asks properly

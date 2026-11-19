@@ -13,10 +13,10 @@ import { ChoicePopup } from '@/components/dashboard/settings/BookingArea';
 import { type Ctx, type Course, Group, Row, Muted, EditPopup, Field, FIELD, TextEdit, SwitchLine, LINK, plural, num, saveSettings } from '@/components/dashboard/settings/ui';
 
 const s = (v: unknown) => (v == null ? '' : String(v));
-const FIELDS = ['hasMemberPricing', 'memberAdvanceDays', 'memberGraceDays', 'counterMemberRate', 'hasResidentPricing', 'residentCounty', 'residentState', 'residentProofRequired'] as const;
-type Pop = '' | 'member' | 'mahead' | 'mgrace' | 'mcounter' | 'resident' | 'rwho' | 'rproof';
+const FIELDS = ['hasMemberPricing', 'memberAdvanceDays', 'memberGraceDays', 'counterMemberRate', 'hasResidentPricing', 'residentCounty', 'residentState', 'residentProofRequired', 'residentAdvanceDays'] as const;
+type Pop = '' | 'member' | 'mahead' | 'mgrace' | 'mcounter' | 'resident' | 'rwho' | 'rproof' | 'rahead';
 
-function OnOffPopup({ ctx, field, title, help, on: onText, off: offText, onClose }: { ctx: Ctx; field: string; title: string; help?: string; on: string; off: string; onClose: () => void }) {
+function OnOffPopup({ ctx, field, title, help, on: onText, off: offText, onClose }: { ctx: Ctx; field: string; title: string; help?: string; on: string; off?: string; onClose: () => void }) {
   const [on, setOn] = useState(!!ctx.form[field]);
   return (
     <EditPopup title={title} hint={help} onClose={onClose} onSave={() => ctx.save({ [field]: on })}>
@@ -74,15 +74,17 @@ export function PricingCard() {
         {members && <Row id="members-counter" label="Member rate at the counter" note={ownerNote('Who gets a member rate when staff ring them up.')} value={f.counterMemberRate === 'any' ? 'Any membership, staff’s call' : 'The member shows their membership'} onOpen={ownerEdit('mcounter')} />}
         <Row id="residents-on" label="Resident prices" note={residents ? 'A resident books one player at the resident price: themselves.' : 'Off: residents pay the public price, online and at the counter.'} value={residents ? 'On' : 'Off'} onOpen={edit('resident')} />
         {residents && <Row id="residents-who" label="Who counts as a resident" value={[s(f.residentCounty) && `${s(f.residentCounty)} County`, s(f.residentState)].filter(Boolean).join(', ') || <Muted>Not set</Muted>} onOpen={edit('rwho')} />}
+        {residents && <Row id="residents-ahead" label="Resident booking window" value={f.residentAdvanceDays == null ? <Muted>Public window</Muted> : plural(Number(f.residentAdvanceDays), 'day')} onOpen={edit('rahead')} />}
         {residents && <Row id="residents-proof" label="Proof at check-in" note="Residents show proof of residency when they check in." value={f.residentProofRequired ? 'Asked for' : 'Not asked for'} onOpen={edit('rproof')} />}
       </Group>
 
-      {pop === 'member' && <OnOffPopup ctx={ctx} field="hasMemberPricing" title="Member prices" on="Members pay their membership’s price, or the member price on Schedule." off="Members pay the public price, online and at the counter." onClose={close} />}
+      {pop === 'member' && <OnOffPopup ctx={ctx} field="hasMemberPricing" title="Member prices" on="Members pay their membership’s price, or the member price on Schedule." onClose={close} />}
       {pop === 'mahead' && <TextEdit ctx={ctx} field="memberAdvanceDays" title="Days ahead members can book" type="number" hint="The default; each membership can set its own." onClose={close} />}
       {pop === 'mgrace' && <TextEdit ctx={ctx} field="memberGraceDays" title="Member rates after it ends" type="number" hint="Days a lapsed member keeps the member price." toValue={v => num(v) ?? 0} onClose={close} />}
       {pop === 'mcounter' && <ChoicePopup ctx={ctx} field="counterMemberRate" title="Member rate at the counter" options={[{ key: 'member', label: 'The member shows their membership' }, { key: 'any', label: 'Any membership, staff’s call' }]} onClose={close} />}
-      {pop === 'resident' && <OnOffPopup ctx={ctx} field="hasResidentPricing" title="Resident prices" on="The resident price is set on Schedule. A resident books one player at it: themselves." off="Residents pay the public price, online and at the counter." onClose={close} />}
+      {pop === 'resident' && <OnOffPopup ctx={ctx} field="hasResidentPricing" title="Resident prices" on="The resident price is set on Schedule. A resident books one player at it: themselves." onClose={close} />}
       {pop === 'rwho' && <ResidentWhoPopup ctx={ctx} onClose={close} />}
+      {pop === 'rahead' && <TextEdit ctx={ctx} field="residentAdvanceDays" title="Resident booking window" type="number" hint="Days ahead a logged-in resident can book. Blank uses the public window." toValue={v => (v.trim() === '' ? null : v.trim())} onClose={close} />}
       {pop === 'rproof' && <OnOffPopup ctx={ctx} field="residentProofRequired" title="Proof at check-in" on="Residents show proof of residency when they check in." off="Residents aren’t asked for proof." onClose={close} />}
     </>
   );
