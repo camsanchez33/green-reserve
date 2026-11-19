@@ -6,10 +6,11 @@
 // The page's secret is ShopSale.receiptToken, minted the first time a receipt goes out — separate from payToken, which
 // marks a sale sent as a pay link. Only a paid sale has a receipt.
 import { randomUUID, timingSafeEqual } from 'crypto';
+import { bookingLookOf } from './booking-look';
 import { prisma } from './prisma';
 
 export type ShopReceipt = {
-  ref: string; courseName: string; brandColor: string; logoUrl: string; location: string;
+  ref: string; courseName: string; brandColor: string; booking_look: ReturnType<typeof bookingLookOf>; logoUrl: string; location: string;
   paidAt: string; paidWith: string; soldBy: string; customerName: string;
   lines: { name: string; unitPriceCents: number; quantity: number }[];
   discountCents: number; discountNote: string; taxCents: number;
@@ -31,18 +32,18 @@ type Row = {
   id: string; number: number | null; status: string; totalCents: number; serviceFeeCents: number; taxCents: number; discountCents: number; discountNote: string; cashTenderedCents: number | null;
   refundedCents: number; paidAt: Date | null; createdAt: Date; soldBy: string; customerName: string;
   lines: { name: string; unitPriceCents: number; quantity: number }[];
-  course: { name: string; brandColor: string | null; logoUrl: string | null; city: string; state: string; timezone: string | null };
+  course: { name: string; brandColor: string | null; bookingLook: string | null; bookingAccent: string | null; logoUrl: string | null; city: string; state: string; timezone: string | null };
 };
 const SELECT = {
   id: true, number: true, status: true, totalCents: true, serviceFeeCents: true, taxCents: true, discountCents: true, discountNote: true, cashTenderedCents: true, refundedCents: true,
   paidAt: true, createdAt: true, soldBy: true, customerName: true, receiptToken: true,
   lines: { orderBy: { id: 'asc' as const }, select: { name: true, unitPriceCents: true, quantity: true } },
-  course: { select: { name: true, brandColor: true, logoUrl: true, city: true, state: true, timezone: true } },
+  course: { select: { name: true, brandColor: true, bookingLook: true, bookingAccent: true, logoUrl: true, city: true, state: true, timezone: true } },
 };
 
 export function receiptView(s: Row): ShopReceipt {
   return {
-    ref: saleRef(s.id, s.number), courseName: s.course.name, brandColor: s.course.brandColor ?? '', logoUrl: s.course.logoUrl ?? '',
+    ref: saleRef(s.id, s.number), courseName: s.course.name, brandColor: s.course.brandColor ?? '', booking_look: bookingLookOf(s.course), logoUrl: s.course.logoUrl ?? '',
     location: [s.course.city, s.course.state].filter(Boolean).join(', '),
     paidAt: (s.paidAt ?? s.createdAt).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: s.course.timezone || 'America/New_York' }),
     paidWith: paidWithOf(s.status), soldBy: s.soldBy, customerName: s.customerName,
