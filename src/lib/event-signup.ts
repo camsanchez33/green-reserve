@@ -14,6 +14,7 @@
 // Capacity is decided under a lock on the event row, so two sign-ups can't
 // both take the last spots.
 import { randomBytes, randomUUID } from 'crypto';
+import { bookingLookOf } from './booking-look';
 import { prisma } from './prisma';
 import { todayIn } from './course-time';
 import { eventFeeFor, settleOpenPayment, HOLD_MINUTES } from './event-payments';
@@ -61,7 +62,7 @@ export async function signupPage(eventId: string) {
   const e = await prisma.courseEvent.findUnique({
     where: { id: eventId },
     include: {
-      course: { select: { name: true, slug: true, brandColor: true, logoUrl: true, heroImageUrl: true, timezone: true, stripeAccountId: true, stripeAccountActive: true, liveStatus: true } },
+      course: { select: { name: true, slug: true, brandColor: true, bookingLook: true, bookingAccent: true, logoUrl: true, heroImageUrl: true, timezone: true, stripeAccountId: true, stripeAccountActive: true, liveStatus: true } },
       entrants: { select: { status: true, holdUntil: true } },
     },
   });
@@ -79,7 +80,7 @@ export async function signupPage(eventId: string) {
     payNow, feePerPlayerCents: payNow ? eventFeeFor('player', null) : 0,
     maxGroup: Math.min(MAX_GROUP, Math.max(1, e.signupMaxGroup)), questions: questionsOf(e.signupQuestions),
     spotsLeft: cap == null ? null : Math.max(0, cap - taken), past: e.date < today,
-    course: { name: e.course.name, brandColor: e.course.brandColor, logoUrl: e.course.logoUrl, photoUrl: e.course.heroImageUrl },
+    course: { name: e.course.name, brandColor: e.course.brandColor, booking_look: bookingLookOf(e.course), logoUrl: e.course.logoUrl, photoUrl: e.course.heroImageUrl },
   };
 }
 
