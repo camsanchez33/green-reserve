@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { golferLookVars, type CourseLook } from '@/components/golfer/look';
+import { LookBackground } from '@/components/golfer/useLookBackground';
 import { CourseFooter } from '@/components/golfer/CourseFrame';
 import type { CancelPolicy } from '@/lib/cancel-policy';
 import g from '@/components/golfer/golfer.module.css';
@@ -105,6 +106,7 @@ export default function LoginClient({ course, back, linkFailed = false }: { cour
 
   return (
     <div className={g.root} style={golferLookVars(course)}>
+      <LookBackground course={course} />
       <div className={g.site}>
         <header className={g.top}><h1><Link href={`/courses/${slug}`}>{course.name}</Link></h1></header>
         {/* The site layout's main element is the page's one main landmark; this is its content. */}

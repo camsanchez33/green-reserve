@@ -10,6 +10,7 @@ import { GolferExitLinks } from '@/components/GolferExitLinks';
 import Link from 'next/link';
 import { LookFooter } from '@/components/golfer/LookFooter';
 import { lookPicked, lookSiteVars, lookBandHex, lookMode, lookText, type BookingAccent } from '@/components/golfer/look';
+import { useLookBackground } from '@/components/golfer/useLookBackground';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { BILLING_EMAIL } from '@/lib/contact';
@@ -193,6 +194,8 @@ function CheckInPageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =
     const lc = info ? { booking_look: info.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info.brandColor } : null;
     onLook(lc && lookPicked(lc) ? lookSiteVars(lc) : undefined);
   }, [info, onLook]);
+  // On Dark, html and body take the look's background while this page is open (LOOK-BG).
+  useLookBackground(info ? { booking_look: info.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info.brandColor } : null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [checkingIn, setCheckingIn] = useState(false);

@@ -48,7 +48,7 @@ export const WIPED_TABLES = [
   'AgreementAcceptance', 'ShopItem',
   // golfers and activity
   'GolferAccount', 'CourseResident', 'CourseMembership', 'MemberLoginCode', 'MemberTermsAgreement', 'TeeTime', 'Booking', 'TeeTimeAlert', 'PaymentEvent',
-  'BookingEvent', 'BookingShopItem', 'SentMessage', 'SmsConsent', 'ShopSale', 'ShopSaleCounter', 'ShopSaleLine', 'ShopSaleRefund', 'RegisterClose', 'RegisterOpen', 'MoneyMove', 'ShopStockReceipt', 'PromoCode', 'RoundPack', 'DemandPrice', 'MemberCharge', 'MemberStatement', 'MonthlyReview',
+  'BookingEvent', 'BookingShopItem', 'SentMessage', 'SmsConsent', 'ShortLink', 'ShopSale', 'ShopSaleCounter', 'ShopSaleLine', 'ShopSaleRefund', 'RegisterClose', 'RegisterOpen', 'MoneyMove', 'ShopStockReceipt', 'PromoCode', 'RoundPack', 'DemandPrice', 'MemberCharge', 'MemberStatement', 'MonthlyReview',
   'GolferNote', 'GolferBlock', 'ShiftNote', 'CourseMonthGoal', 'CourseGoal',
   'CourseEvent', 'CourseEventTask', 'CourseEventPlayer', 'CourseEventPayment', 'CourseEventRefund', 'CourseEventListItem',
   // messages, announcements, problems

@@ -2,7 +2,7 @@
 // one line of benefits) and the upcoming bookings, each opening its manage page. No statements, no dues.
 // Run: npx tsx scripts/golfer-your-course-test.ts
 import { readFileSync } from 'fs';
-import { RENEWAL_FAILED, RENEWAL_PENDING, datedStatus, membershipLine, residentLine, upcomingWhen, manageHref, longDay, isDay } from '../src/app/courses/[slug]/member/your-course-helpers';
+import { RENEWAL_FAILED, RENEWAL_PENDING, graceNote, datedStatus, membershipLine, residentLine, upcomingWhen, manageHref, longDay, isDay } from '../src/app/courses/[slug]/member/your-course-helpers';
 import { golferLookVars, DARK_STATUS } from '../src/components/golfer/look';
 
 let failed = 0;
@@ -62,6 +62,25 @@ check('focus starts at the heading', client.includes('<h2 ref={headRef} tabIndex
 const coursePage = readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8');
 check('the private-club panel no longer promises availability or booking online', !coursePage.includes('view availability and book') && coursePage.includes("This is a private club. Members book through the pro shop{course.phone ? ` at ${course.phone}` : ''}."));
 check('the header: who is logged in, and Log out (its failure said)', client.includes('Logged in · {s.name}') && client.includes('>Log out</button>') && client.includes('Couldn&rsquo;t log out. Try again.'));
+
+
+// The status precedence (Build 2026-11-19): renewalFailed, then pending, then inGrace, then renews (future only), then
+// expires / ended.
+check('inGrace: amber, "Your membership ended <date>. Call the pro shop to renew."', JSON.stringify(membershipLine(routeShape('2026-11-10', false, { renewalFailed: false, inGrace: true }), today)) === JSON.stringify({ group: 'Member', dot: 'warn', when: null, note: 'Your membership ended Nov 10, 2026. Call the pro shop to renew.' }) && graceNote('2026-11-10') === 'Your membership ended Nov 10, 2026. Call the pro shop to renew.');
+check('renewalFailed wins over inGrace and pending', membershipLine(routeShape('2026-11-17', true, { renewalFailed: true, inGrace: true, renewalPending: true }), today)?.problem === RENEWAL_FAILED);
+check('pending (31-day rule) wins over inGrace', membershipLine(routeShape('2026-11-17', true, { renewalFailed: false, inGrace: true }), today)?.note === RENEWAL_PENDING);
+check('set to renew, past the 31 days, in grace: the grace line, not "renews"', membershipLine(routeShape('2026-10-01', true, { renewalFailed: false, inGrace: true }), today)?.note === graceNote('2026-10-01'));
+check('renewalPending true replaces the 31-day rule (even past 31 days)', membershipLine(routeShape('2026-10-01', true, { renewalFailed: false, renewalPending: true }), today)?.note === RENEWAL_PENDING);
+check('renewalPending true never says "being processed" before the date, or for a membership not set to renew', membershipLine(routeShape('2027-03-31', true, { renewalFailed: false, renewalPending: true }), today)?.when === 'renews Mar 31, 2027' && !membershipLine(routeShape('2026-11-17', false, { renewalFailed: false, renewalPending: true }), today)?.note);
+check('renewalPending false replaces the 31-day rule (inside 31 days, no grace: ended in red)', JSON.stringify(membershipLine(routeShape('2026-11-17', true, { renewalFailed: false, renewalPending: false }), today)) === JSON.stringify({ group: 'Member', dot: 'bad', when: 'ended Nov 17, 2026' }));
+check('renewalPending false, in grace: the grace line', membershipLine(routeShape('2026-11-17', true, { renewalFailed: false, renewalPending: false, inGrace: true }), today)?.note === graceNote('2026-11-17'));
+check('a future renewal date reads renews; today is not past', membershipLine(routeShape('2026-12-01', true, { renewalFailed: false }), today)?.when === 'renews Dec 1, 2026' && membershipLine(routeShape(today, true, { renewalFailed: false }), today)?.when === 'renews Nov 18, 2026');
+const neverPastRenews = ['2026-11-17', '2026-10-18', '2026-10-17', '2025-01-01'].every(d => [undefined, true, false].every(rp => [undefined, true, false].every(ig => [undefined, false].every(rf => {
+  const w = membershipLine(routeShape(d, true, { renewalFailed: rf, renewalPending: rp, inGrace: ig }), today)?.when ?? '';
+  return !w.startsWith('renews');
+}))));
+check('never "renews" with a past date, whatever the flags', neverPastRenews);
+check('not set to renew, running: expires; ended: red', membershipLine(routeShape('2027-01-31', false, { renewalFailed: false, inGrace: false }), today)?.when === 'expires Jan 31, 2027' && membershipLine(routeShape('2026-11-01', false, { renewalFailed: false, inGrace: false }), today)?.dot === 'bad');
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

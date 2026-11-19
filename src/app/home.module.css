@@ -358,17 +358,39 @@
   .fgrid, .fgrid2 { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* Book a call: Cal.com's inline embed in a card (homepage mockup .cal). */
-.calBox { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--lift); min-height: 360px; overflow: hidden; }
-.calBoxFailed { min-height: 0; }
-/* Cal.com shows month + times side by side only from ~780px wide; narrower it stacks into a tall list.
-   So the calendar column gets 820px on wide screens, and below 1200px the heading sits above a full-width calendar. */
-.closerIn.closerCal { grid-template-columns: minmax(0, 1fr) minmax(0, 820px); }
-@media (max-width: 1200px) { .closerIn.closerCal { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
-.calInline { width: 100%; min-height: 360px; overflow: auto; }
-.calHidden { display: none; }
-.calNote { margin: 0; padding: 14px 18px; font-size: 14px; color: var(--muted2); }
-.calNote a { font-weight: 600; color: var(--forest); text-decoration: underline; text-underline-offset: 3px; }
+/* Feature pages (homepage mockup, one template). */
+.ftop { padding-block: 18px; }
+.ftop > div { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.ftopLogo { height: 24px; width: auto; display: block; }
+.back { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14.5px; font-weight: 600; color: var(--forest) !important; text-decoration: none; }
+.back:hover { text-decoration: underline; }
+.fhero { padding-block: 24px 8px; }
+.fhero h1 { font-size: clamp(40px, 5.4vw, 60px); line-height: 1.08; color: var(--forest); }
+.fhero p { margin: 12px 0 0; font-size: 18px; color: var(--muted2); max-width: 60ch; }
+.fsecs { display: grid; gap: 80px; padding-block: 56px 88px; }
+.fsec { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; }
+.fsecFlip { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.fsecFlip .fsecTxt { order: 2; }
+.fsecTxt h2 { font-size: clamp(28px, 3.2vw, 36px); line-height: 1.1; color: var(--forest); }
+.fsecTxt > p { margin: 14px 0 0; color: var(--muted2); font-size: 16.5px; max-width: 48ch; }
+.fsecMedia { min-width: 0; display: flex; justify-content: center; }
+.fsecMedia > .shot { width: 100%; max-width: 680px; }
+.fsecMedia > .shotPhone { max-width: 300px; }
+.costs { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 10px; max-width: 56ch; }
+.costs li { padding-left: 18px; position: relative; color: var(--muted2); font-size: 15.5px; }
+.costs li::before { content: ""; position: absolute; left: 0; top: 11px; width: 8px; height: 1.5px; background: var(--forest); }
+.costCard { width: 100%; max-width: 440px; }
+.demoCtl { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; max-width: 440px; }
+.demoCtl b { display: block; font-size: 15px; }
+.demoCtl span { color: var(--muted2); font-size: 13.5px; }
+.demoCtl .btn { height: 44px; }
+.demoCtl .btn:disabled { background: var(--sage2); color: var(--muted2) !important; cursor: default; }
+.demoMsg { margin: 10px 0 0; font-size: 14px; color: var(--muted2); }
+@media (max-width: 880px) {
+  .fsec, .fsecFlip { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .fsecFlip .fsecTxt { order: 0; }
+}
+@media (max-width: 560px) { .fsecs { gap: 64px; padding-block: 40px 64px; } }
 
 /* Contact us pop-up (homepage mockup dialog.cdlg). */
 .cdlg { border: 0; padding: 0; border-radius: 8px; width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 32px); background: var(--paper); color: var(--ink); box-shadow: 0 24px 60px rgba(0,0,0,.3); font-family: var(--font-sans); }

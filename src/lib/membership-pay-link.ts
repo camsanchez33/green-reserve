@@ -27,6 +27,7 @@ export async function maybeSendPayLink(membershipId: string, isRenewal = false):
     name: m.inviteName || [m.golfer?.firstName, m.golfer?.lastName].filter(Boolean).join(' '),
     email: to,
     courseName: m.course.name,
+    courseId: m.courseId,
     tierName: m.tier.name,
     annualFee: centsToDollarsOr0(m.tier.annualFeeCents),
     initiationFee: centsToDollarsOr0(initiationCents),

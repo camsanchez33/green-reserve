@@ -58,6 +58,8 @@ export default function Nav() {
   // all. The operator login URL (/dashboard/login) still works; courses reach it from their bookmark or
   // onboarding link.
   if (isHome) return null;
+  // The feature pages carry their own header (logo + All features).
+  if (pathname.startsWith('/features/')) return null;
 
   // H-2e §6: How it works / Pricing / FAQ are gone for good — on a page this
   // length they jumped one screen and made the top look templated.

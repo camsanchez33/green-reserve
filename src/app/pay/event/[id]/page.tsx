@@ -4,21 +4,34 @@
 // the phone has a wallet, a card otherwise. Same pattern as the walk-up sale
 // link (/pay/shop/[id]); the charge is a direct charge on the course's account.
 import { useEffect, useRef, useState, Suspense } from 'react';
+import type { CSSProperties } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import type { PaymentRequest } from '@stripe/stripe-js';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
-import { Card } from '@/components/ui/Card';
+import { LookFooter } from '@/components/golfer/LookFooter';
+import { lookPicked, lookSiteVars, lookBandHex, lookMode, lookText, type BookingAccent } from '@/components/golfer/look';
+import { useLookBackground } from '@/components/golfer/useLookBackground';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
-const cardStyle = { style: { base: { fontSize: '15px', color: '#141814', '::placeholder': { color: '#979B94' } }, invalid: { color: '#A3452F' } } };
+// BOOKING-LOOK-1: the card reads the look's card colour (white on Light, as Card was).
+const CARD_L = 'bg-card rounded-lg shadow-card';
+// The card field draws in Stripe's iframe, which reads no CSS variables: plain colours by look (Light as it was).
+function cardStyleFor(look: 'light' | 'dark') {
+  const t = lookText(look);
+  return { style: { base: { fontSize: '15px', color: t.ink, '::placeholder': { color: look === 'dark' ? t.muted : '#979B94' } }, invalid: { color: t.bad } } };
+}
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-type Pay = { status: 'open' | 'paid' | 'void'; eventCancelled: boolean; signup: boolean; holdNote: string | null; holdUntil: string | null; label: string; amountCents: number; feeCents: number; eventName: string; dateLabel: string; courseName: string; brandColor: string; logoUrl: string; photoUrl: string };
+type Pay = { status: 'open' | 'paid' | 'void'; eventCancelled: boolean; signup: boolean; holdNote: string | null; holdUntil: string | null; label: string; amountCents: number; feeCents: number; eventName: string; dateLabel: string; courseName: string; brandColor: string; logoUrl: string; photoUrl: string;
+  /** BOOKING-LOOK-1: the course's look; absent or no accent = today's light page. */
+  booking_look?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null };
 
-function PayForm({ paymentId, token, pay, onPaid, onError }: { paymentId: string; token: string; pay: Pay; onPaid: () => void; onError: (m: string) => void }) {
+const lookCourseOf = (p: Pay) => ({ booking_look: p.booking_look?.accent ? { look: p.booking_look.look, accent: p.booking_look.accent } : null, brand_color: p.brandColor });
+
+function PayForm({ paymentId, token, pay, look, onPaid, onError }: { paymentId: string; token: string; pay: Pay; look: 'light' | 'dark'; onPaid: () => void; onError: (m: string) => void }) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -72,19 +85,19 @@ function PayForm({ paymentId, token, pay, onPaid, onError }: { paymentId: string
     <div className="space-y-4">
       {wallet && (
         <>
-          <PaymentRequestButtonElement options={{ paymentRequest: wallet, style: { paymentRequestButton: { type: 'buy', theme: 'dark', height: '48px' } } }} />
+          <PaymentRequestButtonElement options={{ paymentRequest: wallet, style: { paymentRequestButton: { type: 'buy', theme: look === 'dark' ? 'light' : 'dark', height: '48px' } } }} />
           <div className="flex items-center gap-3 text-xs text-ink-muted"><span className="h-px flex-1 bg-line" />or pay with a card<span className="h-px flex-1 bg-line" /></div>
         </>
       )}
       <div>
         <label className="block text-[13px] font-semibold text-ink mb-1.5">Card details</label>
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
-          <CardElement options={cardStyle} />
+          <CardElement options={cardStyleFor(look)} />
         </div>
       </div>
       <button onClick={payByCard} disabled={loading || !stripe}
-        className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-70"
-        style={{ backgroundColor: pay.brandColor || '#173B2A' }}>
+        className="w-full py-3.5 rounded-md font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-70"
+        style={{ backgroundColor: 'var(--g-acc)', color: 'var(--g-on-acc)' }}>
         {loading ? <><Loader2 size={16} className="animate-spin" /> Paying…</> : `Pay ${usd(total)}`}
       </button>
       <p className="text-center text-xs text-ink-muted">Secure checkout powered by Stripe. The charge comes from {pay.courseName}.</p>
@@ -92,13 +105,21 @@ function PayForm({ paymentId, token, pay, onPaid, onError }: { paymentId: string
   );
 }
 
-function PayEventInner() {
+function PayEventInner({ onLook }: { onLook: (v: CSSProperties | undefined) => void }) {
   const { id } = useParams<{ id: string }>();
   const token = useSearchParams().get('token') ?? '';
   const [pay, setPay] = useState<Pay | null>(null);
   const [loadError, setLoadError] = useState('');
   const [error, setError] = useState('');
   const [paid, setPaid] = useState(false);
+  // BOOKING-LOOK-1: the page wears the course look (visual only); without a picked look it is today's light page.
+  const lookCourse = pay ? lookCourseOf(pay) : null;
+  // The page's footer sits outside this component: hand it the look once the payment has loaded.
+  useEffect(() => {
+    const lc = pay ? lookCourseOf(pay) : null;
+    onLook(lc && lookPicked(lc) ? lookSiteVars(lc) : undefined);
+  }, [pay, onLook]);
+  useLookBackground(lookCourse);
 
   useEffect(() => {
     fetch(`/api/event-payment/${id}?token=${encodeURIComponent(token)}`)
@@ -113,12 +134,13 @@ function PayEventInner() {
   const done = paid || pay.status === 'paid';
   // W2-9d: a sign-up whose hold ran out (or that went to the waiting list) can't be paid.
   const closed = !done && (pay.status === 'void' || pay.eventCancelled || !!pay.holdNote);
+  const lc = lookCourse!;
   const heldUntil = pay.holdUntil ? new Date(pay.holdUntil).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : null;
   return (
-    <main className="min-h-screen bg-paper">
-      <CourseHeaderBar courseName={pay.courseName} accent={pay.brandColor} logoUrl={pay.logoUrl} photoUrl={pay.photoUrl} />
+    <main style={lookSiteVars(lc)} className="min-h-screen bg-paper">
+      <CourseHeaderBar courseName={pay.courseName} accent={lookBandHex(lc)} logoUrl={pay.logoUrl} photoUrl={pay.photoUrl} />
       <div className="max-w-md mx-auto px-4 py-8">
-        <Card className="p-5">
+        <div className={`${CARD_L} p-5`}>
           <h1 className="font-serif text-[26px] font-semibold text-ink leading-tight">{done ? (pay.signup ? 'You’re signed up' : 'Paid. Thank you!') : closed ? 'This pay link is closed' : pay.eventName}</h1>
           <p className="text-sm text-ink-soft mt-1">{done || closed ? `${pay.eventName} · ${pay.dateLabel}` : pay.dateLabel}</p>
           {closed && <p className="text-sm text-ink-soft mt-2">{pay.holdNote ? `${pay.holdNote} Nothing was charged.` : `Nothing was charged. Ask ${pay.courseName} if that’s a mistake.`}</p>}
@@ -132,15 +154,22 @@ function PayEventInner() {
           {!done && !closed && pay.status === 'open' && (
             <div className="mt-5">
               {error && <p className="mb-3 text-sm text-bad bg-bad/5 border border-bad/20 rounded-md px-3 py-2" role="alert">{error}</p>}
-              <Elements stripe={stripePromise}><PayForm paymentId={id} token={token} pay={pay} onPaid={() => setPaid(true)} onError={setError} /></Elements>
+              <Elements stripe={stripePromise}><PayForm paymentId={id} token={token} pay={pay} look={lookMode(lc)} onPaid={() => setPaid(true)} onError={setError} /></Elements>
             </div>
           )}
-        </Card>
+        </div>
       </div>
     </main>
   );
 }
 
 export default function PayEventPage() {
-  return <Suspense><PayEventInner /></Suspense>;
+  // BOOKING-LOOK-1: the footer wears the course look too (the site footer skips this page).
+  const [lookVars, setLookVars] = useState<CSSProperties | undefined>(undefined);
+  return (
+    <>
+      <Suspense><PayEventInner onLook={setLookVars} /></Suspense>
+      <LookFooter vars={lookVars} />
+    </>
+  );
 }

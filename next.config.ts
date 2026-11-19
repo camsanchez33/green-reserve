@@ -25,15 +25,13 @@ function reportOnlyCsp(): string {
   const report = sentryCspReportUri();
   return [
     "default-src 'self'",
-    // Next's inline bootstrap needs 'unsafe-inline' until nonces are added; Stripe.js for cards and Apple/Google Pay;
-    // Cal.com's embed script for the homepage's Book a call calendar.
-    "script-src 'self' 'unsafe-inline' https://js.stripe.com https://app.cal.com",
+    // Next's inline bootstrap needs 'unsafe-inline' until nonces are added; Stripe.js for cards and Apple/Google Pay.
+    "script-src 'self' 'unsafe-inline' https://js.stripe.com",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com https://*.stripe.com",
     "font-src 'self' data:",
     "connect-src 'self' https://api.stripe.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
-    // Cal.com's booking calendar frame (homepage Book a call): embed.js serves cal.com links from app.cal.com.
-    "frame-src https://js.stripe.com https://hooks.stripe.com https://app.cal.com",
+    "frame-src https://js.stripe.com https://hooks.stripe.com",
     "worker-src 'self' blob:",
     "form-action 'self'",
     "frame-ancestors 'none'",

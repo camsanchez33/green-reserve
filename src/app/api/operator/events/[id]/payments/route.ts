@@ -1,3 +1,5 @@
+import { eventPayText } from '@/lib/sms-copy';
+import { shortLink } from '@/lib/short-links';
 import { optInAndConfirm } from '@/lib/sms-consent';
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 import { NextRequest, NextResponse } from 'next/server';
@@ -31,7 +33,7 @@ async function sendLink(courseId: string, p: { id: string; payToken: string; lab
       if (p.payerPhone.replace(/\D/g, '').length < 10) return 'Add a mobile number to text the link.';
       const to = normalizePhone(p.payerPhone);
       if (!to.startsWith('+1')) return 'Pay links can only be texted to US and Canadian numbers — email it instead.';
-      await sendSms(to, `GreenReserve: ${p.label} for ${event.name} at ${courseName}, ${total}. Pay here (Apple Pay, Google Pay or card): ${payUrl} Reply STOP to opt out.`, { kind: 'event_pay_link_text', courseId });
+      await sendSms(to, eventPayText(courseName, event.name, p.label, p.amountCents + p.feeCents, await shortLink('p', payUrl, { courseId })), { kind: 'event_pay_link_text', courseId });
     } else {
       if (!p.payerEmail || isPlaceholderEmail(p.payerEmail)) return 'Add an email address to send the link.';
       await sendEventPayLinkEmail({ courseId, email: p.payerEmail, name: p.payerName, courseName, replyTo, eventName: event.name, dateLabel: formatTeeDay(event.date), label: p.label, amountCents: p.amountCents, feeCents: p.feeCents, payUrl, terms: event.terms });

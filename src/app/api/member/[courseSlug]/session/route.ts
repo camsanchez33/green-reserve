@@ -7,6 +7,7 @@ import { membershipLive } from '@/lib/member-rates';
 import { todayIn } from '@/lib/course-time';
 import { residentPricingOn, memberPricingOn } from '@/lib/pricing-switch';
 import { benefitsSentence, upcomingFor } from '@/lib/member-home';
+import { renewalWillCharge } from '@/lib/membership-autorenew';
 
 export async function GET(
   _req: NextRequest,
@@ -16,7 +17,7 @@ export async function GET(
 
   const course = await prisma.course.findUnique({
     where: { slug: courseSlug },
-    select: { id: true, slug: true, memberAdvanceDays: true, publicAdvanceDays: true, residentAdvanceDays: true, timezone: true, memberGraceDays: true, hasResidentPricing: true, hasMemberPricing: true, minPlayers: true, maxPlayers: true },
+    select: { id: true, slug: true, memberAdvanceDays: true, publicAdvanceDays: true, residentAdvanceDays: true, timezone: true, memberGraceDays: true, hasResidentPricing: true, hasMemberPricing: true, minPlayers: true, maxPlayers: true, stripeAccountId: true, stripeAccountActive: true },
   });
   if (!course) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -56,7 +57,7 @@ export async function GET(
       tier: null,
       groups,
       benefits,
-      renewsOn: null, expiresOn: resident!.expiresOn || null, autoRenew: false, renewalFailed: false, inGrace: false,
+      renewsOn: null, expiresOn: resident!.expiresOn || null, autoRenew: false, renewalFailed: false, renewalPending: false, inGrace: false,
       upcoming,
     });
   }
@@ -104,6 +105,10 @@ export async function GET(
     // not been moved on since: staff can extend "Runs until" by hand without a payment, which leaves the old flag set.
     // The Golfer lane shows "Your renewal didn't go through" only on this flag.
     renewalFailed: membership.autoRenewFailedAt != null && !(membership.expiresAt && membership.expiresAt.getTime() > Date.now()),
+    // An automatic renewal charge will actually be attempted for this term (lib/membership-autorenew renewalWillCharge):
+    // always a boolean. True up to the notice window BEFORE the date too, so "Your renewal is being processed." needs it
+    // AND the date passed. False while a declined card waits for its retry (renewalFailed is true then).
+    renewalPending: renewalWillCharge(membership, course),
     // The term has ended but the course's grace days still give member rates (lib/member-rates): the end date's UTC day is
     // the last member day (a paid term may store a time of day), so the term has ended once it is before the course's today. Amber on the page.
     inGrace: live && !!membership.expiresAt && membership.expiresAt.getTime() < Date.parse(`${todayIn(course.timezone)}T00:00:00Z`),

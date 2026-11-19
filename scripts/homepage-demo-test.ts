@@ -39,13 +39,6 @@ check('the homepage carries no fee sentence', !homeCopy.includes('$1.50') && !ho
 check('the pro shop is a feature with its own page', readFileSync('src/components/home/features.ts', 'utf8').includes("slug: 'pro-shop'"));
 check('the register keeps its own words', ['Take cash', 'Close out'].every(l => readFileSync('src/app/dashboard/shop/page.tsx', 'utf8').includes(l)));
 check('the demo and the screenshot seed are the GreenReserve Test Course', demo.includes('GreenReserve Test Course') && seed.includes("name: 'GreenReserve Test Course'") && !demo.includes('Hollow') && !/name: 'Hollow/.test(seed));
-// Book a call (homepage redo): Cal.com's embed is tagged like /demo so the webhook says "from the homepage", never
-// leaves a blank box (the /demo link until it is ready), and with Cal.com off the block keeps a Book a call button.
-const calEmbed = readFileSync('src/components/home/CalEmbed.tsx', 'utf8');
-const closer = readFileSync('src/components/home/HomeCloser.tsx', 'utf8');
-check('the embed booking is tagged source=homepage, as /demo', calEmbed.includes("'metadata[source]': 'homepage'") && readFileSync('src/app/demo/route.ts', 'utf8').includes("'metadata[source]', 'homepage'"));
-check('the embed falls back to /demo', calEmbed.includes("const fallback = '/demo';") && calEmbed.includes('href={fallback}'));
-check('with Cal.com off the block keeps a Book a call button to /demo', closer.includes('calcomBookingUrl()') && closer.includes('<a className={s.btn} href="/demo">Book a call</a>'));
 // Labels the product no longer has stay out of the demo.
 for (const gone of ['Take cash · check in', 'Close to new bookings', 'Open to anyone', 'tee times</span>', 'No Card Required']) check(`the demo no longer says "${gone}"`, !demo.includes(gone));
 

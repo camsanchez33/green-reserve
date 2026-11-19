@@ -11,6 +11,7 @@ import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import { CHANGE_CATEGORIES } from '@/lib/change-requests';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { golferLookVars, type CourseLook } from '@/components/golfer/look';
+import { LookBackground } from '@/components/golfer/useLookBackground';
 import { CourseFooter } from '@/components/golfer/CourseFrame';
 import { loginOffered } from './login/login-helpers';
 import AlertSheet, { alertPartOf, type AlertSheetOpen } from '@/components/golfer/AlertSheet';
@@ -909,6 +910,7 @@ export default function CourseDetailPage({
 
   return (
     <div className={g.root} style={look}>
+      <LookBackground course={course} />
       {/* Preview banner */}
       {previewMode && course.is_live && (
         // Going live SUPERSEDES the pre-live review loop — an old preview
