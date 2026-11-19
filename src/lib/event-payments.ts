@@ -283,7 +283,7 @@ export async function paymentForPayPage(paymentId: string, token: string) {
   if (!token) return null;
   const p = await prisma.courseEventPayment.findUnique({
     where: { id: paymentId },
-    include: { event: { select: { name: true, date: true, status: true, course: { select: { name: true, brandColor: true, logoUrl: true, heroImageUrl: true, stripeAccountId: true, stripeAccountActive: true } } } } },
+    include: { event: { select: { name: true, date: true, status: true, course: { select: { name: true, brandColor: true, bookingLook: true, bookingAccent: true, logoUrl: true, heroImageUrl: true, stripeAccountId: true, stripeAccountActive: true } } } } },
   });
   if (!p || !p.payToken || p.payToken !== token) return null;
   return p;

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { bookingLookOf } from '@/lib/booking-look';
 import { saleForPayPage, chargeSale, saleCardCents } from '@/lib/shop-sales';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { saleTerms, stalePackLinkBlock } from '@/lib/round-packs';
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     status: sale.status === 'paying' ? 'open' : sale.status,
     // SHOP-FEE-1: the total is what the card pays — the course's total plus GreenReserve's service fee (shown as its own line).
     totalCents: saleCardCents(sale), serviceFeeCents: sale.serviceFeeCents, taxCents: sale.taxCents, discountCents: sale.discountCents, discountNote: sale.discountNote,
-    courseName: sale.course.name, brandColor: sale.course.brandColor, logoUrl: sale.course.logoUrl,
+    courseName: sale.course.name, brandColor: sale.course.brandColor, booking_look: bookingLookOf(sale.course), logoUrl: sale.course.logoUrl,
     lines: sale.lines.map(l => ({ name: l.name, unitPriceCents: l.unitPriceCents, quantity: l.quantity })),
     // PRICE-4: a round pack's terms — the page asks the golfer to agree before paying.
     terms: await saleTerms(sale.course.name, sale.lines),

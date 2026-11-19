@@ -16,7 +16,7 @@ import { settleStaleDuesReader } from '@/lib/dues-reader';
 import { sendWelcome, COUNTER_ADDED } from '@/lib/member-welcome';
 import { sendAutoRenewOffEmail } from '@/lib/email';
 import { maybeSendPayLink, NOT_SENT } from '@/lib/membership-pay-link';
-import { stopAutoRenew, STOP_DATA, memberContact } from '@/lib/membership-autorenew';
+import { stopAutoRenew, STOP_DATA, memberContact, setEndDateByStaff } from '@/lib/membership-autorenew';
 import { ciEquals } from '@/lib/like-exact';
 
 /** Memberships item 2: a whole membership row as a response — never where the photo is stored, only whether there is one. */
@@ -302,6 +302,26 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
     }
   }
+  // "Runs until" changed by hand: written on its own, only if it hasn't moved since staff loaded it and no dues payment
+  // is in flight, with an audit row; a later date clears a declined renewal (lib/membership-autorenew setEndDateByStaff).
+  if (expiresAt !== undefined) {
+    // The day the card showed: a renewal paid since the page loaded must never be overwritten by a stale card.
+    const was = body.expiresAtWas;
+    if (typeof was !== 'string' || (was !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(was))) return NextResponse.json({ error: 'Reload the page and try again.' }, { status: 409 });
+    // Dues left on the card reader 10 minutes are settled first (as mark_paid and the renewal charge do), then re-read.
+    await settleStaleDuesReader(membership);
+    const current = await prisma.courseMembership.findUniqueOrThrow({ where: { id }, select: { id: true, courseId: true, expiresAt: true, autoRenewFailedAt: true, autoRenewRetryAt: true } });
+    const me = session.isStaff
+      ? await prisma.courseStaff.findUnique({ where: { id: session.staffId ?? '' }, select: { name: true } })
+      : await prisma.courseOperator.findUnique({ where: { id: session.operatorId ?? '' }, select: { name: true } });
+    // The actor comes from the signed-in login's own row, never from the request.
+    const actor = session.isStaff
+      ? { type: 'staff' as const, id: session.staffId ?? '', name: me?.name ?? '' }
+      : { type: 'operator' as const, id: session.operatorId ?? '', name: me?.name ?? '' };
+    const set = await setEndDateByStaff(current, { was, next: expiresAt ? new Date(expiresAt) : null }, actor);
+    if (!set.ok) return NextResponse.json({ error: 'This membership changed or is being paid right now. Reload and try again.' }, { status: 409 });
+  }
+
   // MEM-RENEW: the golfer agreed to renew THIS tier at its price. On another tier automatic renewal
   // stops (they're told); they agree again if they pay on a tier that renews automatically.
   if (tierId && tierId !== membership.tierId && membership.autoRenew) {
@@ -320,7 +340,6 @@ export async function PATCH(req: NextRequest) {
       tierId:    tierId    ?? membership.tierId,
       status:    status    ?? membership.status,
       notes:     notes     ?? membership.notes,
-      expiresAt: expiresAt !== undefined ? (expiresAt ? new Date(expiresAt) : null) : membership.expiresAt,
       ...contact,
       // An older golfer self-join (retired 2026-11-18) has no pay link yet. Once
       // staff put it on a tier, it can owe dues — mint the token so the pay

@@ -210,7 +210,7 @@ export async function statementForPage(id: string, token: string) {
   const st = await prisma.memberStatement.findUnique({
     where: { id },
     include: {
-      course: { select: { name: true, brandColor: true, logoUrl: true, stripeAccountId: true, stripeAccountActive: true } },
+      course: { select: { name: true, brandColor: true, bookingLook: true, bookingAccent: true, logoUrl: true, stripeAccountId: true, stripeAccountActive: true } },
       membership: { select: { id: true, inviteName: true, inviteEmail: true, accountPaymentMethodId: true, golfer: { select: { email: true, firstName: true, lastName: true } }, tier: { select: { name: true, accountSettle: true } } } },
     },
   });

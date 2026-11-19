@@ -744,7 +744,7 @@ export default function CourseDetailPage({
             <p><b>How far ahead you can book</b></p>
             <ul>
               <li>Everyone: {publicDays} days</li>
-              {course.resident_advance_days ? <li>Residents (with a resident card): {course.resident_advance_days} days</li> : null}
+              {/* No resident line until the server grants the resident window (Build 2026-11-19); it comes back then. */}
               {course.has_member_pricing && memberWindowDays !== publicDays ? <li>Members: {memberWindowDays} days</li> : null}
             </ul>
             {memberSession
