@@ -134,3 +134,18 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
      the assistant, the security checker and the morning digest all need it (Cam to-do).
   8. **Build order once approved:** brief + cache + settings (Build, final-reviewer) → dashboard and admin
      wiring → golfer bot (Golfer lane UI, Build route) → homepage bot (Homepage lane UI, Build route).
+
+## Emails and texts redo — APPROVED (Cam 2026-11-19, "those emails and texts are all good and proper")
+Mockup `lanes/build/emails-texts-mockup.html` (https://claude.ai/artifact/NBRME2rE4Gq45gHV4Mm2k4, v17) is the spec. Look C (Letter) only.
+- Golfer emails come from the course: display name = course's full name, address noreply@greenreserve.app, no replies, no auto-reply. Body: one line saying what happened, stacked rows (Date, Time, Players, Holes, Price — receipt says Paid), one primary button with a text arrow ("See booking details →", "View receipt →", "Pay →"), then a small "Change or cancel booking" text link on confirmation, reminder and pay link. No cancellation line, no "Questions?" line, no Privacy/Terms. Footer: course name, address, phone, then "Powered by" + GreenReserve logo (email-logo-3x.png, 16px, alt text). Thin top bar on every email except the monthly review.
+- Pay link headline: "Time to check in for your round at <Course>."
+- GreenReserve-sent emails (staff invite, monthly review): logo in the header (~26px), footer just greenreserve.app. Monthly review has NO metrics: "Your <Month> review from GreenReserve is ready." + "Open your review →".
+- Outreach: plain personal email; footer = logo + one line "<postal address> · Reply "no thanks" to stop." (postal address from Cam, still owed).
+- Alert and after-round emails keep a stop link.
+- Remove the 3 dead emails and merge the 4 near-duplicates (78 → 71), and the reminder email's emojis.
+- Texts: every text starts with the course name and ends "Reply STOP to opt out." One segment each (≤160 GSM-7). Opt-in and HELP wording as in the mockup (139 / 119 chars). Short links on our own domain: greenreserve.app/b/<code>, /p/, /r/, /a/ — a short code mapped to the existing token (additive table), never exposing more than the long link did.
+- Policy wording in emails only via describePolicy() (none in the body now); fee wording only from LQ-2.
+- Cam to-do when it ships: update the Twilio A2P campaign sample messages to the new wording.
+
+## Tomorrow (Cam 2026-11-19)
+- UI styles review: 4 styles (Glass light/dark, Solid light/dark) shown on REAL page screenshots; layout and function never change, only backgrounds, panels, buttons and controls.

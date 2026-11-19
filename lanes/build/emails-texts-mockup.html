@@ -1,0 +1,467 @@
+<title>GreenReserve Emails and Texts</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Libre+Franklin:wght@400;500;600&display=swap">
+<style>
+/* Layout: mockup chrome (tabs, switchers) around light email frames shown at phone or desktop width */
+:root{
+  --bg:#F3F4F0; --panel:#FFFFFF; --ink:#18201A; --muted:#5C655D; --line:#DCE0D8; --pine:#24563A; --note:#8A5A12; --note-bg:#FBF3E4;
+  --ok:#2F6B45; --warn:#8A5A12; --bad:#9A3B2A;
+  --serif:'EB Garamond',Georgia,'Times New Roman',serif; --sans:'Libre Franklin',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141815;--panel:#1C221E;--ink:#E8ECE6;--muted:#A3ACA4;--line:#2E3631;--pine:#7FBF96;--note:#E2B45E;--note-bg:#2A2418;--ok:#7FBF96;--warn:#E2B45E;--bad:#F08A78;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141815;--panel:#1C221E;--ink:#E8ECE6;--muted:#A3ACA4;--line:#2E3631;--pine:#7FBF96;--note:#E2B45E;--note-bg:#2A2418;--ok:#7FBF96;--warn:#E2B45E;--bad:#F08A78;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font-family:var(--serif);font-weight:600;font-size:26px;margin:0 0 4px;text-wrap:balance}
+h2{font-family:var(--serif);font-weight:600;font-size:21px;margin:0 0 6px;text-wrap:balance}
+.sub{color:var(--muted);margin:0 0 16px;max-width:70ch}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tabs button,.seg button{font:inherit;font-size:13px;font-weight:500;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 12px;border-radius:7px;cursor:pointer;min-height:36px}
+.tabs button[aria-pressed="true"],.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible,select:focus-visible{outline:2px solid var(--pine);outline-offset:2px}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:16px;padding:12px;border:1px dashed var(--line);border-radius:10px}
+.ctl{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ctl>span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-right:2px}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+select{font:inherit;font-size:13px;padding:7px 10px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);min-height:36px;max-width:100%}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+@media (max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}}
+.frame{background:#E9EBE6;border-radius:10px;padding:18px 10px;overflow-x:auto}
+.frame.narrow .mail{max-width:375px}
+.envelope{max-width:600px;margin:0 auto 10px;font-size:12.5px;color:#3E463F;background:#FFFFFF;border:1px solid #D6DAD2;border-radius:7px;padding:10px 12px}
+.frame.narrow .envelope{max-width:375px}
+.envelope b{color:#18201A;font-weight:600}
+.envelope div{display:flex;gap:6px;flex-wrap:wrap}
+.envelope span.k{color:#6B736C;min-width:56px}
+.notes{display:grid;gap:10px}
+.note{background:var(--note-bg);border:1px dashed var(--note);color:var(--ink);border-radius:10px;padding:12px 14px;font-size:13px}
+.note b{color:var(--note);display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.counts{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.counts span{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:13px}
+.groups{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+.groups>section{min-width:0}
+.scroller{overflow-x:auto}
+.tbl{border-collapse:collapse;width:100%;font-size:13px}
+.tbl th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+.tbl td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+code{font-size:12px;color:var(--muted)}
+.dot{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.dot::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.dot.ok{color:var(--ok)}.dot.warn{color:var(--warn)}.dot.bad{color:var(--bad)}
+.texts{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.sms{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px;min-width:0}
+.sms h3{margin:0;font-size:14px;font-weight:600}
+.bubble{background:#E6E9E4;color:#18201A;border-radius:16px 16px 16px 4px;padding:10px 12px;font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+.meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.meta .two{color:var(--bad);font-weight:600}
+.qs{display:grid;gap:12px;max-width:820px}
+.q h3{margin:0 0 4px;font-size:15px}
+.q p{margin:0 0 6px}
+.q .rec{color:var(--ok);font-weight:600}
+@media (prefers-reduced-motion:no-preference){.tabs button,.seg button{transition:background .12s,color .12s}}
+</style>
+
+<div class="wrap">
+  <h1>Emails and texts</h1>
+  <p class="sub">Mockup only. Look C (Letter), as chosen. Every golfer email comes from the course, says what happened in one line, shows the essentials and one button, and ends with the course’s details and "Powered by GreenReserve". Example course: Maple Run Golf Course.</p>
+  <div class="tabs" id="tabs" role="group" aria-label="Screens"></div>
+  <div id="main"></div>
+</div>
+
+<script>
+const INV = [
+ {g:'Golfers: booking and round', from:'support@ or billing@', rows:[
+  ['Booking confirmation','sendBookingConfirmation','A golfer books online or staff book for them','support@','redo'],
+  ['Booking changed','sendBookingModifiedEmail','Time, players or round changed','support@','redo'],
+  ['Reminder (day before)','sendReminderEmail','Cron, the day before the round','support@','emoji'],
+  ['Free cancel window closing','sendCancellationWarningEmail','Cron, before the late-cancel window','support@','redo'],
+  ['Cancelled','sendCancellationEmail','Golfer or staff cancels','support@ or billing@ if money moved','redo'],
+  ['Late-cancel fee charged','sendCancellationFeeChargedEmail','Window closed and the fee was taken','billing@','redo'],
+  ['Check-in is open','sendCheckInAvailableEmail','Morning of the round (check-in-email.ts)','support@','redo'],
+  ['Frost delay','sendFrostDelayEmail','Staff pushes the times','support@','redo'],
+  ['Note from the course','sendCourseNoticeEmail','Staff message to golfers on a day (golfer-messages.ts)','support@','redo'],
+  ['Course stopped taking bookings','sendCourseClosedNotice','Course leaves GreenReserve with bookings ahead','admin@','redo'],
+  ['Receipt link','sendRoundReceiptLinkEmail','Staff sends a receipt from the sheet','billing@','redo'],
+  ['Receipt (paid at check-in)','sendCheckInReceiptEmail','Round paid online or at the counter','billing@','redo'],
+  ['Refund','sendRefundEmail','Course refunds a payment','billing@','redo'],
+  ['Tee time alert','sendTeeTimeAlertEmail','A watched time opens','support@','redo'],
+  ['Alert confirm (new)','planned','Guest sets an alert; confirm link','support@','new'],
+ ]},
+ {g:'Golfers: members',rows:[
+  ['Member invite','sendMemberInviteEmail','Course adds a member','support@','redo'],
+  ['Added as member (has record)','sendMemberLinkedNotification','Course adds an existing golfer','support@','merge'],
+  ['Member log-in link','sendMemberMagicLink','Member asks to log in','noreply@','replace'],
+  ['Dues pay link','sendMembershipPaymentLinkEmail','Course sends dues or a renewal','billing@','redo'],
+  ['Dues receipt','sendMembershipReceiptEmail','Dues paid','billing@','redo'],
+  ['Auto-renew on','sendAutoRenewOnEmail','Member agrees to auto-renew','billing@','redo'],
+  ['Renews soon','sendAutoRenewReminderEmail','Cron, before renewal','billing@','redo'],
+  ['Renewal declined','sendAutoRenewDeclinedEmail','Card declined','billing@','redo'],
+  ['Auto-renew off','sendAutoRenewOffEmail','Member or course turns it off','billing@','redo'],
+  ['Monthly statement','sendStatementEmail','Statement run','billing@','redo'],
+  ['Statement declined','sendStatementDeclinedEmail','Statement charge failed','billing@','redo'],
+  ['Statement paid','sendStatementPaidEmail','Statement paid','billing@','redo'],
+ ]},
+ {g:'Golfers: events and pro shop',rows:[
+  ['Event sign-up (in / paid / waitlist / moved in)','sendEventSignupEmail','Golfer signs up or moves off the waitlist','support@ or billing@','redo'],
+  ['Event pay link','sendEventPayLinkEmail','Course sends an entry fee link','billing@','redo'],
+  ['Event pairings','sendEventPairingsEmail','Course publishes groups','support@','redo'],
+  ['Pro shop pay link','sendShopSalePayLinkEmail','Register sends a pay link','billing@','redo'],
+  ['Pro shop receipt','sendShopReceiptEmail','Sale paid','billing@','redo'],
+ ]},
+ {g:'Course staff',rows:[
+  ['New online booking','sendOperatorBookingNotification','Golfer books (if the course wants it)','admin@','redo'],
+  ['Staff invite','sendStaffWelcomeEmail','Owner adds someone (team-welcome.ts)','admin@','redo'],
+  ['Staff set-new-password','sendStaffResetLinkEmail','Owner resets a staff password','noreply@','redo'],
+  ['Password reset','sendOperatorPasswordResetEmail','Staff asks to reset','noreply@','redo'],
+  ['Confirm your email','sendOperatorVerifyEmail','New course account','noreply@','redo'],
+  ['Sign-in code','sendTwoFactorCodeEmail','Staff second factor by email','noreply@','redo'],
+  ['Password changed','sendPasswordChangedNotification','Any staff password change','noreply@','redo'],
+  ['Golfer password reset (old)','sendGolferPasswordResetEmail','Golfer accounts are retired','noreply@','remove'],
+  ['New support message','sendMessageNotificationEmail','GreenReserve replies in Course support','admin@','redo'],
+  ['Announcement','sendAnnouncementEmail','Cam posts an announcement','admin@','redo'],
+  ['Monthly review','sendMonthlyReviewEmail','Cron, first of the month','admin@','redo'],
+  ['Low stock','sendLowStockEmail','Item drops below reorder point','admin@','redo'],
+  ['Signed agreements','sendSignedAgreementsEmail','Course signs at onboarding','admin@','redo'],
+  ['Agreement changed','sendAgreementBumpNoticeEmail','New agreement version','admin@','redo'],
+ ]},
+ {g:'Onboarding (courses that asked)',rows:[
+  ['We got your question','sendInquiryConfirmation','Course sends the contact form','admin@','redo'],
+  ['Reply to a question','sendInquiryReply','Cam replies from Inquiries','admin@','plain'],
+  ['Page already exists','sendInquiryAlreadyBuilt','Inquiry for a course already on GreenReserve','admin@','redo'],
+  ['Inquiry sign-in code','sendInquirySigninCode','Course checks its inquiry','noreply@','redo'],
+  ['Not a fit right now','sendInquiryDeclinedEmail','Cam declines','admin@','plain'],
+  ['Pick a call time','sendCallInviteEmail','Cam invites to a call','admin@','plain'],
+  ['Call booked','sendCallScheduledEmail','Cal.com booking lands','admin@','redo'],
+  ['Call tomorrow','sendCallReminderEmail','Cron, day before the call','admin@','redo'],
+  ['Call recap','sendCallRecapEmail','After the call','admin@','plain'],
+  ['Recap plus setup sheet','sendCallFollowupEmail','After the call, with the sheet','admin@','merge'],
+  ['Setup sheet request','sendDetailsRequestEmail','Cam asks for course details','admin@','redo'],
+  ['Setup sheet received','sendDetailsSheetConfirmationEmail','Course submits the sheet','admin@','redo'],
+  ['Set up your dashboard','sendDashboardSetupEmail','Course account created','admin@','redo'],
+  ['Booking page ready to look at','sendPageReadyInDashboardEmail','Cam finishes the page','admin@','merge'],
+  ['Preview of your page (unused)','sendPreviewEmail','No caller left','admin@','remove'],
+  ["You're live","sendGoLiveSimpleEmail",'Course goes live','admin@','merge'],
+  ["You're live: how to run it",'sendCourseLiveOrientationEmail','Course goes live','admin@','redo'],
+  ['Still waiting to go live','sendOnboardingChaseEmail','Cron, stalled onboarding','admin@','redo'],
+ ]},
+ {g:'To Cam (admin and owner)',rows:[
+  ['New inquiry','sendInquiryNotification','Contact form','admin@','redo'],
+  ['Locked out course','sendLockedOutOperatorAlert','Course confirmed email but has no login','admin@','redo'],
+  ['Setup sheet ready','sendDetailsSubmittedNotification','Course submits the sheet','admin@','redo'],
+  ['Course approved','sendCourseApprovedNotification','Approval step','admin@','redo'],
+  ['Agreement notice summary','sendAgreementBumpAdminSummaryEmail','After an agreement notice run','admin@','redo'],
+  ['Urgent','sendAdminUrgentAlert','Security checker finds something urgent','admin@','redo'],
+  ['Morning digest','sendAdminDigest','Cron, 7 AM','admin@','redo'],
+  ['Admin code','sendAdminTwoFactorCode','Admin second factor','noreply@','redo'],
+  ['Admin password reset','sendAdminPasswordResetEmail','Admin asks to reset','noreply@','redo'],
+  ['Admin password changed','sendAdminPasswordChangedNotification','Admin password change','noreply@','redo'],
+  ['Set admin password (unused)','sendAdminSetPasswordEmail','No caller left','noreply@','remove'],
+  ['Approve a new device','sendOwnerDeviceApproval','Owner signs in on a new device','noreply@','redo'],
+  ['Owner sign-in','sendOwnerSignInAlert','Every owner sign-in','noreply@','redo'],
+  ['Owner password changed','sendOwnerPasswordChanged','Owner password change','noreply@','redo'],
+  ['Passkey added or removed','sendOwnerPasskeyChanged','Owner passkey change','noreply@','redo'],
+ ]},
+ {g:'Outreach to new courses (Outreach lane, not built)',rows:[
+  ['Outreach email 1','planned','Cam sends from the course page in Inquiries','admin@ (Gmail)','new'],
+  ['Outreach email 2','planned','Follow-up when due','admin@ (Gmail)','new'],
+  ['Outreach email 3','planned','Last follow-up','admin@ (Gmail)','new'],
+ ]},
+];
+const STATUS = {
+  redo:['ok','Moves to the new layout'], emoji:['bad','Has emojis; moves to the new layout'], merge:['warn','Merge with a similar email'],
+  remove:['bad','Remove (no caller or retired)'], replace:['warn','Replaced by the 6-digit log-in code'], plain:['ok','Plain personal style'], new:['warn','New']
+};
+
+
+
+const GR_LOGO='data:image/png;base64,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';
+const C={name:'Maple Run Golf Course',short:'Maple Run',addr:'412 Orchard Lane, Millbrook, NY 12545',phone:'(555) 010-2000',email:'proshop@maplerun.example.com',site:'greenreserve.app/courses/maple-run'};
+const ACC={green:{c:'#24563A',ink:'#FFFFFF'},black:{c:'#1B1D1B',ink:'#FFFFFF'},blue:{c:'#2A5784',ink:'#FFFFFF'},yellow:{c:'#E3B640',ink:'#1B1D1B'}};
+const S={screen:'emails',opt:'C',mail:'confirm',width:'wide',accent:'green',txt:'rec'};
+try{const s=JSON.parse(localStorage.getItem('gr-mail-mock')||'{}');Object.assign(S,s)}catch(e){}
+S.opt='C';S.txt='rec';
+function save(){try{localStorage.setItem('gr-mail-mock',JSON.stringify(S))}catch(e){}}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ---------- Email content: the same facts in every option ---------- */
+const POLICY='Cancel at least 24 hours before your tee time at no charge. Cancel within 24 hours or don’t show, and a $10.00 fee is charged to your card.';
+const MAILS=[
+ {id:'confirm',tab:'Booking confirmation',kind:'golfer',subject:'Booked: Sat, Nov 21 at 11:40 AM – Maple Run Golf Course',pre:'4 players, 18 holes, riding. Nothing charged yet.',
+  label:'Booking confirmation',head:'You’re booked.',lede:'See you Saturday. Show this email or give your name at the pro shop.',
+  ticket:[['Date','Sat, Nov 21'],['Tee time','11:40 AM'],['Players','4'],['Holes','18'],['Cart','Riding']],ref:'MR-48213',
+  money:[['Green fees','4 × $52.00','$208.00'],['Cart','4 × $11.00','$44.00'],['Range balls','2 small × $6.00','$12.00'],['GreenReserve service fee','4 × $1.50','$6.00']],total:['Due at the course','$270.00'],moneyNote:'Nothing has been charged. A card is saved for the cancellation policy only.',
+  policy:true,button:'View or change booking',links:['Add to calendar','Directions']},
+ {id:'reminder',tab:'Reminder',kind:'golfer',subject:'Tomorrow: 11:40 AM at Maple Run Golf Course',pre:'4 players, 18 holes. Free cancellation ends at 11:40 AM today.',
+  label:'Reminder',head:'See you tomorrow.',lede:'Your round is tomorrow. Plan to check in 15 minutes before your tee time.',
+  ticket:[['Date','Sat, Nov 21'],['Tee time','11:40 AM'],['Players','4'],['Holes','18'],['Cart','Riding']],ref:'MR-48213',
+  money:null,total:['Due at the course','$270.00'],moneyNote:null,
+  policy:true,policyLead:'Free cancellation ends today at 11:40 AM.',button:'View or change booking',links:['Directions','Today’s course conditions']},
+ {id:'receipt',tab:'Receipt',kind:'golfer',subject:'Receipt: $270.00 – Maple Run Golf Course',pre:'Paid with Visa ending 4242 on Nov 21.',
+  label:'Receipt',head:'Paid. Thank you.',lede:'Here’s your receipt for Saturday’s round.',
+  ticket:[['Date','Sat, Nov 21'],['Tee time','11:40 AM'],['Players','4'],['Holes','18'],['Paid','Visa ••4242']],ref:'MR-48213',
+  money:[['Green fees','4 × $52.00','$208.00'],['Cart','4 × $11.00','$44.00'],['Range balls','2 small × $6.00','$12.00'],['GreenReserve service fee','4 × $1.50','$6.00']],total:['Paid','$270.00'],paid:true,moneyNote:'Paid with Visa ending 4242 on Nov 21 at 11:22 AM.',
+  policy:false,button:'View receipt',links:['Book your next round']},
+ {id:'thanks',tab:'Thanks for playing',kind:'golfer',subject:'Thanks for playing Maple Run Golf Course',pre:'Your receipt and round details are inside.',
+  label:'After your round',head:'Thanks for playing.',lede:'We hope you enjoyed Saturday’s round. Your receipt is ready if you need it.',
+  ticket:[['Date','Sat, Nov 21'],['Tee time','11:40 AM'],['Players','4'],['Holes','18'],['Paid','$270.00']],ref:'MR-48213',
+  money:null,total:null,policy:false,button:'View receipt',links:['Book your next round'],stopLink:'Stop after-round emails from Maple Run'},
+ {id:'alert',tab:'Tee time alert',kind:'golfer',subject:'A tee time opened: Sat, Nov 21 at 2:40 PM',pre:'Room for 4. First come, first served.',
+  label:'Tee time alert',head:'A time just opened.',lede:'A tee time that matches your alert is open now. It isn’t held for you, so book soon.',
+  ticket:[['Date','Sat, Nov 21'],['Tee time','2:40 PM'],['Spots','4'],['Holes','18'],['From','$52.00']],ref:null,
+  money:null,total:null,policy:false,button:'Book this time',links:['See other times that day'],stopLink:'Stop this alert'},
+ {id:'code',tab:'Log-in code',kind:'golfer',subject:'Your Maple Run Golf Course log-in code: 482 915',pre:'It works for 10 minutes.',
+  label:'Log in',head:'482 915',codeMail:true,lede:'Enter this code to log in to Maple Run Golf Course. It works for 10 minutes. If you didn’t ask for it, you can ignore this email.',
+  ticket:null,ref:null,money:null,total:null,policy:false,button:null,links:[]},
+ {id:'invite',tab:'Member invite',kind:'golfer',subject:'Maple Run Golf Course set you up as a Member',pre:'Log in with this email to get your rates.',
+  label:'Membership',head:'You’re set up as a Member.',lede:'Maple Run Golf Course set you up as a Member. Log in on the course page with this email to get your rates.',
+  ticket:[['Membership','Full Member'],['Rate','$6 off every round'],['Books','9 days out'],['Guest passes','6 a year'],['Renews','Mar 31, 2027']],ref:null,
+  money:null,total:null,policy:false,button:'Log in to Maple Run',links:[]},
+ {id:'staff',tab:'Staff invite (course)',kind:'staff',subject:'You’ve been added to Maple Run Golf Course on GreenReserve',pre:'Set your password to get started.',
+  label:'Your team',head:'You’ve been added to the team.',lede:'Dana Ortiz added you to Maple Run Golf Course as Pro shop staff. Set your password to sign in to the dashboard.',
+  ticket:[['Course','Maple Run Golf Course'],['Role','Pro shop staff'],['Added by','Dana Ortiz'],['Link expires','Nov 26']],ref:null,
+  money:null,total:null,policy:false,button:'Set your password',links:[]},
+ {id:'paylink',tab:'Pay link',kind:'golfer',subject:'Pay for your 11:40 AM tee time \u2013 Maple Run Golf Course',pre:'$270.00. Apple Pay, Google Pay or card.',
+  label:'Check in and pay',head:'Check in and pay.',lede:'Pay for your round now so you can head straight to the first tee.',
+  ticket:[['Date','Today'],['Tee time','11:40 AM'],['Players','4'],['Holes','18'],['Cart','Riding']],ref:'MR-48213',
+  money:null,total:['Total','$270.00'],moneyNote:null,policy:false,button:'Pay $270.00',links:['See the breakdown']},
+ {id:'review',tab:'Monthly review (course)',kind:'staff',subject:'Maple Run: your October review',pre:'Open it in your dashboard.',
+  label:'Monthly review',head:'Your October review.',lede:'Here is how October went at Maple Run. Worth a look: weekday afternoons ran at 38% full, 14 no-shows (9 on weekends), and range buckets sold with 1 in 5 bookings.',
+  ticket:[['Rounds','2,184'],['Collected','$96,420'],['Online','61%'],['No-shows','14'],['Busiest','Sat 8\u201310 AM']],ref:null,
+  money:null,total:null,policy:false,button:'Open the full review',links:[]},
+ {id:'outreach',tab:'Outreach email 1',kind:'outreach',subject:'A free tee sheet for Maple Run',pre:'',plain:true},
+];
+
+/* ---------- Shared email parts ---------- */
+const F={serif:"'EB Garamond',Georgia,'Times New Roman',serif",sans:"-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif",ink:'#151A16',body:'#3F463F',muted:'#6B726A',line:'#E2E5DD',paper:'#FFFFFF',soft:'#F5F6F2',ok:'#2F6B45'};
+function brand(m){return m.kind==='golfer'?ACC[S.accent]:{c:'#1F4D34',ink:'#FFFFFF'}}
+function fromName(m){return m.kind==='golfer'?C.name:m.kind==='staff'?'GreenReserve':'Cam Sanchez'}
+function fromAddr(m){return m.kind==='outreach'?'admin@greenreserve.app':'noreply@greenreserve.app'}
+function btn(m,txt,full){const a=brand(m);return `<a style="display:${full?'block':'inline-block'};text-align:center;background:${a.c};color:${a.ink};text-decoration:none;font:600 15px/1 ${F.sans};padding:14px 22px;border-radius:7px">${esc(txt)}&nbsp;→</a>`}
+function links(m){return m.links&&m.links.length?`<p style="margin:12px 0 0;font:14px/1.5 ${F.sans};color:${F.body}">${m.links.map(l=>`<a style="color:${F.ink};text-decoration:underline">${esc(l)}</a>`).join(' &nbsp;·&nbsp; ')}</p>`:''}
+function questions(m){return m.kind==='golfer'?'':false?`<p style="margin:0;font:14px/1.55 ${F.sans};color:${F.body}">Questions? Email ${C.email} or call ${C.phone}. Replies to this email aren’t read.</p>`:m.kind==='staff'?`<p style="margin:0;font:14px/1.55 ${F.sans};color:${F.body}">Questions? Ask in Course support in your dashboard. Replies to this email aren’t read.</p>`:''}
+function footer(m){
+  const stop=m.stopLink?`<br><a style="color:${F.muted};text-decoration:underline">${esc(m.stopLink)}</a>`:'';
+  if(m.kind==='golfer')return `<p style="margin:0;font:12px/1.6 ${F.sans};color:${F.muted}"><span style="color:${F.ink}">${C.name}</span><br>${C.addr}<br>${C.phone}${stop}<br><span style="display:inline-flex;align-items:center;gap:6px;color:${F.muted}">Powered by <img src="${GR_LOGO}" alt="GreenReserve" width="86" height="16" style="display:inline-block;height:16px;width:86px;border:0;vertical-align:middle"></span></p>`;
+  return `<p style="margin:0;font:12px/1.6 ${F.sans};color:${F.muted}">greenreserve.app</p>`;
+}
+function policyText(m){return (m.policyLead?`<b style="color:${F.ink}">${esc(m.policyLead)}</b> `:'')+esc(POLICY)}
+function moneyRows(m,cellPad){
+  if(!m.money&&!m.total)return '';
+  const rows=(m.money||[]).map(r=>`<tr><td style="padding:${cellPad};font:14px/1.4 ${F.sans};color:${F.body}">${esc(r[0])}<br><span style="font-size:12px;color:${F.muted}">${esc(r[1])}</span></td><td style="padding:${cellPad};font:14px/1.4 ${F.sans};color:${F.ink};text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums">${esc(r[2])}</td></tr>`).join('');
+  const t=m.total?`<tr><td style="padding:${cellPad};border-top:1px solid ${F.line};font:600 15px/1.4 ${F.sans};color:${F.ink}">${esc(m.total[0])}</td><td style="padding:${cellPad};border-top:1px solid ${F.line};font:600 15px/1.4 ${F.sans};color:${m.paid?F.ok:F.ink};text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums">${esc(m.total[1])}</td></tr>`:'';
+  const note=m.moneyNote?`<p style="margin:8px 0 0;font:13px/1.5 ${F.sans};color:${F.muted}">${esc(m.moneyNote)}</p>`:'';
+  return `<table role="presentation" style="width:100%;border-collapse:collapse">${rows}${t}</table>${note}`;
+}
+
+/* ---------- Direct golfer emails (Cam 2026-11-19): one line, the essentials, one button, one policy line ---------- */
+const D={
+ confirm:{line:'You’re booked at Maple Run Golf Course.',ess:[['Date','Sat, Nov 21'],['Time','11:40 AM'],['Players','4'],['Holes','18'],['Price','$270.00']],button:'See booking details',small:'Change or cancel booking'},
+ reminder:{line:'Your tee time is tomorrow at 11:40 AM.',ess:[['Date','Sat, Nov 21'],['Time','11:40 AM'],['Players','4'],['Holes','18'],['Price','$270.00']],button:'See booking details',small:'Change or cancel booking'},
+ receipt:{line:'You paid $270.00 at Maple Run Golf Course on Nov 21.',ess:[['Date','Sat, Nov 21'],['Card','Visa ending 4242'],['Paid','$270.00']],button:'View receipt'},
+ thanks:{line:'Thanks for playing Maple Run Golf Course.',ess:[['Round','Sat, Nov 21 at 11:40 AM'],['Paid','$270.00']],button:'View receipt'},
+ alert:{line:'A tee time just opened at Maple Run Golf Course.',ess:[['Date','Sat, Nov 21'],['Time','2:40 PM'],['Room for','4 players'],['Price','$52.00 a player']],button:'Book this time',after:'It isn’t held for you. First come, first served.'},
+ paylink:{line:'Time to check in for your round at Maple Run Golf Course.',ess:[['Date','Sat, Nov 21'],['Time','11:40 AM'],['Players','4'],['Price','$270.00']],button:'Pay $270.00',small:'Change or cancel booking'},
+ review:{line:'Your October review from GreenReserve is ready.',ess:[],button:'Open your review',noQ:true},
+ invite:{line:'You’re a Member at Maple Run Golf Course.',ess:[['Rate','$6 off every round'],['Books','9 days out']],button:'Log in to Maple Run',after:'Log in with this email address to get your rates.'},
+};
+function directBody(m,look){
+  const d=D[m.id];
+  const center=look==='C';
+  const essA=`<div style="display:flex;flex-wrap:wrap;gap:8px 22px;margin:16px 0 22px">${d.ess.map(e=>`<div><div style="font:600 10.5px/1.3 ${F.sans};letter-spacing:.07em;text-transform:uppercase;color:${F.muted}">${esc(e[0])}</div><div style="font:600 18px/1.3 ${F.sans};color:${F.ink};font-variant-numeric:tabular-nums">${esc(e[1])}</div></div>`).join('')}</div>`;
+  const essB=`<table role="presentation" style="width:100%;border-collapse:collapse;margin:16px 0 20px">${d.ess.map(e=>`<tr><td style="border:1px solid ${F.ink};padding:9px 12px;font:600 11px/1.3 ${F.sans};letter-spacing:.06em;text-transform:uppercase;color:${F.muted};width:40%">${esc(e[0])}</td><td style="border:1px solid ${F.ink};padding:9px 12px;font:600 16px/1.3 ${F.sans};color:${F.ink};font-variant-numeric:tabular-nums">${esc(e[1])}</td></tr>`).join('')}</table>`;
+  const essC=!d.ess.length?'<div style="height:20px"></div>':`<table role="presentation" style="width:100%;border-collapse:collapse;margin:18px 0 24px">${d.ess.map((e,i)=>{const money=/^(Price|Paid|Total)/.test(e[0]);return `<tr><td style="padding:10px 0;${i?`border-top:1px solid ${F.line};`:''}font:13px/1.4 ${F.sans};color:${F.muted};vertical-align:baseline">${esc(e[0])}</td><td style="padding:10px 0;${i?`border-top:1px solid ${F.line};`:''}text-align:right;vertical-align:baseline;font:${money?'600 18px':'500 15px'}/1.4 ${F.sans};color:${F.ink};font-variant-numeric:tabular-nums">${esc(e[1])}</td></tr>`}).join('')}</table>`;
+  const head=look==='C'?`<h2 style="margin:6px 0 0;text-align:center;font:600 26px/1.2 ${F.serif};color:${F.ink}">${esc(d.line)}</h2>`
+    :`<h2 style="margin:0;font:600 ${look==='A'?27:25}px/1.2 ${F.serif};color:${F.ink}">${esc(d.line)}</h2>`;
+  const ess=look==='A'?essA:look==='B'?essB:essC;
+  const pol=d.pol?`<p style="margin:10px 0 0;${center?'text-align:center;':''}font:13px/1.5 ${F.sans};color:${F.body}">${esc(d.pol)}</p>`:'';
+  const after=d.after?`<p style="margin:10px 0 0;${center?'text-align:center;':''}font:13px/1.5 ${F.sans};color:${F.muted}">${esc(d.after)}</p>`:'';
+  const stop=m.stopLink?'':'';
+  const small=d.small?`<p style="margin:12px 0 0;${center?'text-align:center;':''}font:14px/1.5 ${F.sans}"><a style="color:${F.body};text-decoration:underline">${esc(d.small)}</a></p>`:'';
+  return `${head}${ess}${btn(m,d.button,true)}${small}${pol}${after}`;
+}
+function directMail(m,look){
+  const a=brand(m);
+  const body=directBody(m,look);
+  if(look==='A')return `<div class="mail" style="max-width:600px;margin:0 auto;background:${F.paper};border:1px solid ${F.line};border-radius:10px;overflow:hidden"><div style="background:${a.c};color:${a.ink};padding:16px 24px"><div style="font:600 21px/1.2 ${F.serif}">${C.name}</div></div>
+   <div style="padding:24px">${body}<div style="margin-top:22px;padding-top:16px;border-top:1px solid ${F.line}">${questions(m)}</div></div>
+   <div style="padding:16px 24px;background:${F.soft};border-top:1px solid ${F.line}">${footer(m)}</div></div>`;
+  if(look==='B')return `<div class="mail" style="max-width:600px;margin:0 auto;background:${F.paper};border:1px solid ${F.line}"><div style="padding:18px 24px 12px;border-bottom:3px solid ${a.c}"><div style="font:600 20px/1.2 ${F.serif};color:${F.ink}">${C.name}</div></div>
+   <div style="padding:20px 24px 24px">${body}<div style="margin-top:20px">${questions(m)}</div></div>
+   <div style="padding:14px 24px;border-top:1px solid ${F.line}">${footer(m)}</div></div>`;
+  return `<div class="mail" style="max-width:560px;margin:0 auto;background:${F.paper};border:1px solid ${F.line};border-radius:10px"><div style="text-align:center;padding:24px 24px 6px">${m.id==='review'?'':`<div style="width:36px;height:3px;background:${a.c};margin:0 auto 12px"></div>`}<div style="font:600 19px/1.2 ${F.serif};color:${F.ink}">${m.kind==='golfer'?C.name:`<img src="${GR_LOGO}" alt="GreenReserve" width="139" height="26" style="display:inline-block;height:26px;width:139px;border:0">`}</div></div>
+   <div style="padding:8px 28px 26px">${body}${D[m.id].noQ?'':`<div style="margin-top:24px;text-align:center">${questions(m)}</div>`}</div>
+   <div style="padding:16px 28px;border-top:1px solid ${F.line};text-align:center">${footer(m)}</div></div>`;
+}
+
+/* ---------- Option A: Ticket ---------- */
+function optA(m){
+  if(D[m.id])return directMail(m,'A');
+  const a=brand(m);
+  const head=`<div style="background:${a.c};color:${a.ink};padding:18px 24px"><div style="font:600 22px/1.2 ${F.serif}">${esc(fromName(m)==='Cam Sanchez'?'GreenReserve':(m.kind==='golfer'?C.name:'GreenReserve'))}</div><div style="font:500 11px/1.4 ${F.sans};letter-spacing:.08em;text-transform:uppercase;opacity:.85;margin-top:4px">${esc(m.label)}</div></div>`;
+  const tk=m.ticket?`<div style="margin:20px 0;border:1px solid ${F.line};border-radius:10px;overflow:hidden">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr))">${m.ticket.map(t=>`<div style="padding:12px 14px;border-right:1px solid ${F.line};border-bottom:1px solid ${F.line}"><div style="font:600 10.5px/1.3 ${F.sans};letter-spacing:.07em;text-transform:uppercase;color:${F.muted}">${esc(t[0])}</div><div style="font:600 16px/1.3 ${F.sans};color:${F.ink};margin-top:3px">${esc(t[1])}</div></div>`).join('')}</div>
+    ${m.ref?`<div style="padding:9px 14px;border-top:1px dashed ${F.line};font:12px/1.4 ${F.sans};color:${F.muted};background:${F.soft}">Booking ${esc(m.ref)} · ${C.name}</div>`:''}</div>`:'';
+  const code=m.codeMail?`<div style="margin:18px 0;padding:18px;border:1px solid ${F.line};border-radius:10px;text-align:center;font:600 34px/1 ${F.sans};letter-spacing:.12em;color:${F.ink};font-variant-numeric:tabular-nums">${esc(m.head)}</div>`:'';
+  const money=(m.money||m.total)?`<div style="margin:0 0 20px">${moneyRows(m,'7px 0')}</div>`:'';
+  const pol=m.policy?`<div style="margin:0 0 20px;padding:14px 16px;border:1px solid ${F.line};border-radius:10px;background:${F.soft}"><div style="font:600 13px/1.3 ${F.sans};color:${F.ink};margin-bottom:6px">Cancellation policy</div><div style="font:14px/1.55 ${F.sans};color:${F.body}">${policyText(m)}</div></div>`:'';
+  return `<div class="mail" style="max-width:600px;margin:0 auto;background:${F.paper};border:1px solid ${F.line};border-radius:10px;overflow:hidden">${head}
+   <div style="padding:24px">
+    <h2 style="margin:0 0 8px;font:600 28px/1.15 ${F.serif};color:${F.ink}">${m.codeMail?'Your log-in code':esc(m.head)}</h2>
+    <p style="margin:0;font:15px/1.55 ${F.sans};color:${F.body}">${esc(m.lede)}</p>
+    ${code}${tk}${money}${pol}
+    ${m.button?`<div style="margin:4px 0 0">${btn(m,m.button,true)}</div>`:''}${links(m)}
+    <div style="margin-top:22px;padding-top:16px;border-top:1px solid ${F.line}">${questions(m)}</div>
+   </div>
+   <div style="padding:16px 24px;background:${F.soft};border-top:1px solid ${F.line}">${footer(m)}</div></div>`;
+}
+
+/* ---------- Option B: Scorecard ---------- */
+function optB(m){
+  if(D[m.id])return directMail(m,'B');
+  const a=brand(m);
+  const head=`<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;padding:20px 24px 14px;border-bottom:3px solid ${a.c}"><div style="font:600 21px/1.2 ${F.serif};color:${F.ink}">${m.kind==='golfer'?C.name:`<img src="${GR_LOGO}" alt="GreenReserve" width="139" height="26" style="display:inline-block;height:26px;width:139px;border:0">`}</div><div style="font:600 11px/1.4 ${F.sans};letter-spacing:.08em;text-transform:uppercase;color:${F.muted}">${esc(m.label)}${m.ref?' · '+esc(m.ref):''}</div></div>`;
+  const tk=m.ticket?`<table role="presentation" style="width:100%;border-collapse:collapse;margin:18px 0;table-layout:fixed"><tr>${m.ticket.map(t=>`<th style="border:1px solid ${F.ink};background:${F.ink};color:#FFFFFF;font:600 10.5px/1.2 ${F.sans};letter-spacing:.06em;text-transform:uppercase;padding:7px 4px;text-align:center">${esc(t[0])}</th>`).join('')}</tr><tr>${m.ticket.map(t=>`<td style="border:1px solid ${F.ink};font:600 15px/1.3 ${F.sans};color:${F.ink};padding:10px 4px;text-align:center;overflow-wrap:anywhere">${esc(t[1])}</td>`).join('')}</tr></table>`:'';
+  const code=m.codeMail?`<table role="presentation" style="border-collapse:collapse;margin:18px auto"><tr>${m.head.replace(' ','').split('').map(d=>`<td style="border:1px solid ${F.ink};width:40px;height:52px;text-align:center;font:600 26px/1 ${F.sans};color:${F.ink}">${d}</td>`).join('')}</tr></table>`:'';
+  const money=(m.money||m.total)?`<table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 18px">${(m.money||[]).map(r=>`<tr><td style="border-bottom:1px solid ${F.line};padding:8px 0;font:14px/1.4 ${F.sans};color:${F.body}">${esc(r[0])} <span style="color:${F.muted}">(${esc(r[1])})</span></td><td style="border-bottom:1px solid ${F.line};padding:8px 0;text-align:right;font:14px/1.4 ${F.sans};color:${F.ink};font-variant-numeric:tabular-nums">${esc(r[2])}</td></tr>`).join('')}${m.total?`<tr><td style="padding:10px 0;font:600 15px/1.4 ${F.sans};color:${F.ink}">${esc(m.total[0])}</td><td style="padding:10px 0;text-align:right;font:600 18px/1.4 ${F.sans};color:${m.paid?F.ok:F.ink};font-variant-numeric:tabular-nums">${esc(m.total[1])}</td></tr>`:''}</table>${m.moneyNote?`<p style="margin:-8px 0 18px;font:13px/1.5 ${F.sans};color:${F.muted}">${esc(m.moneyNote)}</p>`:''}`:'';
+  const pol=m.policy?`<table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 18px"><tr><td style="border:1px solid ${F.ink};padding:12px 14px"><div style="font:600 11px/1.3 ${F.sans};letter-spacing:.07em;text-transform:uppercase;color:${F.ink};margin-bottom:6px">Cancellation policy</div><div style="font:14px/1.55 ${F.sans};color:${F.body}">${policyText(m)}</div></td></tr></table>`:'';
+  return `<div class="mail" style="max-width:600px;margin:0 auto;background:${F.paper};border:1px solid ${F.line}">${head}
+   <div style="padding:20px 24px 24px">
+    <h2 style="margin:0 0 6px;font:600 26px/1.15 ${F.serif};color:${F.ink}">${m.codeMail?'Your log-in code':esc(m.head)}</h2>
+    <p style="margin:0;font:15px/1.55 ${F.sans};color:${F.body}">${esc(m.lede)}</p>
+    ${code}${tk}${money}${pol}
+    ${m.button?btn(m,m.button,false):''}${links(m)}
+    <div style="margin-top:20px">${questions(m)}</div>
+   </div>
+   <div style="padding:14px 24px;border-top:1px solid ${F.line}">${footer(m)}</div></div>`;
+}
+
+/* ---------- Option C: Letter ---------- */
+function optC(m){
+  if(D[m.id])return directMail(m,'C');
+  const a=brand(m);
+  const when=m.ticket&&m.ticket[0][0]==='Date'?`${m.ticket[0][1]} · ${m.ticket[1][1]}`:null;
+  const head=`<div style="text-align:center;padding:26px 24px 10px">${m.id==='review'?'':`<div style="width:36px;height:3px;background:${a.c};margin:0 auto 12px"></div>`}<div style="font:600 20px/1.2 ${F.serif};color:${F.ink}">${m.kind==='golfer'?C.name:`<img src="${GR_LOGO}" alt="GreenReserve" width="139" height="26" style="display:inline-block;height:26px;width:139px;border:0">`}</div></div>`;
+  const big=when&&!m.codeMail?`<div style="text-align:center;margin:18px 0 4px;font:600 30px/1.15 ${F.serif};color:${F.ink}">${esc(when)}</div><div style="text-align:center;font:14px/1.4 ${F.sans};color:${F.muted}">${m.ticket.slice(2).map(t=>esc(t[1]+' '+t[0].toLowerCase())).join(' · ')}${m.ref?' · '+esc(m.ref):''}</div>`:'';
+  const dl=m.ticket&&!when?`<table role="presentation" style="width:100%;border-collapse:collapse;margin:18px 0">${m.ticket.map(t=>`<tr><td style="padding:7px 0;border-bottom:1px solid ${F.line};font:14px/1.4 ${F.sans};color:${F.muted};width:42%">${esc(t[0])}</td><td style="padding:7px 0;border-bottom:1px solid ${F.line};font:600 14px/1.4 ${F.sans};color:${F.ink}">${esc(t[1])}</td></tr>`).join('')}</table>`:'';
+  const code=m.codeMail?`<div style="text-align:center;margin:18px 0;font:600 40px/1 ${F.serif};letter-spacing:.08em;color:${F.ink}">${esc(m.head)}</div>`:'';
+  const money=(m.money||m.total)?`<div style="margin:22px 0 0">${moneyRows(m,'6px 0')}</div>`:'';
+  const pol=m.policy?`<div style="margin:22px 0 0"><div style="font:600 17px/1.3 ${F.serif};color:${F.ink};margin-bottom:4px">Cancellation policy</div><p style="margin:0;font:14px/1.6 ${F.sans};color:${F.body}">${policyText(m)}</p></div>`:'';
+  return `<div class="mail" style="max-width:560px;margin:0 auto;background:${F.paper};border:1px solid ${F.line};border-radius:10px">${head}
+   <div style="padding:6px 28px 26px">
+    <p style="margin:0;text-align:center;font:600 11px/1.4 ${F.sans};letter-spacing:.08em;text-transform:uppercase;color:${F.muted}">${esc(m.label)}</p>
+    ${m.codeMail?'':`<h2 style="margin:6px 0 0;text-align:center;font:500 24px/1.2 ${F.serif};color:${F.ink}">${esc(m.head)}</h2>`}
+    ${big}${code}
+    <p style="margin:16px 0 0;font:15px/1.6 ${F.sans};color:${F.body}">${esc(m.lede)}</p>
+    ${dl}${money}${pol}
+    ${m.button?`<div style="text-align:center;margin:24px 0 0">${btn(m,m.button,false)}</div>`:''}
+    ${m.links&&m.links.length?`<div style="text-align:center">${links(m)}</div>`:''}
+    <div style="margin-top:24px;text-align:center">${questions(m)}</div>
+   </div>
+   <div style="padding:16px 28px;border-top:1px solid ${F.line};text-align:center">${footer(m)}</div></div>`;
+}
+
+/* ---------- Outreach: plain personal email in every option ---------- */
+function outreach(){
+  const p=t=>`<p style="margin:0 0 14px;font:15px/1.6 ${F.sans};color:#1F2420">${t}</p>`;
+  return `<div class="mail" style="max-width:600px;margin:0 auto;background:#FFFFFF;border:1px solid ${F.line};border-radius:4px;padding:22px 24px">
+   ${p('Hi Sam,')}${p('I’m Cam, the founder of GreenReserve. We built a tee sheet that’s free for courses: online booking, payments, a pro shop register and member log-in, with no setup fee, no monthly fee and no commission on your green fees.')}
+   ${p('Golfers pay $1.50 per player on each online booking, added to your price.')}
+   ${p('Would a 20-minute call next week be useful? You can pick a time here: greenreserve.app/demo')}
+   ${p('Cam Sanchez<br>GreenReserve · admin@greenreserve.app')}
+   <div style="margin:20px 0 0;text-align:center"><img src="${GR_LOGO}" alt="GreenReserve" width="107" height="20" style="display:inline-block;height:20px;width:107px;border:0"><p style="margin:6px 0 0;font:12px/1.5 ${F.sans};color:${F.muted}">[postal address] · Reply “no thanks” to stop.</p></div></div>`;
+}
+
+/* ---------- Notes beside each email ---------- */
+function notesFor(m){
+  const n=[];
+  n.push(['Sender',`<b style="display:inline;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink)">${esc(fromName(m))}</b> &lt;${fromAddr(m)}&gt;. ${m.kind==='outreach'?'Replies come to Cam.':'No replies: the address doesn’t take mail, and the footer gives the course’s phone.'}`]);
+  if(false)n.push(['Cancellation policy line','describePolicy() output, proposed wording. It stays as one line under the button because a fee charged to a saved card must be stated in the confirmation. The real text always comes from describePolicy(), so the email and the booking page can never disagree.']);
+  if(D[m.id])n.push(['Body','One line saying what happened, the essentials, one big button. Everything else lives on the page the button opens.']);
+  if(m.id==='receipt')n.push(['View receipt','Opens the receipt page (/receipt/…), on the course’s look, where the golfer can see or print it.']);
+  if(m.id==='thanks')n.push(['Legal','About their round, so it’s a transactional email. It keeps a stop link for after-round emails.']);
+  if(m.id==='alert')n.push(['Stop link','Every alert email can stop that alert in one tap (required for alerts).']);
+  if(m.kind==='outreach')n.push(['Plain on purpose','Outreach stays a plain personal email in every option (your earlier answer): no layout, the logo, a postal address and a reply-to-stop line, as CAN-SPAM requires.']);
+  if(m.kind==='staff')n.push(['Course and admin email','Same option, in GreenReserve green instead of the course colour.']);
+  return n.map(x=>`<div class="note"><b>${x[0]}</b>${x[1]}</div>`).join('');
+}
+
+/* ---------- Texts ---------- */
+const TX=[
+ ['Booking confirmation','After booking, if they agreed to texts',`${C.name} booking confirmation: 4 players, 9 holes at 11:40 AM Sat Nov 21. Details: greenreserve.app/b/K7Q2X`],
+ ['Reminder','Day before',`${C.name} reminder: 4 players, 18 holes tomorrow at 11:40 AM. Details: greenreserve.app/b/K7Q2X`],
+ ['Pay link (round)','Staff texts a pay link',`${C.name} pay link: $270.00 for your 11:40 AM tee time. Pay: greenreserve.app/p/K7Q2X`],
+ ['Receipt (round)','Staff texts a receipt',`${C.name} receipt: $270.00 paid. View: greenreserve.app/r/M4T8Z`],
+ ['Event pay link','Entry fee link',`${C.name} event: Turkey Shoot Scramble entry, $45.00. Pay: greenreserve.app/p/E2W9L`],
+ ['Pro shop pay link','Register sends a pay link',`${C.name} pro shop: $38.50 for your items. Pay: greenreserve.app/p/S9F3Q`],
+ ['Pro shop receipt','Register sends a receipt',`${C.name} pro shop receipt: $38.50 paid. View: greenreserve.app/r/S9F3Q`],
+ ['Note from the course','Staff message to the day’s golfers',`${C.name} update: frost delay. First tee times move back 30 min.`],
+ ['Tee time alert','A watched time opens (alert-text consent only)',`${C.name} alert: a tee time opened Sat Nov 21 at 2:40 PM, room for 4. Book: greenreserve.app/a/H6N2`],
+ ['Texts confirmed','Golfer agrees to texts',`${C.name}: You're set for booking texts, up to 4 per booking. Msg & data rates may apply. Reply HELP for help, STOP to opt out.`,'code'],
+ ['HELP reply','Golfer texts HELP',`${C.name} booking texts. Questions? Call ${C.phone}. Msg & data rates may apply. Reply STOP to opt out.`,'code'],
+ ['Staff sign-in code','Staff second factor',`GreenReserve code: 482915. It expires in 10 minutes. Don't share it.`,'code'],
+];
+const GSM=/^[A-Za-z0-9 \n\r@£$¥èéùìòÇØøÅå_ÆæßÉ!"#%&'()*+,\-./:;<=>?¡ÄÖÑÜ§¿äöñüà^{}\\\[~\]|€]*$/;
+function seg(t){const g=GSM.test(t),n=t.length,one=g?160:70,multi=g?153:67;return {n,g,s:n<=one?1:Math.ceil(n/multi)}}
+function txText(t){
+  let s=t[2];
+  if(t[3]==='code')return s;
+  if(S.txt==='every'&&t[3]!=='optin')s+=' Powered by GreenReserve.';
+  return s+' Reply STOP to opt out.';
+}
+
+/* ---------- Screens ---------- */
+const SCREENS=[['emails','Emails'],['texts','Texts'],['inventory','Inventory'],['questions','Questions']];
+function tabs(){document.getElementById('tabs').innerHTML=SCREENS.map(s=>`<button type="button" data-screen="${s[0]}" aria-pressed="${S.screen===s[0]}">${s[1]}</button>`).join('')}
+function seg3(name,cur,opts){return `<div class="seg" role="group">${opts.map(o=>`<button type="button" data-${name}="${o[0]}" aria-pressed="${cur===o[0]}">${o[1]}</button>`).join('')}</div>`}
+function emailsScreen(){
+  const m=MAILS.find(x=>x.id===S.mail)||MAILS[0];
+  const body=m.plain?outreach():optC(m);
+  return `<div class="controls">
+    <div class="ctl"><span>Email</span><select id="mailsel" aria-label="Email">${MAILS.map(x=>`<option value="${x.id}" ${x.id===m.id?'selected':''}>${esc(x.tab)}</option>`).join('')}</select></div>
+    <div class="ctl"><span>Width</span>${seg3('width',S.width,[['wide','Desktop'],['narrow','Phone']])}</div>
+    <div class="ctl"><span>Course colour</span>${seg3('accent',S.accent,[['green','Green'],['black','Black'],['blue','Blue'],['yellow','Yellow']])}</div>
+  </div>
+  <div class="stage">
+    <div class="frame ${S.width==='narrow'?'narrow':''}">
+      <div class="envelope"><div><span class="k">From</span><b>${esc(fromName(m))}</b>&lt;${fromAddr(m)}&gt;</div><div><span class="k">Subject</span><b>${esc(m.subject)}</b></div>${m.pre?`<div><span class="k">Preview</span>${esc(m.pre)}</div>`:''}</div>
+      ${body}
+    </div>
+    <div class="notes">${notesFor(m)}<div class="note"><b>Cancellation policy</b>Not in the email. It lives on the booking details page the button opens; golfers agreed to it when they booked.</div><div class="note"><b>Footer</b>Course name, address and phone, then “Powered by GreenReserve”. Alert and after-round emails keep their stop link; outreach keeps a postal address and a reply-to-stop line, as the law requires.</div></div>
+  </div>`;
+}
+function textsScreen(){
+  const rows=TX.map(t=>{const s=txText(t),k=seg(s);return `<div class="sms"><h3>${esc(t[0])}</h3><div class="bubble">${esc(s)}</div><div class="meta"><span>${esc(t[1])}</span><span>${k.n} characters</span><span class="${k.s>1?'two':''}">${k.s===1?'1 text':k.s+' texts'}</span></div></div>`}).join('');
+  const tot=TX.reduce((a,t)=>a+seg(txText(t)).s,0);
+  return `<div class="controls"><div class="ctl"><span>Total</span><b style="font-variant-numeric:tabular-nums">${tot} text segments for these ${TX.length}</b></div></div>
+  <p class="sub">Every course text starts with the course’s full name. Whether the first text and the HELP reply also say “Powered by GreenReserve” is decided later. Links are short paths on our own domain (greenreserve.app/b/…, /p/…, /r/…, /a/…). A text over 160 characters is sent and billed as two.</p>
+  <div class="texts">${rows}</div>`;
+}
+function inventoryScreen(){
+  const total=INV.reduce((a,g)=>a+g.rows.length,0),built=INV.reduce((a,g)=>a+g.rows.filter(r=>r[1]!=='planned').length,0);
+  const tally=k=>INV.reduce((a,g)=>a+g.rows.filter(r=>r[4]===k).length,0);
+  return `<div class="counts"><span><b>${built}</b> emails built</span><span><b>${total-built}</b> planned</span><span><b>${TX.length}</b> texts</span><span><b>${tally('remove')}</b> to remove</span><span><b>${tally('merge')}</b> to merge</span><span><b>${tally('emoji')}</b> with emojis</span></div>
+  <div class="groups">${INV.map(g=>`<section class="card"><h2>${g.g} <span style="font-family:var(--sans);font-size:13px;color:var(--muted);font-weight:500">${g.rows.length}</span></h2>
+   <div class="scroller"><table class="tbl" style="min-width:720px"><thead><tr><th>Email</th><th>Trigger</th><th>Sent from</th><th>Code</th><th>New system</th></tr></thead><tbody>
+   ${g.rows.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[2])}</td><td>${/^Golfers/.test(g.g)?'noreply@ as the course':esc(r[3])}</td><td><code>${esc(r[1])}</code></td><td><span class="dot ${STATUS[r[4]][0]}">${STATUS[r[4]][1]}</span></td></tr>`).join('')}
+   </tbody></table></div></section>`).join('')}</div>`;
+}
+function questionsScreen(){
+  const q=[
+  ];
+  if(!q.length)return '<div class="qs"><div class="card q"><h3>No open questions</h3><p>Everything on this page reflects your decisions so far.</p></div></div>';
+  return `<div class="qs">${q.map(x=>`<div class="card q"><h3>${x[0]}</h3><p>${x[1]}</p></div>`).join('')}</div>`;
+}
+function draw(){
+  tabs();
+  const el=document.getElementById('main');
+  el.innerHTML=S.screen==='emails'?emailsScreen():S.screen==='texts'?textsScreen():S.screen==='inventory'?inventoryScreen():questionsScreen();
+  save();
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  for(const k of ['screen','opt','width','accent','txt']){if(b.dataset[k]){S[k]=b.dataset[k];draw();return}}
+});
+document.addEventListener('change',e=>{if(e.target.id==='mailsel'){S.mail=e.target.value;draw();document.getElementById('mailsel').focus()}});
+draw();
+</script>
