@@ -58,7 +58,7 @@ async function cleanup() {
   const other = await mk('other');
   await sched(a.id); await sched(other.id);
   const today = todayIn('UTC');
-  await regenerateUpcoming(a.id); // what the nightly run made: 8 days
+  await regenerateUpcoming(a.id); // what the nightly run made: 9 days (horizon 8 plus its extra day)
   const before = await windowHorizonDays(a.id);
   ok('before: an 8-day horizon plus the nightly run\'s extra day (9), nothing past day 8', before === 9 && (await count(a.id, addDaysStr(today, 8))) > 0 && (await count(a.id, addDaysStr(today, 9))) === 0, { before });
   const otherBefore = await count(other.id);

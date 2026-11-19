@@ -1,5 +1,5 @@
 // Tee times for a longer booking window (Build 2026-11-19, after #510). The nightly run (cron generate-tee-times,
-// 03:00 UTC) makes every course's widest window plus one day, but a window made longer during the day stayed empty
+// 03:00 UTC) makes every course's widest window plus one day (and one extra), but a window made longer during the day stayed empty
 // past the old end until that night: golfers in the new days saw nothing to book. Every route that can lengthen a
 // window (operator Settings: public, member and resident; membership tiers: advanceBookingDays and windowPublic;
 // admin course-settings; a schedule save, which switches Resident pricing on when it adds a resident rate and so can
