@@ -3,22 +3,38 @@
 // own phone — Apple Pay / Google Pay where the phone has a wallet, a card
 // otherwise. Same pattern as the round pay link (/checkin/[bookingId]).
 import { useEffect, useRef, useState, Suspense } from 'react';
+import type { CSSProperties } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, PaymentRequestButtonElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import type { PaymentRequest } from '@stripe/stripe-js';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
-import { Card } from '@/components/ui/Card';
+import { LookFooter } from '@/components/golfer/LookFooter';
+import { lookPicked, lookSiteVars, lookBandHex, lookMode, lookText, type BookingAccent } from '@/components/golfer/look';
+import { useLookBackground } from '@/components/golfer/useLookBackground';
 import { SHOP_FEE_LABEL } from '@/lib/booking-fees';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
-const cardStyle = { style: { base: { fontSize: '15px', color: '#141814', '::placeholder': { color: '#979B94' } }, invalid: { color: '#A3452F' } } };
+// BOOKING-LOOK-1: the card reads the look's card colour (white on Light, as Card was).
+const CARD_L = 'bg-card rounded-lg shadow-card';
+// The card field draws in Stripe's iframe, which reads no CSS variables: plain colours by look (Light as it was).
+function cardStyleFor(look: 'light' | 'dark') {
+  const t = lookText(look);
+  return { style: { base: { fontSize: '15px', color: t.ink, '::placeholder': { color: look === 'dark' ? t.muted : '#979B94' } }, invalid: { color: t.bad } } };
+}
 const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 
-type Sale = { status: 'open' | 'paid_cash' | 'paid_card' | 'void'; totalCents: number; serviceFeeCents?: number; taxCents?: number; discountCents?: number; discountNote?: string; courseName: string; brandColor: string; logoUrl: string; lines: { name: string; unitPriceCents: number; quantity: number }[]; terms?: string; voidNote?: string };
+type Sale = { status: 'open' | 'paid_cash' | 'paid_card' | 'void'; totalCents: number; serviceFeeCents?: number; taxCents?: number; discountCents?: number; discountNote?: string; courseName: string; brandColor: string; logoUrl: string;
+  /** PERS-1: the course photo, once the payload sends it. */
+  photoUrl?: string | null;
+  /** BOOKING-LOOK-1: the course's look; absent or no accent = today's light page. */
+  booking_look?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null;
+  lines: { name: string; unitPriceCents: number; quantity: number }[]; terms?: string; voidNote?: string };
 
-function PayForm({ saleId, token, sale, onPaid, onError }: { saleId: string; token: string; sale: Sale; onPaid: () => void; onError: (m: string) => void }) {
+const lookCourseOf = (x: Sale) => ({ booking_look: x.booking_look?.accent ? { look: x.booking_look.look, accent: x.booking_look.accent } : null, brand_color: x.brandColor });
+
+function PayForm({ saleId, token, sale, look, onPaid, onError }: { saleId: string; token: string; sale: Sale; look: 'light' | 'dark'; onPaid: () => void; onError: (m: string) => void }) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -77,24 +93,24 @@ function PayForm({ saleId, token, sale, onPaid, onError }: { saleId: string; tok
       {needsTerms && (
         <div className="bg-paper/70 rounded-md p-3 text-[13px] text-ink space-y-2">
           {sale.terms!.split('\n\n').map((t, i) => <p key={i}>{t}</p>)}
-          <label className="flex items-start gap-2 font-medium"><input type="checkbox" className="mt-0.5" checked={agreed} onChange={e => { setAgreed(e.target.checked); agreedRef.current = e.target.checked; }} />I agree to these terms</label>
+          <label className="flex items-start gap-2 font-medium"><input type="checkbox" className="mt-0.5" style={{ accentColor: 'var(--g-acc)' }} checked={agreed} onChange={e => { setAgreed(e.target.checked); agreedRef.current = e.target.checked; }} />I agree to these terms</label>
         </div>
       )}
       {wallet && ready && (
         <>
-          <PaymentRequestButtonElement options={{ paymentRequest: wallet, style: { paymentRequestButton: { type: 'buy', theme: 'dark', height: '48px' } } }} />
+          <PaymentRequestButtonElement options={{ paymentRequest: wallet, style: { paymentRequestButton: { type: 'buy', theme: look === 'dark' ? 'light' : 'dark', height: '48px' } } }} />
           <div className="flex items-center gap-3 text-xs text-ink-muted"><span className="h-px flex-1 bg-line" />or pay with a card<span className="h-px flex-1 bg-line" /></div>
         </>
       )}
       <div>
         <label className="block text-[13px] font-semibold text-ink mb-1.5">Card details</label>
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
-          <CardElement options={cardStyle} />
+          <CardElement options={cardStyleFor(look)} />
         </div>
       </div>
       <button onClick={payByCard} disabled={loading || !stripe || !ready}
-        className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-70"
-        style={{ backgroundColor: sale.brandColor || '#173B2A' }}>
+        className="w-full py-3.5 rounded-md font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-70"
+        style={{ backgroundColor: 'var(--g-acc)', color: 'var(--g-on-acc)' }}>
         {loading ? <><Loader2 size={16} className="animate-spin" /> Paying…</> : `Pay ${usd(sale.totalCents)}`}
       </button>
       <p className="text-center text-xs text-ink-muted">Secure checkout powered by Stripe. The charge comes from {sale.courseName}.</p>
@@ -102,13 +118,21 @@ function PayForm({ saleId, token, sale, onPaid, onError }: { saleId: string; tok
   );
 }
 
-function PayShopInner() {
+function PayShopInner({ onLook }: { onLook: (v: CSSProperties | undefined) => void }) {
   const { id } = useParams<{ id: string }>();
   const token = useSearchParams().get('token') ?? '';
   const [sale, setSale] = useState<Sale | null>(null);
   const [loadError, setLoadError] = useState('');
   const [error, setError] = useState('');
   const [paid, setPaid] = useState(false);
+  // BOOKING-LOOK-1: the page wears the course look (visual only); without a picked look it is today's light page.
+  const lookCourse = sale ? lookCourseOf(sale) : null;
+  // The page's footer sits outside this component: hand it the look once the sale has loaded.
+  useEffect(() => {
+    const lc = sale ? lookCourseOf(sale) : null;
+    onLook(lc && lookPicked(lc) ? lookSiteVars(lc) : undefined);
+  }, [sale, onLook]);
+  useLookBackground(lookCourse);
 
   useEffect(() => {
     fetch(`/api/shop-sale/${id}?token=${encodeURIComponent(token)}`)
@@ -121,11 +145,12 @@ function PayShopInner() {
   if (!sale) return <main className="min-h-screen bg-paper flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-ink-faint" aria-label="Loading" /></main>;
 
   const done = paid || sale.status === 'paid_card' || sale.status === 'paid_cash';
+  const lc = lookCourseOf(sale);
   return (
-    <main className="min-h-screen bg-paper">
-      <CourseHeaderBar courseName={sale.courseName} accent={sale.brandColor} logoUrl={sale.logoUrl} />
+    <main style={lookSiteVars(lc)} className="min-h-screen bg-paper">
+      <CourseHeaderBar courseName={sale.courseName} accent={lookBandHex(lc)} logoUrl={sale.logoUrl} photoUrl={sale.photoUrl} />
       <div className="max-w-md mx-auto px-4 py-8">
-        <Card className="p-5">
+        <div className={`${CARD_L} p-5`}>
           <h1 className="font-serif text-[26px] font-semibold text-ink leading-tight">{done ? 'Paid. Thank you!' : sale.status === 'void' ? 'This sale was cancelled' : 'Your pro shop total'}</h1>
           {sale.status === 'void' && <p className="text-sm text-ink-soft mt-2">Nothing was charged. {sale.voidNote || 'Ask the pro shop if that’s a mistake.'}</p>}
           <ul className="divide-y divide-line-soft mt-4 text-sm">
@@ -141,15 +166,22 @@ function PayShopInner() {
           {!done && sale.status === 'open' && (
             <div className="mt-5">
               {error && <p className="mb-3 text-sm text-bad bg-bad/5 border border-bad/20 rounded-md px-3 py-2" role="alert">{error}</p>}
-              <Elements stripe={stripePromise}><PayForm saleId={id} token={token} sale={sale} onPaid={() => setPaid(true)} onError={setError} /></Elements>
+              <Elements stripe={stripePromise}><PayForm saleId={id} token={token} sale={sale} look={lookMode(lc)} onPaid={() => setPaid(true)} onError={setError} /></Elements>
             </div>
           )}
-        </Card>
+        </div>
       </div>
     </main>
   );
 }
 
 export default function PayShopPage() {
-  return <Suspense><PayShopInner /></Suspense>;
+  // BOOKING-LOOK-1: the footer wears the course look too (the site footer skips this page).
+  const [lookVars, setLookVars] = useState<CSSProperties | undefined>(undefined);
+  return (
+    <>
+      <Suspense><PayShopInner onLook={setLookVars} /></Suspense>
+      <LookFooter vars={lookVars} />
+    </>
+  );
 }
