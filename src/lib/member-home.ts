@@ -7,7 +7,7 @@ import { ciEquals } from './like-exact';
 import { todayIn, clockIn } from './course-time';
 import { withinWindow } from './booking-window';
 import { rulesFor } from './booking-rules';
-import { memberBenefitParts, type BenefitTier } from './member-benefits';
+import { memberBenefitParts, withoutRates, type BenefitTier } from './member-benefits';
 import { feeCoveredCents } from './booking-fees';
 import type { WindowCourse } from './booking-window';
 
@@ -22,7 +22,7 @@ const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
  */
 export function benefitsSentence(tier: BenefitTier | null, member: boolean, resident: boolean, course: WindowCourse, memberPricing: boolean): string | null {
   if (member) {
-    const priced = tier && !memberPricing ? { ...tier, discountPct: null, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null } : tier;
+    const priced = tier && !memberPricing ? withoutRates(tier) : tier;
     const parts = memberBenefitParts(priced, course);
     const rate = parts.find(p => !p.startsWith('book ') && !p.includes('guest pass'));
     const window = parts.find(p => p.startsWith('book '));

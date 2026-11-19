@@ -55,7 +55,9 @@ type Charger = (o: { existingIntentId: string; intentKey: string; onCreated: (id
 export const duesIntentKey = (id: string, lastPaidAt: Date | null) => `dues-intent-${id}-${lastPaidAt ? lastPaidAt.getTime() : 'first'}`;
 
 /** What turning it off writes (also used when a course turns it off on a tier, or a member changes tier). */
-export const STOP_DATA = () => ({ autoRenew: false, autoRenewCancelledAt: new Date(), autoRenewRetryAt: null, renewalRemindedAt: null, autoRenewRemindedFor: null, autoRenewRemindedCents: null });
+// autoRenewFailedAt cleared too (Build 2026-11-18): a member who turns renewal off after a decline has nothing failing
+// any more, so Your <Course> stops saying "Your renewal didn't go through". The charging cron only takes autoRenew rows.
+export const STOP_DATA = () => ({ autoRenew: false, autoRenewCancelledAt: new Date(), autoRenewRetryAt: null, autoRenewFailedAt: null, renewalRemindedAt: null, autoRenewRemindedFor: null, autoRenewRemindedCents: null });
 
 /** Turn auto-renew off (the golfer, or staff). The membership runs to its end date. */
 // Staff move "Runs until" by hand (Build 2026-11-19): a comped or paid-outside term. Each change is written to
