@@ -357,3 +357,10 @@
 @media (max-width: 560px) {
   .fgrid, .fgrid2 { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Book a call: Cal.com's inline embed in a card (homepage mockup .cal). */
+.calBox { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--lift); min-height: 360px; overflow: hidden; }
+.calInline { width: 100%; min-height: 360px; overflow: auto; }
+.calHidden { display: none; }
+.calNote { margin: 0; padding: 14px 18px; font-size: 14px; color: var(--muted2); }
+.calNote a { font-weight: 600; color: var(--forest); text-decoration: underline; text-underline-offset: 3px; }
