@@ -26,7 +26,7 @@ switch, group toggles, "first log-in" toggle, range on/off) are not built. Build
      ticked (error: "Tick the box to agree before you log in."). It's recorded with the terms version, and later
      log-ins don't show it.
    - Member emails and pages from #477 still say "sign in as a member"; reword all of them to "Log in". The invite
-     says: "<Course> set you up as a Member. Log in at <course page> with this email to get your rates." (With Members pricing off: "...with this email to book.")
+     says: "<Course> set you up as a Member. Log in at <course page> with this email to get your rates." (With Members pricing off: "...with this email to book: book 9 days out · 6 guest passes a year", no rate.)
    - A golfer whose session expired who opens a booking's emailed link to move it would drop to the public rate, so
      the manage page says "Log in first to keep your member rate".
    - Once logged in, the header reads "Logged in · <Name> · <Group>", "Your <Course>", "Log out".
