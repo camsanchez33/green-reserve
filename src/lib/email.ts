@@ -336,7 +336,6 @@ export async function sendReminderEmail(data: {
   await getResend().emails.send({ meta: { kind: 'reminder_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.golferEmail, ...mail(reminderEmail({ ...data, totalCents: ctx.booking?.totalCents }, ctx.course)) });
 }
 
-
 export async function sendOperatorPasswordResetEmail(data: {
   operatorName: string;
   operatorEmail: string;
@@ -388,9 +387,6 @@ export async function sendOperatorVerifyEmail(data: {
   await getResend().emails.send({ meta: { kind: 'operator_verify_email' }, from: FROM_NOREPLY, to: data.operatorEmail, ...mail(operatorVerifyEmail(data)) });
 }
 
-
-// Fired right after a correct password when the operator has 2FA enabled —
-// gates issuing the real session cookie until this code is verified.
 /**
  * Cam 2026-10-27: the ONE "your dashboard is ready" email a course owner gets —
  * from the build, a resend, early dashboard access or the preview. No password in
@@ -408,17 +404,6 @@ export async function sendDashboardSetupEmail(data: {
   // Emails redo: one email for dashboard access (merged with the old "page ready in your dashboard").
   await getResend().emails.send({ meta: { kind: data.setupUrl ? 'operator_setup_email' : 'operator_page_ready_email' }, from: FROM_ADMIN, to: data.operatorEmail, ...mail(dashboardAccessEmail(data)) });
 }
-
-
-
-// Combined send (RUN_QUEUE "Send Preview = one combined send") — pressing
-// Send Preview now delivers the page preview AND dashboard login access in
-// one email, so a course never has to wait on a second message to start
-// exploring their dashboard. Admin-initiated only, never automatic.
-
-// Sent during Building stage when admin clicks "Send dashboard access" —
-// gives early dashboard access before the course goes live.
-
 
 export async function sendTwoFactorCodeEmail(data: {
   operatorName: string;
@@ -453,7 +438,6 @@ export async function sendMemberInviteEmail(data: {
   const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
   await getResend().emails.send({ meta: { kind: 'member_invite_email', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(memberInviteEmail(data, ctx.course)) });
 }
-
 
 export async function sendInquiryNotification(data: {
   /** Opens that inquiry (and its reply box) straight from the email. */
@@ -541,7 +525,6 @@ export async function sendDetailsSheetConfirmationEmail(data: {
   // Cam 2026-10-26: the same plain-words recap and next steps as the done screen (lib/setup-sheet-recap).
   await getResend().emails.send({ meta: { kind: 'details_sheet_confirmation_email' }, from: FROM_ADMIN, to: data.email, ...mail(detailsSheetConfirmationEmail(data)) });
 }
-
 
 export async function sendDetailsRequestEmail(data: {
   contactName: string; email: string; courseName: string; detailsLink: string;
@@ -638,7 +621,6 @@ export async function sendMembershipPaymentLinkEmail(data: {
   const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
   await getResend().emails.send({ meta: { kind: 'membership_payment_link_email', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(duesPayLinkEmail(data, ctx.course)) });
 }
-
 
 export async function sendMemberMagicLink(data: {
   name: string; email: string; courseName: string; magicLink: string; courseId?: string;
@@ -812,7 +794,6 @@ export async function sendShopReceiptEmail(data: {
   const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
   await getResend().emails.send({ meta: { kind: 'shop_receipt_email', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(shopReceiptEmail(data, ctx.course)) });
 }
-
 
 // AW-1: the owner signed in at /cam from a device that hasn't been approved.
 // The link opens a confirm page (a click there approves) — mail scanners that

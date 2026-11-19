@@ -29,6 +29,7 @@ check('…both callers that told the two apart now send setupUrl: null', readFil
 const tour = S.goLiveEmail({ courseName: 'Maple Run', courseSlug: 'maple-run', tour: true });
 const short = S.goLiveEmail({ courseName: 'Maple Run', courseSlug: 'maple-run', tour: false });
 check('go-live with the map of the dashboard, and LQ-2’s fee words', head(tour, 'Maple Run is live on GreenReserve.') && has(tour, 'Where everything lives', 'greenreserve.app/courses/maple-run', S.FEE_SENTENCES, 'Open your dashboard&nbsp;&rarr;'));
+check('both go-live versions link to the booking page', [tour, short].every(e => e.html.includes('href="https://greenreserve.app/courses/maple-run"') && e.text.includes('See your booking page: https://greenreserve.app/courses/maple-run')));
 check('go-live, short, for an owner who already had access', head(short, 'Maple Run is live on GreenReserve.') && !has(short, 'Where everything lives') && has(short, "You're live! Maple Run is now bookable on GreenReserve"));
 check('…the route picks the short one exactly when dashboard access was sent', readFileSync('src/app/api/admin/inquiries/route.ts', 'utf8').includes('sendCourseLiveOrientationEmail({ ...d, tour: !hasDashboardAccess })'));
 check('no banned fee phrase', !/keep 100%|never touches your Stripe|our only fee/i.test(tour.text));
@@ -43,7 +44,7 @@ check('…both kinds stay in the send log', src.includes("kind: data.detailsLink
 
 // The count: 78 in the mockup's inventory, less 3 removed and 3 merged (the 4th pair, "added as member", was already one email).
 const senders = (src.match(/^export async function send\w+\(/gm) ?? []).length;
-check(`email.ts has ${senders} senders`, senders > 60, senders);
+check(`email.ts has 74 senders (80 before: 3 removed, 3 merged away)`, senders === 74, senders);
 
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 if (failed) process.exit(1);

@@ -574,6 +574,7 @@ export function goLiveEmail(d: { courseName: string; courseSlug: string; tour: b
     paragraphs: [`Golfers can find and book your tee sheet at ${shown}. New bookings show in your dashboard as they come in.`],
     sections,
     button: { label: 'Open your dashboard', url: `${site()}/dashboard` },
+    small: { label: 'See your booking page', url: bookingUrl },
     after: ['Questions, or something looks wrong? Reply to this email: a real person reads it.'],
   });
 }

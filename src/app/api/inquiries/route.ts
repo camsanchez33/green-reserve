@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
   // Only ALIVE inquiries dedupe. A course rejected or archived months ago that
   // applies again is a genuine new lead, not a duplicate.
   // SECURITY REVIEW: courseName lands in two mail subject headers (the admin
-  // new-lead subject and the already-built one) where escHtml does not apply.
+  // new-lead subject and the already-built one) where HTML escaping does not apply.
   // Every neighbouring field is capped; this one never was. Strip newlines and
   // cap at intake so neither subject can carry a header break.
   const courseName = String(body.courseName).trim().replace(/[\r\n]+/g, ' ').slice(0, 200);
@@ -215,7 +215,7 @@ export async function POST(req: NextRequest) {
   const contactTitle = optStr(body.contactTitle, 120).replace(/[\r\n]+/g, ' ').trim();
   const phone = optStr(body.phone, 40).replace(/[\r\n]+/g, ' ').trim();
   const courseType = optStr(body.courseType, 20);
-  // The question itself. Capped; escaped where it is rendered (email.ts escHtml).
+  // The question itself. Capped; escaped where it is rendered (email-layout esc()).
   const additionalNotes = optStr(body.additionalNotes, 2000);
   const inquiry = await prisma.courseInquiry.create({
     data: {
