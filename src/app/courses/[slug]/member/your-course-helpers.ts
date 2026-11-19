@@ -34,6 +34,11 @@ export type YourSession = {
   /** 2b: the last renewal charge failed (autoRenewFailedAt is set). Past the date alone isn't a failure: the charge
    *  runs after the date, can be held for notice, or skipped. */
   renewalFailed?: boolean;
+  /** The term has ended but the course's grace days still give member rates (#505). */
+  inGrace?: boolean;
+  /** Build is adding it: the server's own word that a renewal charge is still to run after the end date. When sent,
+   *  it replaces the 31-day wait below (a membership set to renew, past its date, is still required). */
+  renewalPending?: boolean;
   upcoming?: Upcoming[];
 };
 
@@ -84,7 +89,6 @@ export function datedStatus(endsOn: string | null | undefined, today: string, re
   return { dot: daysBetween(today, day) <= 30 ? 'warn' : 'ok', when: `expires ${label}` };
 }
 
-/** The membership line, or null for a golfer who is only a resident here. */
 /** Said, in red, when a membership set to renew itself is past its date (Build 2026-11-18). */
 export const RENEWAL_FAILED = 'Your renewal didn’t go through. Call the pro shop.';
 
@@ -92,24 +96,42 @@ export const RENEWAL_FAILED = 'Your renewal didn’t go through. Call the pro sh
  *  runs after the date and can wait for a notice period (Build 2026-11-18). */
 export const RENEWAL_PENDING = 'Your renewal is being processed.';
 
+/** Said, with an amber dot, while the course's grace days still give member rates after the end date. */
+export function graceNote(endedOn: string): string {
+  return `Your membership ended ${longDay(endedOn)}. Call the pro shop to renew.`;
+}
+
+/**
+ * The membership line, or null for a golfer who is only a resident here. In this order (Build 2026-11-19):
+ * 1. renewalFailed: red, "Your renewal didn't go through. Call the pro shop."
+ * 2. set to renew and past the date: amber, "Your renewal is being processed." By the server's renewalPending when it
+ *    sends one; until then only within the longest real wait (a 30-day notice plus a day of cron) and only while the
+ *    server can say a charge failed (it sends renewalFailed), so a declined card never reads "being processed".
+ * 3. inGrace: amber, "Your membership ended <date>. Call the pro shop to renew."
+ * 4. a renewal date still to come: "renews <date>".
+ * 5. otherwise "expires <date>", or red "ended <date>" once it has passed. Never "renews" with a past date.
+ */
 export function membershipLine(s: YourSession, today: string = localToday()): { group: string; dot: Dot; when: string | null; problem?: string; note?: string } | null {
   const m = s.groups?.find(gr => gr.kind === 'member');
   if (!m && (s.groups?.length || s.membershipType === 'Resident')) return null;
   const group = m?.name ?? s.tier?.name ?? s.membershipType;
-  // 2b says when a membership renews; until then (or if the date is unreadable) only the end date is known, so it
-  // reads "expires".
-  // An explicit autoRenew wins; without it, a renewsOn date means it renews.
+  // An explicit autoRenew wins; without it, a renewsOn date means it renews. Until a date can be read, only the end
+  // date is known.
   const renews = s.autoRenew ?? isDay(s.renewsOn);
   const day = isDay(s.renewsOn) ? s.renewsOn : isDay(s.expiresOn) ? s.expiresOn : s.expiresAt;
-  const st = datedStatus(day, today, renews);
-  // Only the server's own record of a failed charge says the renewal failed (Build 2026-11-18).
+  const past = isDay(day) && day.slice(0, 10) < today;
+  // 1. Only the server's own record of a failed charge says the renewal failed.
   if (s.renewalFailed === true) return { group, dot: 'bad', when: null, problem: RENEWAL_FAILED };
-  // "Being processed" only while the server can say a charge failed (it sends renewalFailed), and only within the
-  // longest real wait: a 30-day notice plus a day of cron. Past that nothing is coming, so it reads "ended".
-  if (renews && st.dot === 'bad' && typeof s.renewalFailed === 'boolean' && isDay(day) && daysBetween(day, today) <= 31) {
-    return { group, dot: 'warn', when: null, note: RENEWAL_PENDING };
-  }
-  return { group, ...st };
+  // 2. Being processed.
+  // renewalPending replaces only the 31-day wait: it still needs a membership set to renew whose date has passed.
+  const pending = renews && past && (typeof s.renewalPending === 'boolean'
+    ? s.renewalPending
+    : typeof s.renewalFailed === 'boolean' && daysBetween(day as string, today) <= 31);
+  if (pending) return { group, dot: 'warn', when: null, note: RENEWAL_PENDING };
+  // 3. In the grace days.
+  if (s.inGrace === true && isDay(day)) return { group, dot: 'warn', when: null, note: graceNote(day) };
+  // 4 and 5. A past date reads ended whatever autoRenew says (datedStatus checks the date first).
+  return { group, ...datedStatus(day, today, renews) };
 }
 
 /** The resident line: "Resident · expires Dec 31, 2026". */

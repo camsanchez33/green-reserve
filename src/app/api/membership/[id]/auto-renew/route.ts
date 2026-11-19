@@ -11,12 +11,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   if (!(await rateLimit('membership:autorenew:' + id, 10, 300))) return NextResponse.json({ error: 'Too many attempts — wait a few minutes and try again.' }, { status: 429 });
   const { token } = await req.json().catch(() => ({})) as { token?: unknown };
-  const m = await prisma.courseMembership.findUnique({ where: { id }, select: { id: true, payToken: true, autoRenew: true, inviteName: true, inviteEmail: true, expiresAt: true, tier: { select: { name: true } }, course: { select: { name: true } } } });
+  const m = await prisma.courseMembership.findUnique({ where: { id }, select: { id: true, courseId: true, payToken: true, autoRenew: true, inviteName: true, inviteEmail: true, expiresAt: true, tier: { select: { name: true } }, course: { select: { name: true } } } });
   if (!m || !m.payToken || typeof token !== 'string' || token !== m.payToken) return NextResponse.json({ error: 'Invalid or expired link.' }, { status: 404 });
   if (!m.autoRenew) return NextResponse.json({ ok: true, alreadyOff: true });
   await stopAutoRenew(m.id);
   if (m.inviteEmail) {
-    try { await sendAutoRenewOffEmail({ name: m.inviteName, email: m.inviteEmail, courseName: m.course.name, tierName: m.tier?.name ?? 'membership', endsOn: m.expiresAt }); }
+    try { await sendAutoRenewOffEmail({ name: m.inviteName, email: m.inviteEmail, courseName: m.course.name, courseId: m.courseId, tierName: m.tier?.name ?? 'membership', endsOn: m.expiresAt }); }
     catch (err) { console.error(JSON.stringify({ ev: 'membership.autorenew.off_email_fail', membershipId: m.id, error: err instanceof Error ? err.message : String(err) })); }
   }
   return NextResponse.json({ ok: true });

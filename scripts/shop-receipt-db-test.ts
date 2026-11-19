@@ -44,7 +44,7 @@ async function cleanup() {
 
   const read = (p: string) => readFileSync(p, 'utf8');
   const route = read('src/app/api/operator/shop-sales/route.ts');
-  ok('the texted receipt is the link', route.includes('const url = await shopReceiptUrl(g.session.courseId, s.id);') && route.includes('your receipt from ${s.course.name}') && !route.includes('GreenReserve receipt from'));
+  ok('the texted receipt is the link', route.includes('const url = await shopReceiptUrl(g.session.courseId, s.id);') && route.includes("shopReceiptText(s.course.name, saleCardCents(s), await shortLink('r', url, { courseId: g.session.courseId }))") && !route.includes('GreenReserve receipt from'));
   ok('staff read a receipt by id, only their course\'s', route.includes('await staffShopReceipt(g.session.courseId, receiptOf)'));
   const page = read('src/app/dashboard/shop/page.tsx');
   ok('Sales → Receipt opens it in place with the send row', page.includes('<SaleReceiptPanel receipt={receipt}') && !page.includes('function ReceiptForm('));

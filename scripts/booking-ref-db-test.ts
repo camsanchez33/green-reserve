@@ -24,9 +24,11 @@ for (const q of ['GR4', 'gr4', 'GR 4']) check(`parse "${q}" → course 4`, JSON.
 for (const q of ['4', '17', 'GR-', 'GR0', 'GR4-0', 'GR4-1a', 'Greg', 'GR99999999999', '4-17-2', '555-1234x']) check(`parse "${q}" → null`, parseRef(q) === null, parseRef(q));
 
 // ---- sources ----
-const email = readFileSync('src/lib/email.ts', 'utf8');
-check('emails never print the raw booking id', !/Booking ID: \$\{data\.bookingId\}/.test(email) && !/Booking #\$\{data\.bookingId\.slice/.test(email));
-check('emails print the GR label', (email.match(/Booking \$\{await bookingRefFor\(data\.bookingId\)\}/g) ?? []).length >= 8);
+const email = readFileSync('src/lib/email.ts', 'utf8') + readFileSync('src/lib/email-golfer.ts', 'utf8');
+check('emails never print the raw booking id', !/Booking ID: \$\{data\.bookingId\}/.test(email) && !/Booking #\$\{data\.bookingId\.slice/.test(email) && !/bookingId\.slice\(0, ?8\)/.test(email));
+// Emails redo (Cam 2026-11-19, mockup v17): golfer emails carry no reference line; the booking details page
+// their button opens shows the GR label (below).
+check('golfer emails link to the booking details page', email.includes('details: token ? `${site}/receipt/${enc(bookingId)}?token=${enc(token)}`'));
 for (const f of ['src/app/manage/[bookingId]/page.tsx', 'src/app/receipt/[bookingId]/page.tsx']) {
   check(`${f} shows the GR label`, readFileSync(f, 'utf8').includes('bookingRef ??'));
 }

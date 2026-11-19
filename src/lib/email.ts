@@ -1,14 +1,22 @@
 import { Resend } from 'resend';
-import { saleRef } from './sale-ref';
 import { sheetRecap, SHEET_NEXT_STEPS } from './setup-sheet-recap';
-import { serviceFeeLabel, hoursLabel, SHOP_FEE_LABEL } from '@/lib/booking-fees';
-import { afterCutoffLine, policyMoney } from '@/lib/cancel-policy';
-import { membershipFeeCents } from '@/lib/stripe';
 import { logSent, type SendMeta } from '@/lib/sent-messages';
-import { SUPPORT_EMAIL, ADMIN_EMAIL, BILLING_EMAIL, NOREPLY_EMAIL } from '@/lib/contact';
-import { bookingRefFor } from '@/lib/booking-ref';
-import { confirmationLines, confirmationPartsOf, DEFAULT_ARRIVAL, type ConfirmationParts } from './confirmation-parts';
+import { SUPPORT_EMAIL, ADMIN_EMAIL, NOREPLY_EMAIL } from '@/lib/contact';
+import { type ConfirmationParts } from './confirmation-parts';
 import { welcomeParts, type WelcomeInput } from './team-welcome';
+import { prisma } from './prisma';
+import { roundChargeCents } from './booking-fees';
+import { courseFrom, type EmailCourse } from './email-layout';
+import { BOOKING_ACCENT_COLOURS, bookingLookOf } from './booking-look';
+import {
+  bookingConfirmationEmail, bookingModifiedEmail, reminderEmail, cancellationWarningEmail, cancellationEmail,
+  cancellationFeeChargedEmail, payLinkEmail, frostDelayEmail, courseNoticeEmail, roundReceiptLinkEmail, checkInReceiptEmail,
+  refundEmail, teeTimeAlertEmail, alertConfirmEmail, memberInviteEmail, memberMagicLinkEmail, memberLoginCodeEmail,
+  duesPayLinkEmail, duesReceiptEmail, autoRenewOnEmail, autoRenewReminderEmail, autoRenewDeclinedEmail, autoRenewOffEmail,
+  statementEmail, statementDeclinedEmail, statementPaidEmail, eventSignupEmail, eventPayLinkEmail, eventPairingsEmail,
+  shopPayLinkEmail, shopReceiptEmail, type BuiltEmail,
+} from './email-golfer';
+export { courseNoticeEmail };
 
 let _resend: Resend | null = null;
 /** Resend's options plus our own `meta` (BRAIN-1b), which never reaches Resend. */
@@ -68,12 +76,51 @@ function getResend(): Sender {
 }
 // MAIL-1 (Cam 2026-10-22): each email is sent from the address its reader
 // should answer — golfers support@, courses admin@, money billing@ (lib/contact.ts).
-const FROM_SUPPORT = `GreenReserve <${SUPPORT_EMAIL}>`;
 const FROM_ADMIN = `GreenReserve <${ADMIN_EMAIL}>`;
-const FROM_BILLING = `GreenReserve <${BILLING_EMAIL}>`;
 // Codes, sign-in links and security alerts. No inbox exists, so a reply bounces
 // (Cam 2026-10-22); these emails name support@ or admin@ instead of "reply".
 const FROM_NOREPLY = `GreenReserve <${NOREPLY_EMAIL}>`;
+
+/** subject, html and the plain-text version, for a Resend send. */
+const mail = (e: BuiltEmail) => ({ subject: e.subject, html: e.html, text: e.text });
+
+/**
+ * Emails and texts redo (Cam 2026-11-19): golfer emails come from the course — the From name is the
+ * course's full name at noreply@ — with the course's name, address and phone in the footer and its
+ * colour on the bar and button. Looked up here from the booking (or the course) the email is about,
+ * so no caller changes what it passes. Never throws: on any miss the email still goes, with the name only.
+ */
+export async function emailCourse(ref: { bookingId?: string | null; courseId?: string | null; courseSlug?: string | null }, courseName: string): Promise<{ course: EmailCourse; booking: { totalCents: number; players: number } | null }> {
+  const select = { name: true, address: true, city: true, state: true, zipCode: true, phone: true, proShopPhone: true, brandColor: true, bookingLook: true, bookingAccent: true } as const;
+  try {
+    let c: { name: string; address: string; city: string; state: string; zipCode: string; phone: string; proShopPhone: string; brandColor: string; bookingLook: string; bookingAccent: string | null } | null = null;
+    let booking: { totalCents: number; players: number } | null = null;
+    if (ref.bookingId) {
+      const b = await prisma.booking.findUnique({ where: { id: ref.bookingId }, select: { totalAmount: true, shopTotalCents: true, shopFeeCents: true, shopTaxCents: true, accessFeeTotal: true, feePaidCents: true, roundChargedCents: true, players: true, course: { select } } });
+      // What the pay page charges (api/checkin roundChargedTotal): the round plus its shop items, their fee and tax, less any fee paid at booking.
+      if (b) { c = b.course; booking = { totalCents: b.roundChargedCents ?? roundChargeCents(b), players: b.players }; }
+    }
+    if (!c && ref.courseId) c = await prisma.course.findUnique({ where: { id: ref.courseId }, select });
+    if (!c && ref.courseSlug) c = await prisma.course.findUnique({ where: { slug: ref.courseSlug }, select });
+    if (!c) return { course: { name: courseName }, booking };
+    const look = bookingLookOf(c);
+    const preset = look.accent ? BOOKING_ACCENT_COLOURS[look.accent].light : null;
+    const stateZip = [c.state, c.zipCode].filter(Boolean).join(' ');
+    return {
+      course: {
+        name: c.name || courseName,
+        address: [c.address, c.city, stateZip].map(x => (x ?? '').trim()).filter(Boolean).join(', '),
+        phone: (c.proShopPhone || c.phone || '').trim(),
+        accent: preset ? preset.acc : c.brandColor,
+        onAccent: preset ? preset.onAcc : undefined,
+      },
+      booking,
+    };
+  } catch (err) {
+    console.error('[email] course lookup failed:', err instanceof Error ? err.message : String(err));
+    return { course: { name: courseName }, booking: null };
+  }
+}
 
 // EMAIL-2 (Cam 2026-10-20: "I don't think this looks professional or clean").
 // One look for every email: a cream page, the GreenReserve lockup above one white
@@ -144,100 +191,13 @@ export function isPlaceholderEmail(email: string | null | undefined): boolean {
 }
 
 export async function sendBookingConfirmation(data: BookingEmailData) {
-  const cancellationHours = data.cancellationHours ?? 24;
-  const cancellationFee = data.cancellationFeeTotal ?? 0;
-  const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
-  // The course's own page (Cam 2026-11-18: no golfer portal) — course-scoped, never a generic cross-course page.
-  const portalUrl = data.courseSlug
-    ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}`
-    : process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
-  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : portalUrl;
-  const noCard = data.noCard ?? false;
-
-  // Breakdown rows shared by all variants
-  const breakdownRows = `
-    <tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Course</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">${data.courseName}</td></tr>
-    <tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Date &amp; Time</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">${data.date} at ${data.time}</td></tr>
-    <tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Players</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.productLabel ? escHtml(data.productLabel) + ' &middot; ' : ''}${data.holes} holes</td></tr>
-    ${data.appliedRate !== 'standard' ? `<tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Rate</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#173B2A;font-weight:600;text-transform:capitalize;">${data.appliedRate === 'pack' ? 'Round pack' : escapeHtml(data.appliedRate)}</td></tr>` : ''}
-    <tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Green Fee</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</td></tr>
-    ${data.cartFeeTotal > 0 ? `<tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Cart Fee</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</td></tr>` : ''}
-    ${(data.rangeBallsTotal ?? 0) > 0 ? `<tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Range Balls</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${((data.rangeBallsTotal ?? 0) / 100).toFixed(2)}</td></tr>` : ''}
-    <tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">${serviceFeeLabel(data.players)}${data.feePaidAtBooking ? ' — charged now' : ''}</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</td></tr>
-  `;
-
-  // FEE-AT-BOOKING: the booking fee was taken when they booked; check-in collects the rest.
-  const chargedNow = data.feePaidAtBooking
-    ? `<strong>Only the $${(data.accessFeeTotal / 100).toFixed(2)} booking fee has been charged</strong> — your card is saved to hold your spot.`
-    : '<strong>Nothing has been charged yet</strong> — your card is saved to hold your spot.';
-  const dueAtCheckIn = data.feePaidAtBooking ? data.totalAmount - data.accessFeeTotal : data.totalAmount;
-  let intro: string;
-  let totalRow: string;
-  let policyBox: string;
-  let ctaButtons: string;
-
-  if (noCard) {
-    // No-fee-policy course — no card collected, golfer pays at check-in
-    intro = `<h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">You're on the tee sheet.</h1>
-      <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Your spot at ${data.courseName} is confirmed. <strong>No card required</strong> — pay at the course when you check in, or online from the link below on the day of your round.</p>`;
-    totalRow = `<tr><td style="padding:14px 12px 0 0;color:#141814;font-size:15px;font-weight:600;">Total due at the course</td><td align="right" style="padding:14px 0 0;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:22px;font-weight:600;">$${(data.totalAmount / 100).toFixed(2)}</td></tr>`;
-    policyBox = `<div style="background:#EEF3EC;border:1px solid #CFDCCD;border-radius:6px;padding:16px;margin-bottom:24px;">
-      <p style="margin:0;color:#173B2A;font-size:13px;font-weight:600;">Free cancellation any time — no fees, no card on file.</p>
-    </div>`;
-    ctaButtons = `
-      ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:10px;">Check In &amp; Pay Online &rarr;</a>` : ''}
-      <a href="${manageUrl}" style="display:block;color:#173B2A;text-decoration:none;text-align:center;padding:8px;font-weight:700;font-size:13px;margin-bottom:16px;">Manage My Booking &rarr;</a>`;
-  } else if (cancellationFee > 0) {
-    // Card on file, course has a cancellation fee
-    intro = `<h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">You're on the tee sheet.</h1>
-      <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Here are your booking details for ${data.courseName}. ${chargedNow}</p>`;
-    totalRow = `<tr><td style="padding:14px 12px 0 0;color:#141814;font-size:15px;font-weight:600;">Estimated total at check-in</td><td align="right" style="padding:14px 0 0;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:22px;font-weight:600;">$${(dueAtCheckIn / 100).toFixed(2)}</td></tr>`;
-    policyBox = `<div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:16px;margin-bottom:24px;">
-      <p style="margin:0 0 4px;color:#141814;font-size:13px;font-weight:700;">Cancellation policy</p>
-      ${data.policyLines?.length
-        ? data.policyLines.map(l => `<p style="margin:0 0 4px;color:#141814;font-size:13px;">${escapeHtml(l)}</p>`).join('')
-        : `<p style="margin:0;color:#141814;font-size:13px;">Cancel any time up to ${hoursLabel(cancellationHours)} before your tee time at no charge. After that, a $${(cancellationFee / 100).toFixed(2)} late-cancellation fee will be charged to your card — it&rsquo;s refunded in full when you check in and pay for your round.</p>`}
-    </div>`;
-    ctaButtons = `
-      ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
-      <a href="${manageUrl}" style="display:block;${checkInUrl ? 'color:#173B2A;' : 'background:#173B2A;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};border-radius:6px;font-weight:600;font-size:${checkInUrl ? '13px' : '15px'};margin-bottom:16px;">Manage My Booking &rarr;</a>`;
-  } else {
-    // Card on file, no cancellation fee policy
-    intro = `<h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">You're on the tee sheet.</h1>
-      <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Here are your booking details for ${data.courseName}. ${chargedNow}</p>`;
-    totalRow = `<tr><td style="padding:14px 12px 0 0;color:#141814;font-size:15px;font-weight:600;">Estimated total at check-in</td><td align="right" style="padding:14px 0 0;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:22px;font-weight:600;">$${(dueAtCheckIn / 100).toFixed(2)}</td></tr>`;
-    policyBox = `<div style="background:#EEF3EC;border:1px solid #CFDCCD;border-radius:6px;padding:16px;margin-bottom:24px;">
-      <p style="margin:0;color:#173B2A;font-size:13px;font-weight:600;">Free cancellation any time — this course has no late-cancellation fee.</p>
-      ${(data.policyLines ?? []).filter(l => /no-show/i.test(l)).map(l => `<p style="margin:4px 0 0;color:#173B2A;font-size:13px;">${escapeHtml(l)}</p>`).join('')}
-    </div>`;
-    ctaButtons = `
-      ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
-      <a href="${manageUrl}" style="display:block;${checkInUrl ? 'color:#173B2A;' : 'background:#173B2A;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};border-radius:6px;font-weight:600;font-size:${checkInUrl ? '13px' : '15px'};margin-bottom:16px;">Manage My Booking &rarr;</a>`;
-  }
-
-  const html = baseTemplate(`
-    ${intro}
-    <div style="border-top:1px solid #E3E4DE;margin-bottom:24px;">
-      <table width="100%" cellpadding="0" cellspacing="0">
-        ${breakdownRows}
-        ${totalRow}
-      </table>
-    </div>
-    ${policyBox}
-    <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:16px;margin-bottom:24px;">
-      <p style="margin:0;color:#141814;font-size:13px;font-weight:600;">${data.courseAddress}</p>
-      ${confirmationLines(data.parts ?? confirmationPartsOf({ confirmationNote: data.confirmationNote })).map(l => `<p style="margin:8px 0 0;color:#141814;font-size:12px;${l.text === DEFAULT_ARRIVAL && !l.label ? '' : 'white-space:pre-line;'}">${l.label ? `<strong>${escapeHtml(l.label)}.</strong> ` : ''}${escapeHtml(l.text)}</p>`).join('')}
-    </div>
-    ${ctaButtons}
-    ${data.checkInToken ? `<p style="margin:0 0 8px;text-align:center;"><a href="${process.env.NEXT_PUBLIC_URL}/receipt/${data.bookingId}?token=${data.checkInToken}" style="color:#6B706A;font-size:12px;text-decoration:underline;">View booking confirmation</a></p>` : ''}
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">${data.testSend ? 'Test email: this is what golfers get. Nothing was booked.' : `Booking ${await bookingRefFor(data.bookingId)}`}</p>
-  `);
-  const subject = `Confirmed: ${data.courseName} — ${data.date} at ${data.time}`;
+  const ctx = await emailCourse({ bookingId: data.testSend ? null : data.bookingId, courseSlug: data.courseSlug }, data.courseName);
+  const e = bookingConfirmationEmail(data, ctx.course);
   if (data.testSend) {
-    await getResend().emails.send({ meta: { kind: 'booking_confirmation_test', courseSlug: data.courseSlug }, from: FROM_SUPPORT, to: data.golferEmail, subject: `Test: ${subject}`, html });
+    await getResend().emails.send({ meta: { kind: 'booking_confirmation_test', courseSlug: data.courseSlug }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.golferEmail, ...mail(e) });
     return;
   }
-  await getResend().emails.send({ meta: { kind: 'booking_confirmation', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_SUPPORT, to: data.golferEmail, subject, html });
+  await getResend().emails.send({ meta: { kind: 'booking_confirmation', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.golferEmail, ...mail(e) });
 }
 
 export async function sendOperatorBookingNotification(data: BookingEmailData & { operatorEmail: string }) {
@@ -277,27 +237,10 @@ export async function sendCancellationEmail(data: {
   reason?: string;
 }) {
   if (isPlaceholderEmail(data.golferEmail)) return; // SD-5: walk-in without an email
-  const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#F6E6E1;color:#A3452F;font-size:13px;font-weight:600;padding:4px 12px;border-radius:6px;">Booking Cancelled</span></div>
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your booking has been cancelled.</h1>
-    <p style="margin:0 0 ${data.reason ? '16px' : '24px'};color:#3F453E;font-size:15px;">${data.courseName} &middot; ${data.date} at ${data.time} &middot; ${data.players} player${data.players > 1 ? 's' : ''}</p>
-    ${data.reason
-      ? `<p style="margin:0 0 24px;color:#3F453E;font-size:15px;line-height:1.6;">${data.reason}</p>`
-      : ''
-    }
-    ${!data.feeCharged
-      ? `<div style="background:#EEF3EC;border:1px solid #CFDCCD;border-radius:6px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#2F6B45;font-size:15px;font-weight:600;">&#10003; ${data.refunded ? 'What you paid has been refunded to your card. Nothing else was charged.' : 'You weren&rsquo;t charged anything.'}</p></div>`
-      : `<div style="background:#F7EFE2;border:1px solid #E8D3B0;border-radius:6px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#7A4A10;font-size:14px;font-weight:600;">The $${(data.feeAmount / 100).toFixed(2)} cancellation fee you were charged is non-refundable &mdash; this cancellation came after the course&rsquo;s free-cancellation window closed.</p></div>`
-    }
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
-  `, data.feeCharged || data.refunded ? BILLING_EMAIL : SUPPORT_EMAIL);
-  // Cam 2026-10-22: money moved (a fee kept, or a refund) → billing@; only about the round → support@.
-  await getResend().emails.send({ meta: { kind: 'cancellation_email', bookingId: data.bookingId }, from: data.feeCharged || data.refunded ? FROM_BILLING : FROM_SUPPORT, to: data.golferEmail, subject: `Cancelled: ${data.courseName} — ${data.date} at ${data.time}`, html });
+  const ctx = await emailCourse({ bookingId: data.bookingId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'cancellation_email', bookingId: data.bookingId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.golferEmail, ...mail(cancellationEmail(data, ctx.course)) });
 }
 
-// Fired by the cancellation-fee cron the moment it successfully auto-charges
-// someone for not cancelling in time. Refundable later at check-in, so this
-// is explicitly NOT framed as a final charge.
 // MP-5b. Taking a course offline or archiving it used to happen entirely
 // behind the operator's back: their page stopped accepting bookings, any
 // future tee times were left dangling, and nobody told them. If we cancelled
@@ -337,20 +280,8 @@ export async function sendCancellationFeeChargedEmail(data: {
   golferName: string; golferEmail: string; courseName: string;
   date: string; time: string; feeAmount: number; bookingId: string; checkInToken?: string | null;
 }) {
-  const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
-  const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#F7EFE2;color:#7A4A10;font-size:13px;font-weight:600;padding:4px 12px;border-radius:6px;">Cancellation window closed</span></div>
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">You've been charged $${(data.feeAmount / 100).toFixed(2)}.</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      You didn't cancel your ${data.date} at ${data.time} tee time at ${data.courseName} before the free-cancellation window closed, so we charged your card $${(data.feeAmount / 100).toFixed(2)} to hold your spot.
-    </p>
-    <div style="background:#EEF3EC;border:1px solid #CFDCCD;border-radius:6px;padding:16px;margin-bottom:24px;">
-      <p style="margin:0;color:#2F6B45;font-size:14px;font-weight:600;">This fee is refunded automatically when you check in and pay for your round — use the button below on the day of your round.</p>
-    </div>
-    ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">Check In &amp; Pay &rarr;</a>` : ''}
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
-  `, BILLING_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'cancellation_fee_charged_email', bookingId: data.bookingId }, from: FROM_BILLING, to: data.golferEmail, subject: `Charged $${(data.feeAmount / 100).toFixed(2)} — ${data.courseName} cancellation window closed`, html });
+  const ctx = await emailCourse({ bookingId: data.bookingId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'cancellation_fee_charged_email', bookingId: data.bookingId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.golferEmail, ...mail(cancellationFeeChargedEmail(data, ctx.course)) });
 }
 
 // Sent ~1 hour before the free-cancellation window closes for bookings that
@@ -363,26 +294,8 @@ export async function sendCancellationWarningEmail(data: {
   /** The booking's lateFeeTimingAtBooking — the consequence line depends on it (R-CRON-004). */
   lateFeeTiming?: string | null;
 }) {
-  const consequence = afterCutoffLine(data.lateFeeTiming, policyMoney(data.feeAmount), 'once the window closes');
-  const portalUrl = data.courseSlug
-    ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}`
-    : process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
-  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : portalUrl;
-  const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#F7EFE2;color:#7A4A10;font-size:13px;font-weight:600;padding:4px 12px;border-radius:6px;">Action required</span></div>
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your cancellation window closes soon.</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Hi ${escHtml(firstName(data.golferName))} — your tee time at <strong style="color:#141814;">${data.courseName}</strong> on ${data.date} at ${data.time} is coming up.
-      The free-cancellation window (${hoursLabel(data.cancellationHours)} before your tee time) closes within the next hour.
-    </p>
-    <div style="background:#F7EFE2;border:1px solid #E8D3B0;border-radius:6px;padding:16px;margin-bottom:24px;">
-      <p style="margin:0 0 6px;color:#7A4A10;font-size:14px;font-weight:700;">If you need to cancel, do it now.</p>
-      <p style="margin:0;color:#7A4A10;font-size:14px;">${consequence}</p>
-    </div>
-    <a href="${manageUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">Cancel for Free &rarr;</a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">If you're keeping your tee time, no action needed — we'll see you on the course.</p>
-  `);
-  await getResend().emails.send({ meta: { kind: 'cancellation_warning_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_SUPPORT, to: data.golferEmail, subject: `Heads up — your free cancellation window closes soon (${data.courseName})`, html });
+  const ctx = await emailCourse({ bookingId: data.bookingId, courseSlug: data.courseSlug }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'cancellation_warning_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.golferEmail, ...mail(cancellationWarningEmail(data, ctx.course)) });
 }
 
 // Fired by the cutoff cron for courses with NO cancellation fee policy — no
@@ -392,32 +305,17 @@ export async function sendCheckInAvailableEmail(data: {
   golferName: string; golferEmail: string; courseName: string;
   date: string; time: string; bookingId: string; checkInToken?: string | null;
 }) {
-  const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
-  const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#EEF3EC;color:#2F6B45;font-size:13px;font-weight:600;padding:4px 12px;border-radius:6px;">&#9971; Ready to check in</span></div>
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">You're all set — time to check in.</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Your tee time at ${data.courseName} on ${data.date} at ${data.time} is coming up.
-      Check in online now, or do it at the clubhouse when you arrive.
-    </p>
-    ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">Check In Online Now &rarr;</a>` : ''}
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
-  `);
-  await getResend().emails.send({ meta: { kind: 'check_in_available_email', bookingId: data.bookingId }, from: FROM_SUPPORT, to: data.golferEmail, subject: `Ready to check in — ${data.courseName} ${data.date} at ${data.time}`, html });
+  const ctx = await emailCourse({ bookingId: data.bookingId }, data.courseName);
+  const e = payLinkEmail({ ...data, players: ctx.booking?.players, totalCents: ctx.booking?.totalCents }, ctx.course);
+  await getResend().emails.send({ meta: { kind: 'check_in_available_email', bookingId: data.bookingId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.golferEmail, ...mail(e) });
 }
 
 /** RECEIPT-1 (Cam 2026-11-08: a paper, text or email receipt when they pay at the counter): the round's receipt page. */
 export async function sendRoundReceiptLinkEmail(data: {
   golferName: string; to: string; courseName: string; date: string; time: string; bookingId: string; checkInToken: string;
 }) {
-  const url = `${process.env.NEXT_PUBLIC_URL}/receipt/${data.bookingId}?token=${data.checkInToken}`;
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your receipt from ${data.courseName}</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Hi ${firstName(data.golferName)}, thanks for playing. Here is the receipt for your round on ${data.date} at ${data.time}.</p>
-    <a href="${url}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">View receipt &rarr;</a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
-  `);
-  await getResend().emails.send({ meta: { kind: 'round_receipt_link_email', bookingId: data.bookingId }, from: FROM_BILLING, to: data.to, subject: `Your receipt from ${data.courseName}`, html });
+  const ctx = await emailCourse({ bookingId: data.bookingId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'round_receipt_link_email', bookingId: data.bookingId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.to, ...mail(roundReceiptLinkEmail(data, ctx.course)) });
 }
 
 export async function sendBookingModifiedEmail(data: {
@@ -425,45 +323,15 @@ export async function sendBookingModifiedEmail(data: {
   date: string; time: string; players: number; holes: number; productLabel?: string | null;
   greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number;
   accessFeeTotal: number; totalAmount: number; bookingId: string; checkInToken: string | null;
-  /** Already checked in (and paid): no "Check In & Pay", the total reads as paid. */
+  /** Already checked in (and paid): no change link, the total reads as paid. */
   checkedIn?: boolean;
   /** POS-1a: pro-shop items on the booking and GreenReserve's fee on them — added to the total. */
   shopTotalCents?: number; shopFeeCents?: number;
   /** W2-7 B2: sales tax on those items — added to the total. */
   shopTaxCents?: number;
 }) {
-  const shopRows = (data.shopTotalCents ?? 0) > 0
-    ? `<tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Pro-shop items</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${((data.shopTotalCents ?? 0) / 100).toFixed(2)}</td></tr>`
-      + ((data.shopFeeCents ?? 0) > 0 ? `<tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">${SHOP_FEE_LABEL}</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${((data.shopFeeCents ?? 0) / 100).toFixed(2)}</td></tr>` : '')
-      + ((data.shopTaxCents ?? 0) > 0 ? `<tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Sales tax on shop items</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${((data.shopTaxCents ?? 0) / 100).toFixed(2)}</td></tr>` : '')
-    : '';
-  const grandTotal = data.totalAmount + (data.shopTotalCents ?? 0) + (data.shopFeeCents ?? 0) + (data.shopTaxCents ?? 0);
-  const portalUrl = data.courseSlug
-    ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}`
-    : process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
-  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : portalUrl;
-  const checkInUrl = data.checkInToken && !data.checkedIn ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
-  const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#F6F4EC;color:#173B2A;font-size:13px;font-weight:600;padding:4px 12px;border-radius:6px;">Booking Updated</span></div>
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your booking has been updated.</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Here are your updated booking details for ${data.courseName}.</p>
-    <div style="border-top:1px solid #E3E4DE;margin-bottom:24px;">
-      <table width="100%" cellpadding="0" cellspacing="0">
-        <tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Date &amp; Time</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">${data.date} at ${data.time}</td></tr>
-        <tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Players</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.productLabel ? escHtml(data.productLabel) + ' &middot; ' : ''}${data.holes} holes</td></tr>
-        <tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Green Fee</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</td></tr>
-        ${data.cartFeeTotal > 0 ? `<tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Cart Fee</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</td></tr>` : ''}
-        ${data.rangeBallsTotal > 0 ? `<tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Range Balls</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${(data.rangeBallsTotal / 100).toFixed(2)}</td></tr>` : ''}
-        <tr><td width="62%" style="padding:10px 12px 10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">${serviceFeeLabel(data.players)}</td><td align="right" style="padding:10px 0;border-bottom:1px solid #E3E4DE;font-size:14px;color:#141814;font-weight:600;">$${(data.accessFeeTotal / 100).toFixed(2)}</td></tr>
-        ${shopRows}
-        <tr><td style="padding:14px 12px 0 0;color:#141814;font-size:15px;font-weight:600;">${data.checkedIn ? 'Total (already paid)' : 'New total at check-in'}</td><td align="right" style="padding:14px 0 0;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:22px;font-weight:600;">$${(grandTotal / 100).toFixed(2)}</td></tr>
-      </table>
-    </div>
-    ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:10px;">Check In &amp; Pay &rarr;</a>` : ''}
-    <a href="${manageUrl}" style="display:block;color:#173B2A;text-decoration:none;text-align:center;padding:8px;font-weight:700;font-size:13px;margin-bottom:16px;">Manage My Booking &rarr;</a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
-  `);
-  await getResend().emails.send({ meta: { kind: 'booking_modified_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_SUPPORT, to: data.golferEmail, subject: `Updated: ${data.courseName} — ${data.date} at ${data.time}`, html });
+  const ctx = await emailCourse({ bookingId: data.bookingId, courseSlug: data.courseSlug }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'booking_modified_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.golferEmail, ...mail(bookingModifiedEmail(data, ctx.course)) });
 }
 
 // B-9 frost delay: the course pushed the start back and this group moved to a
@@ -472,24 +340,12 @@ export async function sendFrostDelayEmail(data: {
   golferName: string; golferEmail: string; courseName: string; date: string;
   oldTime: string; newTime: string; players: number; bookingId: string; checkInToken: string | null;
 }) {
-  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : (process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app');
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 6px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Frost delay: your tee time moved</h1>
-    <p style="margin:0 0 22px;color:#3F453E;font-size:15px;">Hi ${escHtml(data.golferName.split(' ')[0] || 'there')}, ${escHtml(data.courseName)} is delaying its first tee times this morning for frost. Your group has been moved to the next open time.</p>
-    <div style="background:#F6F4EC;border-radius:6px;padding:20px;margin-bottom:20px;">
-      <p style="margin:0 0 6px;color:#6B706A;font-size:13px;">${escHtml(data.date)} · ${data.players} player${data.players === 1 ? '' : 's'}</p>
-      <p style="margin:0;color:#6B706A;font-size:15px;text-decoration:line-through;">${escHtml(data.oldTime)}</p>
-      <p style="margin:2px 0 0;color:#141814;font-size:22px;font-weight:700;">${escHtml(data.newTime)}</p>
-    </div>
-    <p style="margin:0 0 18px;color:#3F453E;font-size:14px;">Your price hasn't changed. If the new time doesn't work for your group, call the course and they'll sort it out with you.</p>
-    <a href="${manageUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;">Manage my booking</a>
-  `);
-  await getResend().emails.send({ meta: { kind: 'frost_delay_email', bookingId: data.bookingId }, from: FROM_SUPPORT, to: data.golferEmail, subject: `Frost delay: ${data.courseName} — now ${data.newTime}`, html });
+  const ctx = await emailCourse({ bookingId: data.bookingId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'frost_delay_email', bookingId: data.bookingId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.golferEmail, ...mail(frostDelayEmail(data, ctx.course)) });
 }
 
 // Fired the moment performCheckIn() successfully charges a golfer for their
-// round at check-in. Itemizes the same numbers as the original booking
-// confirmation, plus the late-cancellation fee refund if one applied.
+// round at check-in (lib/email-golfer checkInReceiptEmail).
 export async function sendCheckInReceiptEmail(data: {
   golferName: string; golferEmail: string; courseName: string; courseSlug?: string;
   date: string; time: string; players: number;
@@ -508,29 +364,8 @@ export async function sendCheckInReceiptEmail(data: {
   bookingId: string; checkInToken?: string | null;
 }) {
   if (isPlaceholderEmail(data.golferEmail)) return; // SD-5: walk-in without an email
-  const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#EEF3EC;color:#2F6B45;font-size:13px;font-weight:600;padding:4px 12px;border-radius:6px;">&#10003; Checked in</span></div>
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">You're checked in — enjoy your round!</h1>
-    <p style="margin:0 0 4px;color:#3F453E;font-size:18px;font-weight:600;">$${(data.totalAmount / 100).toFixed(2)} charged</p>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">${data.courseName} &middot; ${data.date} at ${data.time}</p>
-    <div style="border-top:1px solid #E3E4DE;margin-bottom:24px;">
-      <table width="100%" cellpadding="0" cellspacing="0">
-        <tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Green Fee</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</td></tr>
-        ${data.cartFeeTotal > 0 ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Cart Fee</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</td></tr>` : ''}
-        ${data.rangeBallsTotal > 0 ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Range Balls</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.rangeBallsTotal / 100).toFixed(2)}</td></tr>` : ''}
-        <tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">${serviceFeeLabel(data.players)}${data.feePaidAtBookingCents ? ` ($${(data.feePaidAtBookingCents / 100).toFixed(2)} paid when you booked)` : ''}</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(Math.max(0, data.accessFeeTotal - (data.feePaidAtBookingCents ?? 0)) / 100).toFixed(2)}</td></tr>
-        ${(data.shopLines ?? []).map(l => `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">${escapeHtml(l.name)}${l.quantity > 1 ? ` &times; ${l.quantity}` : ''}</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(l.unitPriceCents * l.quantity / 100).toFixed(2)}</td></tr>`).join('')}
-        ${data.shopFeeCents ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">${SHOP_FEE_LABEL}</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.shopFeeCents / 100).toFixed(2)}</td></tr>` : ''}
-        ${data.shopTaxCents ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Sales tax on shop items</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.shopTaxCents / 100).toFixed(2)}</td></tr>` : ''}
-        <tr><td style="padding:10px 0 0;color:#141814;font-size:14px;font-weight:700;border-top:1px solid #E3E4DE;">Total Charged</td><td style="padding:10px 0 0;text-align:right;color:#141814;font-size:18px;font-weight:700;border-top:1px solid #E3E4DE;">$${(data.totalAmount / 100).toFixed(2)}</td></tr>
-      </table>
-    </div>
-    ${data.feeRefunded ? `<div style="background:#EEF3EC;border:1px solid #CFDCCD;border-radius:6px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#2F6B45;font-size:14px;font-weight:600;">&#10003; The $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee you were charged earlier has been refunded.</p></div>` : ''}
-    ${data.feeRefundFailed ? `<div style="background:#F7EFE2;border:1px solid #E8D3B0;border-radius:6px;padding:16px;margin-bottom:24px;"><p style="margin:0;color:#7A4A10;font-size:14px;font-weight:600;">Your earlier $${(data.feeRefundAmount / 100).toFixed(2)} late-cancellation fee is owed back to you, but the automatic refund did not go through. The course has been notified — if it has not appeared within a few days, contact them or ${BILLING_EMAIL}.</p></div>` : ''}
-    ${data.checkInToken ? `<a href="${process.env.NEXT_PUBLIC_URL}/receipt/${data.bookingId}?token=${data.checkInToken}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">View Receipt &rarr;</a>` : ''}
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
-  `, BILLING_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'check_in_receipt_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_BILLING, to: data.golferEmail, subject: `Receipt: ${data.courseName} — $${(data.totalAmount / 100).toFixed(2)}`, html });
+  const ctx = await emailCourse({ bookingId: data.bookingId, courseSlug: data.courseSlug }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'check_in_receipt_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.golferEmail, ...mail(checkInReceiptEmail(data, ctx.course)) });
 }
 
 /** ALERTS-2: the stop link (a page with a Stop button) and the RFC 8058 one-click header. */
@@ -548,23 +383,9 @@ export async function sendTeeTimeAlertEmail(data: {
   name: string; email: string; courseName: string; courseSlug: string; courseId?: string;
   date: string; time?: string; players: number; stopToken: string; lastDate?: string;
 }) {
-  const base = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
-  const bookUrl = `${base}/courses/${encodeURIComponent(data.courseSlug)}?date=${data.date}&players=${data.players}`;
   const stop = alertStopUrls(data.stopToken);
-  const day = new Date(data.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-  const time = data.time ? (() => { const [h, m] = data.time!.split(':').map(Number); return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`; })() : '';
-  const course = escHtml(data.courseName);
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">A tee time opened</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">A time you asked about at <strong>${course}</strong> is open for ${data.players} player${data.players === 1 ? '' : 's'}. First to book gets it; nothing is held.</p>
-    <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:20px;margin-bottom:24px;">
-      ${time ? `<p style="margin:0 0 4px;font-weight:700;color:#141814;font-size:18px;">${time}</p>` : ''}
-      <p style="margin:0;color:#3F453E;">${day} &middot; ${course}</p>
-    </div>
-    <a href="${bookUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:24px;">See times and book</a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">${data.lastDate ? `This alert ends after ${new Date(data.lastDate + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}. ` : ''}<a href="${stop.url}" style="color:#6B706A;">Stop this alert</a></p>
-  `);
-  await getResend().emails.send({ meta: { kind: 'tee_time_alert_email', courseSlug: data.courseSlug, courseId: data.courseId ?? null }, from: FROM_SUPPORT, to: data.email, subject: `A tee time opened at ${data.courseName}`, html, headers: stop.headers });
+  const ctx = await emailCourse({ courseId: data.courseId, courseSlug: data.courseSlug }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'tee_time_alert_email', courseSlug: data.courseSlug, courseId: data.courseId ?? null }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(teeTimeAlertEmail(data, ctx.course, stop.url)), headers: stop.headers });
 }
 
 /** ALERTS-2: a guest's alert turns on only from this link (a page with a button; GET changes nothing). */
@@ -575,42 +396,16 @@ export async function sendAlertConfirmEmail(data: {
   const base = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
   const confirmUrl = `${base}/api/alerts/confirm/${encodeURIComponent(data.token)}`;
   const stop = alertStopUrls(data.token);
-  const course = escHtml(data.courseName);
-  const days = data.dates.map(d => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })).join(', ');
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Turn on your tee time alert</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">You asked <strong>${course}</strong> to tell you when a time opens on ${escHtml(days)} for ${data.players} player${data.players === 1 ? '' : 's'}${data.phone ? `, by email and by text to the number ending ${escHtml(data.phone.slice(-4))}` : ''}. Nothing is sent until you turn it on.</p>
-    <a href="${confirmUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:24px;">Turn on alert</a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Didn&rsquo;t ask for this? Ignore this email and nothing will be sent. <a href="${stop.url}" style="color:#6B706A;">Stop this alert</a></p>
-  `);
-  await getResend().emails.send({ meta: { kind: 'tee_time_alert_confirm', courseSlug: data.courseSlug, courseId: data.courseId }, from: FROM_SUPPORT, to: data.email, subject: `Turn on your tee time alert at ${data.courseName}`, html, headers: stop.headers });
+  const ctx = await emailCourse({ courseId: data.courseId, courseSlug: data.courseSlug }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'tee_time_alert_confirm', courseSlug: data.courseSlug, courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(alertConfirmEmail(data, ctx.course, confirmUrl, stop.url)), headers: stop.headers });
 }
 
 export async function sendReminderEmail(data: {
   golferName: string; golferEmail: string; courseName: string; courseAddress: string; courseSlug?: string;
   date: string; time: string; players: number; holes: number; productLabel?: string | null; bookingId: string; checkInToken?: string | null;
 }) {
-  const checkInUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/checkin/${data.bookingId}?token=${data.checkInToken}` : '';
-  const portalUrl = data.courseSlug
-    ? `${process.env.NEXT_PUBLIC_URL}/courses/${data.courseSlug}`
-    : process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
-  const manageUrl = data.checkInToken ? `${process.env.NEXT_PUBLIC_URL}/manage/${data.bookingId}?token=${data.checkInToken}` : portalUrl;
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">&#9971; Tee time tomorrow!</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">You&rsquo;re on the tee sheet at ${data.courseName}.</p>
-    <div style="background:#F6F4EC;border-radius:6px;padding:24px;margin-bottom:20px;">
-      <p style="margin:0 0 8px;color:#141814;font-size:22px;font-weight:700;">${data.time}</p>
-      <p style="margin:0 0 4px;color:#3F453E;font-weight:600;">${data.courseName}</p>
-      <p style="margin:0 0 12px;color:#3F453E;font-size:14px;">&#128205; ${data.courseAddress}</p>
-      <p style="margin:0;color:#3F453E;font-size:14px;">${data.players} player${data.players > 1 ? 's' : ''} &middot; ${data.productLabel ? escHtml(data.productLabel) + ' &middot; ' : ''}${data.holes} holes</p>
-    </div>
-    <div style="background:#F7EFE2;border:1px solid #E8D3B0;border-radius:6px;padding:14px;margin-bottom:20px;">
-      <p style="margin:0;color:#7A4A10;font-size:13px;">&#128336; ${checkInUrl ? 'The link below opens tomorrow, the day of your round — check in and pay there before you head out, or at the pro shop when you arrive.' : 'Arrive 15 minutes early and check in at the pro shop.'}</p>
-    </div>
-    ${checkInUrl ? `<a href="${checkInUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:10px;">Check In &amp; Pay Tomorrow &rarr;</a>` : ''}
-    <a href="${manageUrl}" style="display:block;${checkInUrl ? 'color:#173B2A;' : 'background:#173B2A;color:#fff;'}text-decoration:none;text-align:center;padding:${checkInUrl ? '8px' : '14px'};font-weight:600;font-size:${checkInUrl ? '13px' : '15px'};">View or Cancel Booking &rarr;</a>
-  `);
-  await getResend().emails.send({ meta: { kind: 'reminder_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_SUPPORT, to: data.golferEmail, subject: `Tomorrow: ${data.time} at ${data.courseName}`, html });
+  const ctx = await emailCourse({ bookingId: data.bookingId, courseSlug: data.courseSlug }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'reminder_email', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.golferEmail, ...mail(reminderEmail({ ...data, totalCents: ctx.booking?.totalCents }, ctx.course)) });
 }
 
 
@@ -996,32 +791,12 @@ export async function sendMemberInviteEmail(data: {
   name: string; email: string; courseName: string; groupName: string; coursePageUrl: string; benefits: string;
   /** Members pricing on at the course (lib/pricing-switch). Off: no rate is promised; the invite says "to book. You can book <window> · <passes>." */
   memberPricing: boolean;
+  courseId?: string;
 }) {
-  // GOLFER-LOGIN-1 (Cam 2026-11-18, approved mockup "When the course sets someone up"): one invite for every member,
-  // "Log in", never "sign in as a member". Sent once the membership is active (lib/member-welcome).
-  const shownUrl = data.coursePageUrl.replace(/^https?:[/][/]/, '');
-  // Members pricing off (Build 2026-11-19): "…to book. You can book 9 days out · 6 guest passes a year." (no rate).
-  const offLine = !data.benefits ? '' : data.benefits.startsWith('book ') ? `You can ${data.benefits}.` : `${data.benefits[0].toUpperCase()}${data.benefits.slice(1)}.`;
-  const first = (data.name || '').trim().split(' ')[0];
-  const html = baseTemplate(`
-    ${first ? `<p style="margin:0 0 12px;color:#3F453E;font-size:15px;">Hi ${escHtml(first)},</p>` : ''}
-    <p style="margin:0 0 12px;color:#3F453E;font-size:15px;">
-      <strong>${escHtml(data.courseName)}</strong> set you up as a <strong>${escHtml(data.groupName)}</strong>.
-      Log in at ${escHtml(shownUrl)} with this email ${data.memberPricing ? `to get your rates${data.benefits ? `: ${escHtml(data.benefits)}` : '.'}` : `to book.${offLine ? ` ${escHtml(offLine)}` : ''}`}
-    </p>
-    <a href="${data.coursePageUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin:20px 0 16px;">
-      Log in to ${escHtml(data.courseName)}
-    </a>
-    <p style="margin:0;color:#6B706A;font-size:12px;">
-      No password. We email you a code each time. Didn&rsquo;t expect this? Call the pro shop. Nothing happens until you log in.
-    </p>
-  `);
-  await getResend().emails.send({ meta: { kind: 'member_invite_email' },
-    from: FROM_SUPPORT,
-    to: data.email,
-    subject: `${data.courseName} set you up as a ${data.groupName}`,
-    html,
-  });
+  // GOLFER-LOGIN-1 (Cam 2026-11-18): one invite for every member, "Log in", never "sign in as a member".
+  // Sent once the membership is active (lib/member-welcome).
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'member_invite_email', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(memberInviteEmail(data, ctx.course)) });
 }
 
 // The lead form is public: every field below is attacker-controlled text that
@@ -1597,41 +1372,10 @@ export async function sendOnboardingChaseEmail(data: {
 
 export async function sendMembershipPaymentLinkEmail(data: {
   name: string; email: string; courseName: string; tierName: string;
-  annualFee: number; initiationFee: number; payLink: string; isRenewal?: boolean;
+  annualFee: number; initiationFee: number; payLink: string; isRenewal?: boolean; courseId?: string;
 }) {
-  // Same rule the pay page charges (amountsDue() in api/membership/[id]): dues + GreenReserve's 1%.
-  const dues = data.annualFee + data.initiationFee;
-  const serviceFee = membershipFeeCents(Math.round(dues * 100)) / 100;
-  const total = dues + serviceFee;
-  const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#EEF3EC;color:#2F6B45;font-size:13px;font-weight:600;padding:4px 14px;border-radius:6px;">${data.isRenewal ? 'Membership renewal' : 'Membership dues'}</span></div>
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${data.isRenewal ? `Time to renew, ${data.name}.` : `Complete your membership, ${data.name}.`}</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">
-      ${data.isRenewal
-        ? `Your <strong>${data.tierName}</strong> membership at <strong>${data.courseName}</strong> is coming up for renewal. Pay your dues online to keep your member rates and booking privileges.`
-        : `<strong>${data.courseName}</strong> has set you up as a <strong>${data.tierName}</strong> member. Pay your dues online to activate your membership.`}
-    </p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:14px;color:#3F453E;">
-      ${data.initiationFee > 0 ? `<tr><td style="padding:6px 0;">One-time initiation fee</td><td style="text-align:right;font-weight:700;">$${data.initiationFee.toFixed(2)}</td></tr>` : ''}
-      <tr><td style="padding:6px 0;">${data.tierName} dues</td><td style="text-align:right;font-weight:700;">$${data.annualFee.toFixed(2)}</td></tr>
-      ${serviceFee > 0 ? `<tr><td style="padding:6px 0;">GreenReserve service fee (1% of dues)</td><td style="text-align:right;font-weight:700;">$${serviceFee.toFixed(2)}</td></tr>` : ''}
-      <tr><td style="padding:10px 0;border-top:1px solid #E3E4DE;font-weight:800;color:#141814;">Total due</td><td style="text-align:right;border-top:1px solid #E3E4DE;font-weight:700;color:#141814;">$${total.toFixed(2)}</td></tr>
-    </table>
-    <a href="${data.payLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin-bottom:16px;">
-      Pay Membership Dues &rarr;
-    </a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      Your dues go directly to ${data.courseName}. Paying at the pro shop instead? Just let the course know.
-    </p>
-  `, BILLING_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'membership_payment_link_email' },
-    from: FROM_BILLING,
-    to: data.email,
-    subject: data.isRenewal
-      ? `Renew your membership at ${data.courseName}`
-      : `Pay your membership dues — ${data.courseName}`,
-    html,
-  });
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'membership_payment_link_email', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(duesPayLinkEmail(data, ctx.course)) });
 }
 
 export async function sendAdminSetPasswordEmail(data: {
@@ -1658,111 +1402,49 @@ export async function sendAdminSetPasswordEmail(data: {
 }
 
 export async function sendMemberMagicLink(data: {
-  name: string; email: string; courseName: string; magicLink: string;
+  name: string; email: string; courseName: string; magicLink: string; courseId?: string;
 }) {
   // GOLFER-LOGIN-1 (Cam 2026-11-18): "Log in", never "sign in as a member" — residents and other groups get this too.
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Log in to ${escHtml(data.courseName)}</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Use the button below to log in to <strong>${escHtml(data.courseName)}</strong>. This link works for 15 minutes.
-    </p>
-    <a href="${data.magicLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin-bottom:16px;">
-      Log in &rarr;
-    </a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      If you didn&rsquo;t try to log in, ignore this email.
-    </p>
-  `);
-  await getResend().emails.send({ meta: { kind: 'member_magic_link' },
-    from: FROM_NOREPLY,
-    to: data.email,
-    subject: `Log in to ${data.courseName}`,
-    html,
-  });
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'member_magic_link', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(memberMagicLinkEmail(data, ctx.course)) });
 }
 
 // Log in with a code (Cam 2026-11-18, approved mockup "The log-in code"): the per-course log-in code email.
-export async function sendMemberLoginCode(data: { email: string; courseName: string; code: string }) {
-  const shown = `${data.code.slice(0, 3)} ${data.code.slice(3)}`;
-  const html = baseTemplate(`
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Here&rsquo;s your code to log in to <strong>${escHtml(data.courseName)}</strong>:</p>
-    <div style="font-size:34px;font-weight:700;letter-spacing:.18em;text-align:center;padding:14px 0;background:#F1F2EE;border-radius:10px;margin:0 0 12px;color:#141814;">${shown}</div>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">It works for 10 minutes.</p>
-    <p style="margin:0;color:#6B706A;font-size:12px;">If you didn&rsquo;t try to log in, ignore this email. Nobody can log in without this code.</p>
-  `);
-  await getResend().emails.send({ meta: { kind: 'member_login_code' },
-    from: FROM_NOREPLY,
-    to: data.email,
-    subject: `Your ${data.courseName} log-in code`,
-    html,
-  });
+export async function sendMemberLoginCode(data: { email: string; courseName: string; code: string; courseId?: string }) {
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'member_login_code', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(memberLoginCodeEmail(data, ctx.course)) });
 }
 
 // MEM-RENEW (lib/membership-autorenew): the four auto-renew emails — on (the terms they agreed to),
-// the reminder before each renewal, a declined renewal (pay link), and off. Billing alias: money.
-const longDate = (d: Date | null) => (d ? d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '');
-const cents = (c: number) => `$${(c / 100).toFixed(2)}`;
+// the reminder before each renewal, a declined renewal (pay link), and off. Built in lib/email-golfer.
 const manageButton = (link: string, label: string) => `<a href="${link}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:700;font-size:15px;margin:20px 0 12px;">${label}</a>`;
 
-export async function sendAutoRenewOnEmail(data: { name: string; email: string; courseName: string; tierName: string; terms: string; renewsOn: Date | null; totalCents: number; manageLink: string }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">Automatic renewal is on</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — your <strong>${data.tierName}</strong> membership at <strong>${data.courseName}</strong> will renew automatically${data.renewsOn ? ` on <strong>${longDate(data.renewsOn)}</strong>` : ''} for <strong>${cents(data.totalCents)}</strong>. These are the terms you agreed to:</p>
-    <p style="margin:0 0 8px;padding:14px;background:#F6F4EC;border-radius:6px;color:#3F453E;font-size:13.5px;line-height:1.5;">${data.terms}</p>
-    ${manageButton(data.manageLink, 'Manage or turn off automatic renewal')}
-  `, BILLING_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'membership_autorenew_on' }, from: FROM_BILLING, to: data.email, subject: `Automatic renewal is on — ${data.courseName}`, html });
+export async function sendAutoRenewOnEmail(data: { name: string; email: string; courseName: string; tierName: string; terms: string; renewsOn: Date | null; totalCents: number; manageLink: string; courseId?: string }) {
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'membership_autorenew_on', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(autoRenewOnEmail(data, ctx.course)) });
 }
 
-export async function sendAutoRenewReminderEmail(data: { name: string; email: string; courseName: string; tierName: string; renewsOn: Date; totalCents: number; manageLink: string }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">Your membership renews on ${longDate(data.renewsOn)}</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — your <strong>${data.tierName}</strong> membership at <strong>${data.courseName}</strong> renews automatically on <strong>${longDate(data.renewsOn)}</strong>. <strong>${cents(data.totalCents)}</strong> will be charged to the card you saved. Nothing to do if you'd like to keep it.</p>
-    <p style="margin:0;color:#3F453E;font-size:15px;">Don't want to renew? Turn automatic renewal off before then — your membership runs to the end of the period you've paid for.</p>
-    ${manageButton(data.manageLink, 'Turn off automatic renewal')}
-  `, BILLING_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'membership_autorenew_reminder' }, from: FROM_BILLING, to: data.email, subject: `Your ${data.courseName} membership renews on ${longDate(data.renewsOn)}`, html });
+export async function sendAutoRenewReminderEmail(data: { name: string; email: string; courseName: string; tierName: string; renewsOn: Date; totalCents: number; manageLink: string; courseId?: string }) {
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'membership_autorenew_reminder', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(autoRenewReminderEmail(data, ctx.course)) });
 }
 
-export async function sendAutoRenewDeclinedEmail(data: { name: string; email: string; courseName: string; tierName: string; totalCents: number; payLink: string; retryOn: Date | null }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">Your renewal didn't go through</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — we couldn't charge <strong>${cents(data.totalCents)}</strong> to your saved card to renew your <strong>${data.tierName}</strong> membership at <strong>${data.courseName}</strong>.${data.retryOn ? ` We'll try the card once more on ${longDate(data.retryOn)}.` : ''} To keep your member rates, pay with another card:</p>
-    ${manageButton(data.payLink, 'Pay membership dues')}
-  `, BILLING_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'membership_autorenew_declined' }, from: FROM_BILLING, to: data.email, subject: `Your ${data.courseName} membership renewal didn't go through`, html });
+export async function sendAutoRenewDeclinedEmail(data: { name: string; email: string; courseName: string; tierName: string; totalCents: number; payLink: string; retryOn: Date | null; courseId?: string }) {
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'membership_autorenew_declined', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(autoRenewDeclinedEmail(data, ctx.course)) });
 }
 
-export async function sendAutoRenewOffEmail(data: { name: string; email: string; courseName: string; tierName: string; endsOn: Date | null }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">Automatic renewal is off</h1>
-    <p style="margin:0;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — your <strong>${data.tierName}</strong> membership at <strong>${data.courseName}</strong> won't renew automatically, and your card won't be charged.${data.endsOn ? ` Your membership runs through <strong>${longDate(data.endsOn)}</strong>.` : ''} You can renew any time from the course's reminder email.</p>
-  `, BILLING_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'membership_autorenew_off' }, from: FROM_BILLING, to: data.email, subject: `Automatic renewal is off — ${data.courseName}`, html });
+export async function sendAutoRenewOffEmail(data: { name: string; email: string; courseName: string; tierName: string; endsOn: Date | null; courseId?: string }) {
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'membership_autorenew_off', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(autoRenewOffEmail(data, ctx.course)) });
 }
 
 export async function sendMembershipReceiptEmail(data: {
   name: string; email: string; courseName: string; tierName: string;
-  amountPaid: number; serviceFee: number; expiresAt: Date | null;
+  amountPaid: number; serviceFee: number; expiresAt: Date | null; courseId?: string;
 }) {
-  const until = data.expiresAt
-    ? data.expiresAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-    : null;
-  const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#EEF3EC;color:#2F6B45;font-size:13px;font-weight:600;padding:4px 14px;border-radius:6px;">Payment received</span></div>
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">You're all set, ${data.name}.</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">
-      Your payment of <strong>$${data.amountPaid.toFixed(2)}</strong> to <strong>${data.courseName}</strong> went through${data.serviceFee > 0 ? ` (dues $${(data.amountPaid - data.serviceFee).toFixed(2)} plus GreenReserve's $${data.serviceFee.toFixed(2)} service fee, 1% of the dues)` : ''}.
-      Your <strong>${data.tierName}</strong> membership is active${until ? ` through <strong>${until}</strong>` : ''}.
-    </p>
-    <p style="margin:0;color:#6B706A;font-size:12px;">Keep this email as your receipt. Member rates apply automatically when you book while signed in.</p>
-  `, BILLING_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'membership_receipt_email' },
-    from: FROM_BILLING,
-    to: data.email,
-    subject: `Receipt — ${data.tierName} membership at ${data.courseName}`,
-    html,
-  });
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'membership_receipt_email', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(duesReceiptEmail(data, ctx.course)) });
 }
 
 /**
@@ -1838,16 +1520,8 @@ export async function sendRefundEmail(data: {
   golferName: string; golferEmail: string; courseName: string;
   date: string; time: string; amountCents: number; full: boolean; reason: string; bookingId: string;
 }) {
-  const amount = `$${(data.amountCents / 100).toFixed(2)}`;
-  const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#EEF3EC;color:#2F6B45;font-size:13px;font-weight:600;padding:4px 12px;border-radius:6px;">Refund issued</span></div>
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${amount} is on its way back to your card.</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">${data.courseName} &middot; ${data.date} at ${data.time}${data.full ? '' : ' &middot; partial refund'}</p>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;line-height:1.6;">${data.reason}</p>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:14px;line-height:1.6;">Refunds usually appear on your statement within 5&ndash;10 business days, depending on your bank. It goes back to the card you paid with.</p>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Booking ${await bookingRefFor(data.bookingId)}</p>
-  `, BILLING_EMAIL);
-  const r = await getResend().emails.send({ meta: { kind: 'refund_email', bookingId: data.bookingId }, from: FROM_BILLING, to: data.golferEmail, subject: `Refund: ${amount} from ${data.courseName}`, html });
+  const ctx = await emailCourse({ bookingId: data.bookingId }, data.courseName);
+  const r = await getResend().emails.send({ meta: { kind: 'refund_email', bookingId: data.bookingId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.golferEmail, ...mail(refundEmail(data, ctx.course)) });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 
@@ -1948,23 +1622,16 @@ export async function sendMonthlyReviewEmail(data: {
  *  first tee 9:00"). The text is the course's own, escaped, line breaks kept.
  *  Replies go to the course, not GreenReserve. */
 /** MSG-2: the course notice exactly as it is sent — Message golfers previews this, the send uses it. */
-export function courseNoticeEmail(data: { courseName: string; dateLabel: string; teeTime: string; body: string }): { subject: string; html: string } {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">A note from ${escHtml(data.courseName)}</h1>
-    <p style="margin:0 0 18px;color:#3F453E;font-size:14px;">About your ${escHtml(data.teeTime)} tee time on ${escHtml(data.dateLabel)}.</p>
-    <div style="color:#141814;font-size:15px;line-height:1.6;white-space:pre-wrap;">${escHtml(data.body)}</div>
-    <p style="margin:22px 0 0;color:#6B706A;font-size:13px;">Questions? Reply to this email to reach ${escHtml(data.courseName)}.</p>
-  `);
-  return { subject: subj(`${data.courseName}: about your ${data.teeTime} tee time`), html };
-}
 
 export async function sendCourseNoticeEmail(data: {
   to: string; golferName: string; courseName: string; replyTo?: string | null;
   dateLabel: string; teeTime: string; body: string; courseId?: string;
 }) {
-  const { subject, html } = courseNoticeEmail(data);
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  const { subject, html, text } = courseNoticeEmail({ ...data, course: ctx.course });
+  // The course's own reply-to (when staff gave one) is kept: a reply reaches the course, never noreply@.
   await getResend().emails.send({ meta: { kind: 'course_notice_email', courseId: data.courseId },
-    from: FROM_SUPPORT, to: data.to, subject, html,
+    from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.to, subject, html, text,
     ...(data.replyTo ? { replyTo: data.replyTo } : {}),
   });
 }
@@ -1977,32 +1644,12 @@ export async function sendShopSalePayLinkEmail(data: {
   /** SHOP-FEE-1: GreenReserve's service fee, already in totalCents (what the card pays); its own line. */
   serviceFeeCents?: number;
 }) {
-  // W2-7 part B: sales tax, when the course collects it, as its own line. POS-3: and a discount.
-  const taxRow = shopDiscountRow(data.discountCents, data.discountNote) + (data.taxCents ? `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;">Sales tax</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;text-align:right;">$${(data.taxCents / 100).toFixed(2)}</td></tr>` : '')
-    + shopServiceFeeRow(data.serviceFeeCents);
-  const rows = shopLineRows(data.lines);
-  const html = baseTemplate(`
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your pro shop total</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">${data.name ? `Hi ${escapeHtml(firstName(data.name))}, here` : 'Here'}&rsquo;s what you picked up at ${escapeHtml(data.courseName)}.</p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">${rows}${taxRow}
-      <tr><td style="padding:10px 0 0;color:#141814;font-size:15px;font-weight:700;">Total</td><td style="padding:10px 0 0;color:#141814;font-size:15px;font-weight:700;text-align:right;">$${(data.totalCents / 100).toFixed(2)}</td></tr>
-    </table>
-    <a href="${data.payUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin:16px 0;">Pay $${(data.totalCents / 100).toFixed(2)} &rarr;</a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Apple Pay, Google Pay or card. The charge comes from ${escapeHtml(data.courseName)}.</p>
-  `, BILLING_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'shop_sale_pay_link_email', courseId: data.courseId }, from: FROM_BILLING, to: data.email, subject: `Pay for your pro shop items — ${data.courseName}`, html });
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'shop_sale_pay_link_email', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(shopPayLinkEmail(data, ctx.course)) });
 }
 
-const shopLineRows = (lines: { name: string; unitPriceCents: number; quantity: number }[]) =>
-  lines.map(l => `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;">${escapeHtml(l.name)}${l.quantity > 1 ? ` &times; ${l.quantity}` : ''}</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;text-align:right;">$${((l.unitPriceCents * l.quantity) / 100).toFixed(2)}</td></tr>`).join('');
-/** SHOP-FEE-1: GreenReserve's service fee on card pro-shop items, as its own line. */
-const shopServiceFeeRow = (cents?: number) => cents
-  ? `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;">${escapeHtml(SHOP_FEE_LABEL)}</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;text-align:right;">$${(cents / 100).toFixed(2)}</td></tr>` : '';
-const shopDiscountRow = (cents?: number, note?: string) => cents
-  ? `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;">Discount${note ? ` (${escapeHtml(note)})` : ''}</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;text-align:right;">&minus;$${(cents / 100).toFixed(2)}</td></tr>` : '';
-
 // POS-3 (Cam 2026-10-24, "like Square"): the receipt for a paid walk-up sale,
-// sent when the customer asks for one. Money moved, so it comes from billing@.
+// sent when the customer asks for one. Sent as the course (lib/email-golfer).
 export async function sendShopReceiptEmail(data: {
   email: string; name: string; courseName: string; courseId?: string; saleId: string;
   /** PRO-SHOP: the course's sale number (#18), or null for a sale from before numbers. */
@@ -2013,20 +1660,8 @@ export async function sendShopReceiptEmail(data: {
   /** SHOP-FEE-1: GreenReserve's service fee, already in totalCents (what was paid); its own line. */
   serviceFeeCents?: number;
 }) {
-  const row = (label: string, value: string, strong = false) => `<tr><td style="padding:${strong ? '10px 0 0' : '6px 0'};color:${strong ? '#141814' : '#3F453E'};font-size:${strong ? 15 : 14}px;${strong ? 'font-weight:700;' : 'border-bottom:1px solid #E3E4DE;'}">${label}</td><td style="padding:${strong ? '10px 0 0' : '6px 0'};color:${strong ? '#141814' : '#3F453E'};font-size:${strong ? 15 : 14}px;text-align:right;${strong ? 'font-weight:700;' : 'border-bottom:1px solid #E3E4DE;'}">${value}</td></tr>`;
-  const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
-  const html = baseTemplate(`
-    <h1 style="margin:16px 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your receipt</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">${data.name ? `Hi ${escapeHtml(firstName(data.name))}, thanks` : 'Thanks'} for shopping at ${escapeHtml(data.courseName)}.</p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">${shopLineRows(data.lines)}${shopDiscountRow(data.discountCents, data.discountNote)}${data.taxCents ? row('Sales tax', usd(data.taxCents)) : ''}${data.serviceFeeCents ? row(escapeHtml(SHOP_FEE_LABEL), usd(data.serviceFeeCents)) : ''}${row('Total', usd(data.totalCents), true)}</table>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 16px;">
-      <tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Paid</td><td align="right" style="padding:4px 0;color:#141814;font-size:13px;">${escapeHtml(data.paidWith)} · ${escapeHtml(data.paidAt)}</td></tr>
-      ${data.cashTenderedCents != null ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Cash given · change</td><td align="right" style="padding:4px 0;color:#141814;font-size:13px;">${usd(data.cashTenderedCents)} · ${usd(data.cashTenderedCents - data.totalCents)}</td></tr>` : ''}
-      ${data.refundedCents ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Refunded</td><td align="right" style="padding:4px 0;color:#141814;font-size:13px;">&minus;${usd(data.refundedCents)}</td></tr>` : ''}
-      <tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Receipt</td><td align="right" style="padding:4px 0;color:#141814;font-size:13px;">${escapeHtml(saleRef(data.saleId, data.saleNumber))}</td></tr>
-    </table>
-  `, BILLING_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'shop_receipt_email', courseId: data.courseId }, from: FROM_BILLING, to: data.email, subject: `Your receipt from ${data.courseName}`, html });
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'shop_receipt_email', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(shopReceiptEmail(data, ctx.course)) });
 }
 
 
@@ -2163,21 +1798,8 @@ export async function sendEventPairingsEmail(data: {
   name: string; email: string; courseName: string; coursePhone: string; replyTo: string;
   eventName: string; dateLabel: string; startLabel: string; groupNo: number; startHole: string | null; groupmates: string[]; courseId?: string;
 }) {
-  const e = escapeHtml;
-  const row = (label: string, value: string) => `<tr><td style="padding:6px 0;color:#6B706A;font-size:14px;width:120px;vertical-align:top;">${label}</td><td style="padding:6px 0;color:#141814;font-size:14px;">${value}</td></tr>`;
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your group for ${e(data.eventName)}</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">Hi ${e(firstName(data.name))}, here is where you start at ${e(data.courseName)}.</p>
-    <table cellpadding="0" cellspacing="0" style="width:100%;border-top:1px solid #E3E4DE;border-bottom:1px solid #E3E4DE;margin-bottom:20px;">
-      ${row('Date', e(data.dateLabel))}
-      ${row(data.startHole ? 'Shotgun' : 'Tee time', e(data.startLabel))}
-      ${row('Group', String(data.groupNo))}
-      ${data.startHole ? row('Starting hole', e(data.startHole)) : ''}
-      ${data.groupmates.length ? row('Playing with', data.groupmates.map(e).join('<br>')) : ''}
-    </table>
-    <p style="margin:0;color:#6B706A;font-size:13px;">Questions? Reply to this email${data.coursePhone ? ` or call ${e(data.courseName)} at ${e(data.coursePhone)}` : ''}.</p>
-  `);
-  await getResend().emails.send({ meta: { kind: 'event_pairings_email', courseId: data.courseId }, from: FROM_SUPPORT, to: data.email, replyTo: data.replyTo, subject: `Your group for ${data.eventName}`, html });
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'event_pairings_email', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, replyTo: data.replyTo, ...mail(eventPairingsEmail(data, ctx.course)) });
 }
 
 /** W2-9b: a pay link for an event (deposit, balance or any payment the course asks for). Replies go to the staff who sent it. */
@@ -2185,23 +1807,8 @@ export async function sendEventPayLinkEmail(data: {
   email: string; name: string; courseName: string; replyTo: string;
   eventName: string; dateLabel: string; label: string; amountCents: number; feeCents: number; payUrl: string; terms: string; courseId?: string;
 }) {
-  const e = escapeHtml;
-  const money = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  const row = (l: string, v: string, bold = false) => `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:${bold ? '#141814' : '#3F453E'};font-size:14px;${bold ? 'font-weight:700;' : ''}">${l}</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;text-align:right;${bold ? 'font-weight:700;' : ''}">${v}</td></tr>`;
-  const total = data.amountCents + data.feeCents;
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${e(data.label)} for ${e(data.eventName)}</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">Hi ${e(firstName(data.name))}, ${e(data.courseName)} has sent you a payment for ${e(data.eventName)} on ${e(data.dateLabel)}.</p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
-      ${row(e(data.label), money(data.amountCents))}
-      ${data.feeCents ? row('GreenReserve service fee', money(data.feeCents)) : ''}
-      ${row('Total', money(total), true)}
-    </table>
-    <a href="${data.payUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin:16px 0;">Pay ${money(total)}</a>
-    ${data.terms ? `<p style="margin:0 0 12px;color:#3F453E;font-size:13px;"><strong>${e(data.courseName)}&rsquo;s terms:</strong> ${e(data.terms)}</p>` : ''}
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">Apple Pay, Google Pay or card. The charge comes from ${e(data.courseName)}. Reply to this email to reach ${e(data.courseName)}.</p>
-  `, BILLING_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'event_pay_link_email', courseId: data.courseId }, from: FROM_BILLING, to: data.email, replyTo: data.replyTo, subject: `${data.label} for ${data.eventName} — ${data.courseName}`, html });
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'event_pay_link_email', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, replyTo: data.replyTo, ...mail(eventPayLinkEmail(data, ctx.course)) });
 }
 
 /** W2-9d: an event sign-up, emailed to whoever signed the group up. */
@@ -2211,33 +1818,9 @@ export async function sendEventSignupEmail(data: {
   courseName: string; coursePhone: string; replyTo: string | null;
   eventName: string; dateLabel: string; startLabel: string; paidCents: number; terms: string; courseId?: string;
 }) {
-  const e = escapeHtml;
-  const money = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  const row = (l: string, v: string) => `<tr><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#3F453E;font-size:14px;">${l}</td><td style="padding:6px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;text-align:right;">${v}</td></tr>`;
-  const wait = data.variant === 'waitlist';
-  // MAIL-1 (Cam 2026-10-22): money moved → billing@; only about the round → support@.
-  const paid = data.variant === 'paid' && data.paidCents > 0;
-  const heading = wait ? `You’re on the waiting list` : data.variant === 'moved_in' ? `A spot opened — you’re in` : `You’re signed up`;
-  const lead = wait
-    ? `${e(data.eventName)} is full right now, so ${e(data.courseName)} has put you on the waiting list. They’ll email you if a spot opens. Nothing has been charged.`
-    : data.variant === 'moved_in'
-      ? `${e(data.courseName)} has moved you off the waiting list — you’re playing in ${e(data.eventName)}.`
-      : `You’re on the list for ${e(data.eventName)} at ${e(data.courseName)}.`;
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${heading}</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">Hi ${e(firstName(data.name))}, ${lead}</p>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
-      ${row('Event', e(data.eventName))}
-      ${row('Date', e(data.dateLabel))}
-      ${row('Start', e(data.startLabel))}
-      ${row(data.players.length === 1 ? 'Player' : 'Players', data.players.map(e).join('<br>'))}
-      ${data.variant === 'paid' && data.paidCents ? row('Paid', money(data.paidCents)) : ''}
-    </table>
-    ${data.terms && !wait ? `<p style="margin:0 0 12px;color:#3F453E;font-size:13px;"><strong>${e(data.courseName)}&rsquo;s terms:</strong> ${e(data.terms)}</p>` : ''}
-    <p style="margin:0;color:#6B706A;font-size:13px;">Questions or need to drop out? Reply to this email${data.coursePhone ? ` or call ${e(data.courseName)} at ${e(data.coursePhone)}` : ''}.</p>
-  `, paid ? BILLING_EMAIL : SUPPORT_EMAIL);
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
   await getResend().emails.send({ meta: { kind: 'event_signup_email', courseId: data.courseId },
-    from: paid ? FROM_BILLING : FROM_SUPPORT, to: data.email, subject: subj(`${heading}: ${data.eventName}`), html,
+    from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(eventSignupEmail(data, ctx.course)),
     ...(data.replyTo ? { replyTo: data.replyTo } : {}),
   });
 }
@@ -2257,32 +1840,19 @@ export async function sendLowStockEmail(data: { courseId: string; courseName: st
   await getResend().emails.send({ meta: { kind: 'shop_low_stock', courseId: data.courseId }, from: FROM_ADMIN, to: data.ownerEmail, subject: one ? `Low stock: ${data.items[0].name}` : `Low stock: ${data.items.length} items at ${data.courseName}`, html });
 }
 
-// MEM-ACCT part 2: member account statements (billing@ — money is owed or moved).
-const monthName = (period: string) => { const [y, m] = period.split('-').map(Number); return new Date(Date.UTC(y, m - 1, 15)).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }); };
+// MEM-ACCT part 2: member account statements. Built in lib/email-golfer; sent as the course.
 
-export async function sendStatementEmail(data: { name: string; email: string; courseName: string; period: string; totalCents: number; lineCount: number; dueAt: Date; chargeOn: Date | null; payLink: string }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">Your ${monthName(data.period)} statement</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — your member account at <strong>${data.courseName}</strong> comes to <strong>${cents(data.totalCents)}</strong> for ${monthName(data.period)} (${data.lineCount} item${data.lineCount === 1 ? '' : 's'}).${data.chargeOn ? ` It will be charged to your saved card on <strong>${longDate(data.chargeOn)}</strong>; to pay another way, use the link before then.` : ` It's due by <strong>${longDate(data.dueAt)}</strong>.`}</p>
-    ${manageButton(data.payLink, data.chargeOn ? 'See the statement' : 'Pay the statement')}
-  `, BILLING_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'member_statement' }, from: FROM_BILLING, to: data.email, subject: `Your ${data.courseName} statement — ${monthName(data.period)}`, html });
+export async function sendStatementEmail(data: { name: string; email: string; courseName: string; period: string; totalCents: number; lineCount: number; dueAt: Date; chargeOn: Date | null; payLink: string; courseId?: string }) {
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'member_statement', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(statementEmail(data, ctx.course)) });
 }
 
-export async function sendStatementDeclinedEmail(data: { name: string; email: string; courseName: string; period: string; totalCents: number; dueAt: Date; retryOn: Date | null; payLink: string }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">Your statement didn't go through</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — we couldn't charge <strong>${cents(data.totalCents)}</strong> to your saved card for your ${monthName(data.period)} statement at <strong>${data.courseName}</strong>.${data.retryOn ? ` We'll try the card once more on ${longDate(data.retryOn)}.` : ''} It's due by <strong>${longDate(data.dueAt)}</strong>; after that nothing more can go on your account until it's paid.</p>
-    ${manageButton(data.payLink, 'Pay the statement')}
-  `, BILLING_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'member_statement_declined' }, from: FROM_BILLING, to: data.email, subject: `Your ${data.courseName} statement didn't go through`, html });
+export async function sendStatementDeclinedEmail(data: { name: string; email: string; courseName: string; period: string; totalCents: number; dueAt: Date; retryOn: Date | null; payLink: string; courseId?: string }) {
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'member_statement_declined', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(statementDeclinedEmail(data, ctx.course)) });
 }
 
-export async function sendStatementPaidEmail(data: { name: string; email: string; courseName: string; period: string; amountCents: number; cardSaved: boolean; link: string }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">Statement paid</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — <strong>${cents(data.amountCents)}</strong> was charged to your card for your ${monthName(data.period)} statement at <strong>${data.courseName}</strong>.${data.cardSaved ? ` This card will be charged for your next statements, 3 days after each one is emailed; you can turn that off from any statement.` : ''}</p>
-    ${manageButton(data.link, 'See the statement')}
-  `, BILLING_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'member_statement_paid' }, from: FROM_BILLING, to: data.email, subject: `Statement paid — ${data.courseName}`, html });
+export async function sendStatementPaidEmail(data: { name: string; email: string; courseName: string; period: string; amountCents: number; cardSaved: boolean; link: string; courseId?: string }) {
+  const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
+  await getResend().emails.send({ meta: { kind: 'member_statement_paid', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(statementPaidEmail(data, ctx.course)) });
 }

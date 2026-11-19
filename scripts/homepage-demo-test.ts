@@ -35,7 +35,9 @@ check('closed seats cut what the golfer phone offers', demo.includes('const free
 const homeCopy = readFileSync('src/app/HomeContent.tsx', 'utf8');
 const seed = readFileSync('scripts/screenshots/seed.ts', 'utf8');
 check('the homepage carries no fee sentence', !homeCopy.includes('$1.50') && !homeCopy.includes('per player on each online booking') && homeCopy.includes('Free for your course.'));
-check('the pro shop has its own section with its own screenshot', homeCopy.includes("shot: 'shop'") && ['Take cash', 'Close out'].every(l => readFileSync('src/app/dashboard/shop/page.tsx', 'utf8').includes(l)));
+// Homepage redo (Cam 2026-11-18): the pro shop is one of the seven features, with its own page.
+check('the pro shop is a feature with its own page', readFileSync('src/components/home/features.ts', 'utf8').includes("slug: 'pro-shop'"));
+check('the register keeps its own words', ['Take cash', 'Close out'].every(l => readFileSync('src/app/dashboard/shop/page.tsx', 'utf8').includes(l)));
 check('the demo and the screenshot seed are the GreenReserve Test Course', demo.includes('GreenReserve Test Course') && seed.includes("name: 'GreenReserve Test Course'") && !demo.includes('Hollow') && !/name: 'Hollow/.test(seed));
 // Labels the product no longer has stay out of the demo.
 for (const gone of ['Take cash · check in', 'Close to new bookings', 'Open to anyone', 'tee times</span>', 'No Card Required']) check(`the demo no longer says "${gone}"`, !demo.includes(gone));
