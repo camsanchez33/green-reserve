@@ -260,7 +260,7 @@ export async function generateTeeTimes(courseId: string, dateStr: string): Promi
   return created;
 }
 
-export async function generateForAllCourses(minDaysAhead = 8): Promise<{ courseId: string; date: string; error: string }[]> {
+export async function generateForAllCourses(minDaysAhead = 8, now: Date = new Date()): Promise<{ courseId: string; date: string; error: string }[]> {
   const schedules = await prisma.teeTimeSchedule.findMany({
     where: { active: true },
     select: { courseId: true },
@@ -280,8 +280,11 @@ export async function generateForAllCourses(minDaysAhead = 8): Promise<{ courseI
   for (const { courseId } of schedules) {
     const daysAhead = horizon.get(courseId) ?? minDaysAhead;
     // SD-3: each course's window starts on ITS today.
-    const today = todayIn(tzOf.get(courseId));
-    for (let i = 0; i < daysAhead; i++) {
+    const today = todayIn(tzOf.get(courseId), now);
+    // One day past the horizon (Build 2026-11-19): this runs at 03:00 UTC, which is still the evening before for a
+    // course west of UTC, so its "today" here is the day before the golfers' today. Without the extra day, the window's
+    // last day was empty from local midnight until the next run.
+    for (let i = 0; i <= daysAhead; i++) {
       const dateStr = addDaysStr(today, i);
       try {
         await generateTeeTimes(courseId, dateStr);
