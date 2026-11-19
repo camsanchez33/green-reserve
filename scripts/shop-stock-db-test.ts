@@ -162,7 +162,8 @@ async function cleanup() {
 
   // Wiring.
   ok('the stock box says the reminder is by email', readFileSync('src/components/dashboard/shop/StockBox.tsx', 'utf8').includes('Reminder by email') && !readFileSync('src/components/dashboard/shop/StockBox.tsx', 'utf8').includes('Shows as Low on Stock'));
-  ok('the email goes through getResend from admin@', /export async function sendLowStockEmail[\s\S]*?getResend\(\)\.emails\.send\(\{ meta: \{ kind: 'shop_low_stock'[^}]*\}, from: FROM_ADMIN/.test(readFileSync('src/lib/email.ts', 'utf8')));
+  // Emails redo (Cam 2026-11-19): a routine staff notice — from noreply@, pointing to Course support.
+  ok('the email goes through getResend from noreply@', /export async function sendLowStockEmail[\s\S]*?getResend\(\)\.emails\.send\(\{ meta: \{ kind: 'shop_low_stock'[^}]*\}, from: FROM_NOREPLY/.test(readFileSync('src/lib/email.ts', 'utf8')));
   const route = readFileSync('src/app/api/operator/shop-stock/route.ts', 'utf8');
   ok('cost is the owner\'s alone; receiving and reorder points need the catalog permission', route.includes("if (session.isStaff) return NextResponse.json({ error: 'Only the course owner can see or set costs.' }") && route.includes("requirePermission(session, 'shop.catalog')") && route.includes('const cost = !session.isStaff'));
   ok('the catalog the register loads never carries cost', !readFileSync('src/lib/shop-catalog.ts', 'utf8').match(/ITEM_SELECT = \{[^}]*costCents/));

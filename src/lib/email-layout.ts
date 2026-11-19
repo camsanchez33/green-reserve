@@ -43,7 +43,9 @@ export type EmailCourse = {
 
 export type EmailRow = { label: string; value: string };
 export type EmailLink = { label: string; url: string };
-export type EmailNote = { label?: string; text: string };
+export type EmailNote = { label?: string; text: string; /** The label links here (admin alerts). */ url?: string };
+/** A titled block after the notes: rows and/or notes under a small heading (the morning digest, a setup sheet recap). */
+export type EmailSection = { title: string; rows?: EmailRow[]; notes?: EmailNote[] };
 
 export type LetterInput = {
   /** 'course' = from a course to a golfer; 'greenreserve' = from GreenReserve (staff, admin, onboarding). */
@@ -59,6 +61,8 @@ export type LetterInput = {
   rows?: EmailRow[];
   /** Labelled notes after the rows (a course's arrival line, a reason, terms). */
   notes?: EmailNote[];
+  /** Titled blocks after the notes. */
+  sections?: EmailSection[];
   /** A big code (sign-in codes): shown large under the headline. */
   code?: string;
   /** The one primary button. The arrow is added here. */
@@ -119,7 +123,7 @@ function colours(i: LetterInput): { bar: string; btn: string; btnInk: string } {
 }
 
 /** "Price", "Paid", "Total" rows carry money: set larger. */
-const isMoneyRow = (label: string) => /^(Price|Paid|Total|Refund|Due|Amount|Charged)\b/i.test(label) && !/^(Paid with|Due by)/i.test(label);
+const isMoneyRow = (label: string) => /^(Price|Paid|Total|Refund|Due|Amount|Charged)\b/i.test(label) && !/^(Paid with|Due by|Charged to)/i.test(label);
 const br = (s: string) => esc(s).replace(/\r?\n/g, '<br>');
 
 /** The logo image (a 3x PNG: email clients don't show SVG), at `h` px high. 540×101 source. */
@@ -146,23 +150,31 @@ export function letterEmail(i: LetterInput): RenderedEmail {
   const headline = `<h1 style="margin:6px 0 0;text-align:center;font:600 26px/1.2 ${T.serif};color:${T.ink}">${esc(i.line)}</h1>`;
   const code = i.code ? `<div style="text-align:center;margin:18px 0 4px;font:600 40px/1 ${T.serif};letter-spacing:.08em;color:${T.ink}">${esc(i.code)}</div>` : '';
   const paras = (i.paragraphs ?? []).filter(Boolean).map(t => `<p style="margin:14px 0 0;text-align:center;font:15px/1.6 ${T.sans};color:${T.body}">${br(t)}</p>`).join('');
-  const rows = (i.rows ?? []).filter(r => r && r.value !== '');
-  const rowsHtml = rows.length
-    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:18px 0 0">${rows.map((r, n) => {
+  const rowsOf = (list: EmailRow[] | undefined) => (list ?? []).filter(r => r && r.value !== '');
+  const rowsTable = (list: EmailRow[]) => list.length
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:18px 0 0">${list.map((r, n) => {
       const money = isMoneyRow(r.label);
       const top = n ? `border-top:1px solid ${T.line};` : '';
       return `<tr><td style="padding:10px 12px 10px 0;${top}font:13px/1.4 ${T.sans};color:${T.muted};vertical-align:baseline">${esc(r.label)}</td>`
         + `<td align="right" style="padding:10px 0;${top}text-align:right;vertical-align:baseline;font:${money ? '600 18px' : '500 15px'}/1.4 ${T.sans};color:${T.ink}">${br(r.value)}</td></tr>`;
     }).join('')}</table>`
     : '';
-  const notes = (i.notes ?? []).filter(n => n && n.text).map(n =>
-    `<p style="margin:12px 0 0;font:14px/1.55 ${T.sans};color:${T.body}">${n.label ? `<strong style="color:${T.ink}">${esc(n.label)}.</strong> ` : ''}${br(n.text)}</p>`).join('');
+  const notesHtml = (list: EmailNote[] | undefined) => (list ?? []).filter(n => n && n.text).map(n => {
+    const label = !n.label ? '' : n.url
+      ? `<a href="${esc(safeUrl(n.url))}" style="color:${T.ink};font-weight:600;text-decoration:underline">${esc(n.label)}</a>. `
+      : `<strong style="color:${T.ink}">${esc(n.label)}.</strong> `;
+    return `<p style="margin:12px 0 0;font:14px/1.55 ${T.sans};color:${T.body}">${label}${br(n.text)}</p>`;
+  }).join('');
+  const rows = rowsOf(i.rows);
+  const rowsHtml = rowsTable(rows);
+  const notes = notesHtml(i.notes);
+  const sections = (i.sections ?? []).map(sec => `<p style="margin:24px 0 0;font:600 15px/1.3 ${T.sans};color:${T.ink}">${esc(sec.title)}</p>${rowsTable(rowsOf(sec.rows)).replace('margin:18px 0 0', 'margin:6px 0 0')}${notesHtml(sec.notes)}`).join('');
   const button = i.button
     ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;margin:24px 0 0"><tr><td align="center" style="background:${c.btn};border-radius:7px"><a href="${esc(safeUrl(i.button.url))}" style="display:block;padding:14px 22px;font:600 15px/1 ${T.sans};color:${c.btnInk};text-decoration:none;text-align:center">${esc(i.button.label)}&nbsp;&rarr;</a></td></tr></table>`
     : '';
   const small = i.small ? `<p style="margin:12px 0 0;text-align:center;font:14px/1.5 ${T.sans}"><a href="${esc(safeUrl(i.small.url))}" style="color:${T.body};text-decoration:underline">${esc(i.small.label)}</a></p>` : '';
   const after = (i.after ?? []).filter(Boolean).map(t => p(t, `margin-top:10px;text-align:center;font:13px/1.5 ${T.sans};color:${T.muted}`)).join('');
-  const spacer = !rows.length && !paras && !code && !notes ? '<div style="height:4px;line-height:4px;font-size:0">&nbsp;</div>' : '';
+  const spacer = !rows.length && !paras && !code && !notes && !sections ? '<div style="height:4px;line-height:4px;font-size:0">&nbsp;</div>' : '';
 
   const stop = i.stop ? `<br><a href="${esc(safeUrl(i.stop.url))}" style="color:${T.muted};text-decoration:underline">${esc(i.stop.label)}</a>` : '';
   const footer = isCourse
@@ -181,7 +193,7 @@ export function letterEmail(i: LetterInput): RenderedEmail {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${T.soft}"><tr><td align="center" style="padding:28px 12px">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:${T.paper};border:1px solid ${T.line};border-radius:10px">
 ${header}
-<tr><td style="padding:8px 28px 26px">${headline}${code}${paras}${rowsHtml}${notes}${spacer}${button}${small}${after}</td></tr>
+<tr><td style="padding:8px 28px 26px">${headline}${code}${paras}${rowsHtml}${notes}${sections}${spacer}${button}${small}${after}</td></tr>
 <tr><td align="center" style="padding:16px 28px;border-top:1px solid ${T.line};text-align:center">${footer}</td></tr>
 </table>
 </td></tr></table>
@@ -194,7 +206,13 @@ ${header}
   if (i.code) t.push('', i.code);
   for (const x of i.paragraphs ?? []) if (x) t.push('', x);
   if (rows.length) { t.push(''); for (const r of rows) t.push(`${r.label}: ${r.value.replace(/\r?\n/g, ', ')}`); }
-  for (const n of i.notes ?? []) if (n?.text) t.push('', `${n.label ? `${n.label}. ` : ''}${n.text}`);
+  const noteText = (n: EmailNote) => `${n.label ? `${n.label}. ` : ''}${n.text}${n.url ? ` (${safeUrl(n.url)})` : ''}`;
+  for (const n of i.notes ?? []) if (n?.text) t.push('', noteText(n));
+  for (const sec of i.sections ?? []) {
+    t.push('', sec.title.toUpperCase());
+    for (const r of rowsOf(sec.rows)) t.push(`${r.label}: ${r.value.replace(/\r?\n/g, ', ')}`);
+    for (const n of sec.notes ?? []) if (n?.text) t.push(noteText(n));
+  }
   if (i.button) t.push('', `${i.button.label}: ${safeUrl(i.button.url)}`);
   if (i.small) t.push(`${i.small.label}: ${safeUrl(i.small.url)}`);
   for (const x of i.after ?? []) if (x) t.push('', x);
@@ -236,4 +254,38 @@ export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n ==
 /** A Date → "March 31, 2027". */
 export function longDate(d: Date | null | undefined): string {
   return d ? d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+}
+
+// ---------- Plain personal email (Cam's own replies, and outreach) ----------
+export type PlainInput = {
+  /** Paragraphs, in order: greeting, body, … (plain text; line breaks kept). */
+  paragraphs: string[];
+  /** The sign-off lines: "Cam Sanchez", "GreenReserve · <address>". */
+  signature: string[];
+  /** A muted line under the signature (what they asked, quoted back). */
+  quote?: string;
+  /** Outreach only: the logo and one line (postal address · reply to stop) under the email. */
+  footerLine?: string;
+};
+/** No layout on purpose: it reads like a person wrote it (mockup "Outreach: plain personal email"). */
+export function plainEmail(i: PlainInput): RenderedEmail {
+  // A bare http(s) link in a paragraph becomes a link (escaped first, so only our own anchor is markup).
+  const linkify = (h: string) => h.replace(/https?:\/\/[^\s<]+/g, u => `<a href="${u}" style="color:#1F4D34">${u}</a>`);
+  const p = (t: string) => `<p style="margin:0 0 14px;font:15px/1.6 ${T.sans};color:#1F2420">${linkify(br(t))}</p>`;
+  const sig = `<p style="margin:0 0 14px;font:15px/1.6 ${T.sans};color:#1F2420">${i.signature.map(esc).join('<br>')}</p>`;
+  const quote = i.quote ? `<p style="margin:22px 0 0;padding-top:14px;border-top:1px solid ${T.line};font:13px/1.55 ${T.sans};color:${T.muted}">${br(i.quote)}</p>` : '';
+  const foot = i.footerLine ? `<div style="margin:20px 0 0;text-align:center">${logoImg(20)}<p style="margin:6px 0 0;font:12px/1.5 ${T.sans};color:${T.muted}">${esc(i.footerLine)}</p></div>` : '';
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
+<body style="margin:0;padding:0;background:#FFFFFF">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:22px 16px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%"><tr><td>
+${i.paragraphs.filter(Boolean).map(p).join('')}${sig}${quote}${foot}
+</td></tr></table>
+</td></tr></table>
+</body>
+</html>`;
+  const text = [...i.paragraphs.filter(Boolean).flatMap(x => [x, '']), ...i.signature, ...(i.quote ? ['', i.quote] : []), ...(i.footerLine ? ['', '--', i.footerLine] : [])].join('\n') + '\n';
+  return { html, text };
 }

@@ -1,9 +1,8 @@
 import { Resend } from 'resend';
-import { sheetRecap, SHEET_NEXT_STEPS } from './setup-sheet-recap';
 import { logSent, type SendMeta } from '@/lib/sent-messages';
-import { SUPPORT_EMAIL, ADMIN_EMAIL, NOREPLY_EMAIL } from '@/lib/contact';
+import { SUPPORT_EMAIL, ADMIN_EMAIL, NOREPLY_EMAIL, OUTREACH_POSTAL_ADDRESS } from '@/lib/contact';
 import { type ConfirmationParts } from './confirmation-parts';
-import { welcomeParts, type WelcomeInput } from './team-welcome';
+import { type WelcomeInput } from './team-welcome';
 import { prisma } from './prisma';
 import { roundChargeCents } from './booking-fees';
 import { courseFrom, type EmailCourse } from './email-layout';
@@ -16,6 +15,15 @@ import {
   statementEmail, statementDeclinedEmail, statementPaidEmail, eventSignupEmail, eventPayLinkEmail, eventPairingsEmail,
   shopPayLinkEmail, shopReceiptEmail, type BuiltEmail,
 } from './email-golfer';
+import {
+  operatorBookingEmail, courseClosedEmail, staffWelcomeEmail, staffResetLinkEmail, operatorPasswordResetEmail, operatorVerifyEmail,
+  twoFactorCodeEmail, passwordChangedEmail, messageNotificationEmail, announcementEmail, monthlyReviewEmail, lowStockEmail,
+  signedAgreementsEmail, agreementBumpEmail, inquiryConfirmationEmail, inquiryAlreadyBuiltEmail, inquirySigninCodeEmail,
+  detailsSheetConfirmationEmail, detailsRequestEmail, callReminderEmail, callScheduledEmail, onboardingChaseEmail,
+  inquiryReplyEmail, inquiryDeclinedEmail, callInviteEmail, inquiryNotificationEmail, lockedOutAlertEmail, detailsSubmittedEmail,
+  courseApprovedEmail, agreementBumpSummaryEmail, adminUrgentEmail, adminDigestEmail, adminTwoFactorEmail, adminPasswordResetEmail,
+  ownerDeviceApprovalEmail, ownerSignInEmail, ownerPasswordChangedEmail, ownerPasskeyChangedEmail, outreachEmail, type DigestFacts,
+} from './email-staff';
 export { courseNoticeEmail };
 
 let _resend: Resend | null = null;
@@ -74,11 +82,12 @@ function getResend(): Sender {
   }
   return _resend as unknown as Sender;
 }
-// MAIL-1 (Cam 2026-10-22): each email is sent from the address its reader
-// should answer — golfers support@, courses admin@, money billing@ (lib/contact.ts).
+// MAIL-1 (Cam 2026-10-22), emails redo (Cam 2026-11-19): golfer emails come from the course at
+// noreply@ (courseFrom); GreenReserve's own come from admin@ where a reply should reach Cam
+// (onboarding, agreements, Cam's own replies) and noreply@ for codes, security alerts and routine
+// staff notices, which point to Course support instead (lib/email-staff).
 const FROM_ADMIN = `GreenReserve <${ADMIN_EMAIL}>`;
-// Codes, sign-in links and security alerts. No inbox exists, so a reply bounces
-// (Cam 2026-10-22); these emails name support@ or admin@ instead of "reply".
+// No inbox exists, so a reply bounces (Cam 2026-10-22): these emails never ask for one.
 const FROM_NOREPLY = `GreenReserve <${NOREPLY_EMAIL}>`;
 
 /** subject, html and the plain-text version, for a Resend send. */
@@ -201,30 +210,8 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
 }
 
 export async function sendOperatorBookingNotification(data: BookingEmailData & { operatorEmail: string }) {
-  // "Your Revenue" = green + cart fee — matches the Payments page and dashboard
-  // tee sheet exactly. Nothing's actually charged yet, so this is what's EXPECTED once
-  // the golfer checks in and pays, not a paid amount.
-  const yourRevenue = (data.greenFeeTotal + data.cartFeeTotal) / 100;
-  const noCard = data.noCard ?? false;
-  const html = baseTemplate(`
-    <h2 style="margin:0 0 4px;color:#141814;font-size:22px;font-weight:700;">New Booking</h2>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:14px;">A tee time has been booked at ${data.courseName.trim()}. ${noCard ? 'No card was collected — golfer pays at the course or via check-in link.' : (data.feePaidAtBooking ? "Their card is on file — only GreenReserve's booking fee was charged; the round is charged when they check in (or the cancellation window closes)." : "Their card is on file — nothing's charged until they check in (or the cancellation window closes).")}</p>
-    <div style="background:#F6F4EC;border-radius:6px;padding:20px;">
-      <p style="margin:0 0 8px;"><strong>Golfer:</strong> ${escHtml(data.golferName)} (${escHtml(data.golferEmail)})</p>
-      <p style="margin:0 0 8px;"><strong>Date:</strong> ${data.date} at ${data.time}</p>
-      <p style="margin:0 0 12px;"><strong>Players:</strong> ${data.players} &middot; ${data.productLabel ? escHtml(data.productLabel) + ' &middot; ' : ''}${data.holes} holes</p>
-      <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #E3E4DE;padding-top:10px;">
-        <tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Green Fee</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.greenFeeTotal / 100).toFixed(2)}</td></tr>
-        ${data.cartFeeTotal > 0 ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Cart Fee</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.cartFeeTotal / 100).toFixed(2)}</td></tr>` : ''}
-        ${(data.rangeBallsTotal ?? 0) > 0 ? `<tr><td style="padding:4px 0;color:#6B706A;font-size:13px;">Range Balls</td><td style="padding:4px 0;text-align:right;color:#141814;font-size:13px;font-weight:600;">$${(data.rangeBallsTotal! / 100).toFixed(2)}</td></tr>` : ''}
-        <tr><td style="padding:8px 0 4px;color:#2F6B45;font-size:14px;font-weight:800;">Expected Revenue</td><td style="padding:8px 0 4px;text-align:right;color:#2F6B45;font-size:16px;font-weight:700;">$${yourRevenue.toFixed(2)}</td></tr>
-        <tr><td colspan="2" style="padding:6px 0 0;color:#6B706A;font-size:11px;">Once they check in and pay. + $${(data.accessFeeTotal / 100).toFixed(2)} GreenReserve fee, paid by the golfer on top of your price.</td></tr>
-      </table>
-    </div>
-    <a href="https://greenreserve.app/dashboard" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-top:20px;">View Tee Sheet &rarr;</a>
-    <a href="https://greenreserve.app/dashboard/money?tab=payments" style="display:block;color:#173B2A;text-decoration:none;text-align:center;padding:8px;font-weight:600;font-size:13px;">See it in Payments &rarr;</a>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'operator_booking_notification', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_ADMIN, to: data.operatorEmail, subject: `New booking: ${data.players} player${data.players > 1 ? 's' : ''} — ${data.date} at ${data.time}`, html });
+  // "Expected" = green + cart fee — matches the Payments page and dashboard tee sheet. Nothing is charged yet.
+  await getResend().emails.send({ meta: { kind: 'operator_booking_notification', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_NOREPLY, to: data.operatorEmail, ...mail(operatorBookingEmail(data)) });
 }
 
 export async function sendCancellationEmail(data: {
@@ -250,30 +237,7 @@ export async function sendCourseClosedNotice(data: {
   action: 'offline' | 'archived';
   cancelledCount: number;
 }) {
-  const what = data.action === 'archived' ? 'archived' : 'taken offline';
-  const bookingLine = data.cancelledCount === 0
-    ? 'There were no upcoming bookings, so no golfers were affected.'
-    : `${data.cancelledCount} upcoming booking${data.cancelledCount === 1 ? ' was' : 's were'} cancelled, and ${data.cancelledCount === 1 ? 'that golfer has' : 'those golfers have'} been emailed. Nobody was charged for a round they will not play.`;
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${data.courseName} has been ${what}.</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;line-height:1.6;">
-      Hi ${firstName(data.operatorName)} — your GreenReserve booking page is no longer accepting tee times.
-    </p>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;line-height:1.6;">${bookingLine}</p>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;line-height:1.6;">
-      Nothing has been deleted — your tee sheet, bookings and history are all still here, and we can put you back
-      online whenever you are ready. If this is not what you expected, reply to this email and we will sort it out.
-    </p>
-    <p style="margin:0;color:#6B706A;font-size:12px;">
-      Questions? Reply to this email — ${ADMIN_EMAIL}.
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'course_closed_notice' },
-    from: FROM_ADMIN,
-    to: data.operatorEmail,
-    subject: `${data.courseName} is no longer taking bookings on GreenReserve`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'course_closed_notice' }, from: FROM_ADMIN, to: data.operatorEmail, ...mail(courseClosedEmail(data)) });
 }
 
 export async function sendCancellationFeeChargedEmail(data: {
@@ -414,77 +378,25 @@ export async function sendOperatorPasswordResetEmail(data: {
   operatorEmail: string;
   resetLink: string;
 }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Reset your password</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Hi ${firstName(data.operatorName)} — we got a request to reset the password on your GreenReserve dashboard (${data.operatorEmail}).
-      If this wasn't you, you can safely ignore this email.
-    </p>
-    <a href="${data.resetLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin-bottom:16px;">
-      Set a New Password &rarr;
-    </a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      This link expires in 1 hour. Questions? Reach us at <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'operator_password_reset_email' },
-    from: FROM_NOREPLY,
-    to: data.operatorEmail,
-    subject: `Reset your GreenReserve password`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'operator_password_reset_email' }, from: FROM_NOREPLY, to: data.operatorEmail, ...mail(operatorPasswordResetEmail(data)) });
 }
 
 // Team (Cam 2026-11-17): the welcome email a course owner's invite sends. Its
-// words come from lib/team-welcome.ts, the same source as the Invite preview.
+// words come from lib/team-welcome.ts; the Invite popup previews this exact HTML.
 // From admin@ (a real inbox): the footer invites them to answer it.
 export function staffWelcomeHtml(data: WelcomeInput, setupLink: string): string {
-  const w = welcomeParts(data);
-  return baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Welcome to ${escapeHtml(data.courseName)}</h1>
-    <p style="margin:0 0 12px;color:#3F453E;font-size:15px;">${escapeHtml(w.greeting)}</p>
-    <p style="margin:0 0 12px;color:#3F453E;font-size:15px;">${escapeHtml(w.intro)}</p>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">${escapeHtml(w.role)}</p>
-    <p style="margin:0 0 6px;color:#141814;font-size:15px;font-weight:600;">Getting started</p>
-    ${w.steps.map((t, i) => `<p style="margin:0 0 6px;color:#3F453E;font-size:15px;">${i + 1}. ${escapeHtml(t)}</p>`).join('')}
-    <a href="${setupLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin:20px 0 16px;">
-      ${escapeHtml(w.button)} &rarr;
-    </a>
-    <p style="margin:0;color:#6B706A;font-size:13px;">${escapeHtml(w.footer)}</p>
-  `, ADMIN_EMAIL);
+  return staffWelcomeEmail(data, setupLink).html;
 }
 
 export async function sendStaffWelcomeEmail(data: WelcomeInput & { to: string; setupLink: string; courseId: string }) {
-  await getResend().emails.send({ meta: { kind: 'staff_welcome_email', courseId: data.courseId },
-    from: FROM_ADMIN,
-    to: data.to,
-    subject: welcomeParts(data).subject,
-    html: staffWelcomeHtml(data, data.setupLink),
-  });
+  const e = staffWelcomeEmail(data, data.setupLink);
+  await getResend().emails.send({ meta: { kind: 'staff_welcome_email', courseId: data.courseId }, from: FROM_ADMIN, to: data.to, ...mail(e) });
 }
 
 // Team (Cam 2026-11-17): "Reset password emails a link (no temporary password)".
 // The owner sent it, so it says so; the link is the staff reset link (1 hour, one use).
 export async function sendStaffResetLinkEmail(data: { to: string; personName: string; ownerName: string; courseName: string; resetLink: string; courseId: string }) {
-  const owner = data.ownerName.trim() || 'The course owner';
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Set a new password</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Hi ${escapeHtml(firstName(data.personName))} — ${escapeHtml(owner)} at ${escapeHtml(data.courseName)} sent you a link to set a new password for your GreenReserve login (${escapeHtml(data.to)}). Your current password works until you change it.
-    </p>
-    <a href="${data.resetLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin-bottom:16px;">
-      Set a New Password &rarr;
-    </a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      This link works once, for 1 hour. Didn’t expect this? Ask ${escapeHtml(owner)}, or write to <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'staff_reset_link_email', courseId: data.courseId },
-    from: FROM_NOREPLY,
-    to: data.to,
-    subject: `Set a new password for ${data.courseName}`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'staff_reset_link_email', courseId: data.courseId }, from: FROM_NOREPLY, to: data.to, ...mail(staffResetLinkEmail(data)) });
 }
 
 export async function sendAdminPasswordResetEmail(data: {
@@ -492,46 +404,14 @@ export async function sendAdminPasswordResetEmail(data: {
   adminEmail: string;
   resetLink: string;
 }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Reset your password</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Hi ${firstName(data.adminName)} — we got a request to reset the password on your GreenReserve admin account (${data.adminEmail}).
-      If this wasn't you, you can safely ignore this email.
-    </p>
-    <a href="${data.resetLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin-bottom:16px;">
-      Set a New Password &rarr;
-    </a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      This link expires in 24 hours. Questions? Reach us at <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'admin_password_reset_email' },
-    from: FROM_NOREPLY,
-    to: data.adminEmail,
-    subject: `Reset your GreenReserve admin password`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'admin_password_reset_email' }, from: FROM_NOREPLY, to: data.adminEmail, ...mail(adminPasswordResetEmail(data)) });
 }
 
 export async function sendAdminPasswordChangedNotification(data: {
   adminName: string;
   adminEmail: string;
 }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your password was changed</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">
-      Hi ${firstName(data.adminName)} — this confirms the password on your GreenReserve admin account (${data.adminEmail}) was just changed.
-    </p>
-    <div style="background:#F7EFE2;border:1px solid #E8D3B0;border-radius:6px;padding:16px 20px;margin-bottom:20px;">
-      <p style="margin:0;color:#7A4A10;font-size:13px;"><strong>Wasn't you?</strong> Email <a href="mailto:${ADMIN_EMAIL}" style="color:#7A4A10;text-decoration:underline;">${ADMIN_EMAIL}</a> right away.</p>
-    </div>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'admin_password_changed_notification' },
-    from: FROM_NOREPLY,
-    to: data.adminEmail,
-    subject: `Your GreenReserve admin password was changed`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'admin_password_changed_notification' }, from: FROM_NOREPLY, to: data.adminEmail, ...mail(passwordChangedEmail({ email: data.adminEmail, admin: true })) });
 }
 
 // Verification-by-possession: arriving at the link in this email IS the proof
@@ -541,24 +421,7 @@ export async function sendOperatorVerifyEmail(data: {
   operatorEmail: string;
   verifyLink: string;
 }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Confirm it's you</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Hi ${firstName(data.operatorName)} — click below to confirm ${data.operatorEmail} and finish setting up your GreenReserve dashboard.
-    </p>
-    <a href="${data.verifyLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:800;font-size:16px;margin-bottom:16px;">
-      Confirm My Email &rarr;
-    </a>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      Didn't request this? You can ignore this email. Questions? Reach us at <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'operator_verify_email' },
-    from: FROM_NOREPLY,
-    to: data.operatorEmail,
-    subject: `Confirm your GreenReserve account`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'operator_verify_email' }, from: FROM_NOREPLY, to: data.operatorEmail, ...mail(operatorVerifyEmail(data)) });
 }
 
 export async function sendGolferPasswordResetEmail(data: {
@@ -722,45 +585,11 @@ export async function sendTwoFactorCodeEmail(data: {
   operatorEmail: string;
   code: string;
 }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your verification code</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Hi ${firstName(data.operatorName)} — enter this code to finish signing in to your GreenReserve dashboard.
-    </p>
-    <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:24px;margin-bottom:20px;text-align:center;">
-      <p style="margin:0;color:#141814;font-size:32px;font-weight:700;font-family:monospace;letter-spacing:0.2em;">${data.code}</p>
-    </div>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      This code expires in 10 minutes. Didn't try to sign in? Reach us at <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'two_factor_code_email' },
-    from: FROM_NOREPLY,
-    to: data.operatorEmail,
-    subject: `Your GreenReserve verification code: ${data.code}`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'two_factor_code_email' }, from: FROM_NOREPLY, to: data.operatorEmail, ...mail(twoFactorCodeEmail(data)) });
 }
 
 export async function sendAdminTwoFactorCode(data: { email: string; name: string; code: string }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Admin verification code</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">
-      Hi ${firstName(data.name)} — enter this code to complete your secure admin login.
-    </p>
-    <div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:24px;margin-bottom:20px;text-align:center;">
-      <p style="margin:0;color:#141814;font-size:36px;font-weight:700;font-family:monospace;letter-spacing:0.25em;">${data.code}</p>
-    </div>
-    <p style="margin:0;color:#6B706A;font-size:12px;text-align:center;">
-      Expires in 10 minutes. Not you? Email us immediately — <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'admin_two_factor_code' },
-    from: FROM_NOREPLY,
-    to: data.email,
-    subject: `GreenReserve admin code: ${data.code}`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'admin_two_factor_code' }, from: FROM_NOREPLY, to: data.email, ...mail(adminTwoFactorEmail(data)) });
 }
 
 // Fired after ANY successful password change (in-dashboard change-password,
@@ -770,21 +599,7 @@ export async function sendPasswordChangedNotification(data: {
   operatorName: string;
   operatorEmail: string;
 }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your password was changed</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">
-      Hi ${firstName(data.operatorName)} — this confirms the password on your GreenReserve dashboard (${data.operatorEmail}) was just changed.
-    </p>
-    <div style="background:#F7EFE2;border:1px solid #E8D3B0;border-radius:6px;padding:16px 20px;margin-bottom:20px;">
-      <p style="margin:0;color:#7A4A10;font-size:13px;"><strong>Wasn't you?</strong> Email <a href="mailto:${ADMIN_EMAIL}" style="color:#7A4A10;text-decoration:underline;">${ADMIN_EMAIL}</a> right away.</p>
-    </div>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'password_changed_notification' },
-    from: FROM_NOREPLY,
-    to: data.operatorEmail,
-    subject: `Your GreenReserve password was changed`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'password_changed_notification' }, from: FROM_NOREPLY, to: data.operatorEmail, ...mail(passwordChangedEmail({ email: data.operatorEmail })) });
 }
 
 export async function sendMemberInviteEmail(data: {
@@ -822,31 +637,8 @@ export async function sendInquiryNotification(data: {
   /** SC-2 §1: "invite not sent — <why>" when the call invite email failed; absent when it went. */
   inviteNote?: string | null;
 }) {
-  // Cam 2026-10-26 ("can look better"): the question first, who asked in one quiet
-  // line under it, and two ways in — Reply (the inquiry's reply box) or the inquiry.
-  const site = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
-  const inquiryUrl = data.inquiryId ? `${site}/admin/inquiries/${encodeURIComponent(data.inquiryId)}` : `${site}/admin/inquiries`;
-  const who = [
-    escHtml(data.contactName) + (data.contactTitle ? `, ${escHtml(data.contactTitle)}` : ''),
-    [data.city, data.state].filter(Boolean).map(escHtml).join(', '),
-    data.phone ? escHtml(data.phone) : '',
-  ].filter(Boolean).join(' &middot; ');
-  const question = data.additionalNotes.trim();
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">${escHtml(data.courseName)}</h1>
-    <p style="margin:0 0 16px;color:#141814;font-size:17px;line-height:1.55;white-space:pre-wrap;">${question ? escHtml(question) : '<span style="color:#6B706A;">No question written.</span>'}</p>
-    <p style="margin:0 0 24px;color:#6B706A;font-size:14px;">${who}<br><a href="mailto:${escHtml(data.email)}" style="color:#6B706A;">${escHtml(data.email)}</a></p>
-    ${data.inviteNote ? `<p style="margin:0 0 20px;color:#A3452F;font-size:13px;">The call-booking link didn&rsquo;t send (${escHtml(data.inviteNote)}). Send it from the inquiry.</p>` : ''}
-    <a href="${inquiryUrl}?reply=1" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:10px;">Reply</a>
-    <a href="${inquiryUrl}" style="display:block;color:#173B2A;text-decoration:none;text-align:center;padding:8px;font-weight:600;font-size:14px;">Open inquiry</a>
-  `, ADMIN_EMAIL);
-
-  await getResend().emails.send({ meta: { kind: 'inquiry_notification', inquiryId: data.inquiryId ?? null },
-    from: FROM_ADMIN,
-    to: ADMIN_EMAIL,
-    subject: subj(`${data.courseName} asked a question`),
-    html,
-  });
+  // Cam 2026-10-26: the question first, who asked under it, and two ways in — Reply or the inquiry.
+  await getResend().emails.send({ meta: { kind: 'inquiry_notification', inquiryId: data.inquiryId ?? null }, from: FROM_ADMIN, to: ADMIN_EMAIL, ...mail(inquiryNotificationEmail(data)) });
 }
 
 /**
@@ -858,52 +650,17 @@ export async function sendInquiryReply(data: {
   inquiryId: string; email: string; contactName: string; courseName: string;
   body: string; question?: string | null; adminName: string;
 }) {
-  const paras = data.body.trim().split(/\n{2,}/).map(p =>
-    `<p style="margin:0 0 14px;color:#141814;font-size:15px;line-height:1.6;white-space:pre-wrap;">${escHtml(p.trim())}</p>`).join('');
-  const html = baseTemplate(`
-    <p style="margin:0 0 14px;color:#141814;font-size:15px;">Hi ${escHtml(firstName(data.contactName))},</p>
-    ${paras}
-    <p style="margin:18px 0 0;color:#141814;font-size:15px;">${escHtml(data.adminName)}<br><span style="color:#6B706A;">GreenReserve</span></p>
-    ${data.question?.trim() ? `<div style="margin:28px 0 0;padding:14px 0 0;border-top:1px solid #E3E4DE;color:#6B706A;font-size:13px;line-height:1.55;white-space:pre-wrap;">You asked: ${escHtml(data.question.trim())}</div>` : ''}
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'inquiry_reply', inquiryId: data.inquiryId },
-    from: FROM_ADMIN,
-    to: data.email,
-    subject: subj(`Re: your question about ${data.courseName}`),
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'inquiry_reply', inquiryId: data.inquiryId }, from: FROM_ADMIN, to: data.email, ...mail(inquiryReplyEmail(data)) });
 }
 
 // IF-1 §3 / SC-2 §1: the confirmation points at picking a call — the
 // per-inquiry invite link when it was issued, else the Calendly fallback.
-const INQUIRY_CALL_FALLBACK_URL = 'https://calendly.com/greenreserve';
 
 export async function sendInquiryConfirmation(data: {
   firstName: string; contactName: string; email: string; courseName: string; callUrl?: string | null;
 }) {
-  const INQUIRY_CALL_URL = data.callUrl || INQUIRY_CALL_FALLBACK_URL;
-  // IF-1: the "What you told us" table went with the branch questions — the
-  // form no longer collects anything worth echoing back.
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Got it, ${escHtml(data.firstName)}.</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">
-      Thanks for your question about <strong>${escHtml(data.courseName)}</strong> — we'll reply to this address.
-      If you'd rather see GreenReserve working, book a demo: we'll walk through your tee sheet, your green fees
-      and what going live looks like.
-    </p>
-    <a href="${INQUIRY_CALL_URL}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:12px;">
-      Book a demo
-    </a>
-    <p style="margin:16px 0 0;color:#6B706A;font-size:12px;text-align:center;">
-      Questions? Reply to this email or reach us at <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>.
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'inquiry_confirmation' },
-    from: FROM_ADMIN,
-    to: data.email,
-    subject: `We got your question — ${data.courseName}`,
-    html,
-  });
+  // IF-1 §3 / SC-2 §1: points at picking a call — the per-inquiry invite link when issued, else the fallback.
+  await getResend().emails.send({ meta: { kind: 'inquiry_confirmation' }, from: FROM_ADMIN, to: data.email, ...mail(inquiryConfirmationEmail(data)) });
 }
 
 // Cam 2026-09-16: a course that already has a page cannot be created again, so
@@ -914,28 +671,7 @@ export async function sendInquiryConfirmation(data: {
 export async function sendInquiryAlreadyBuilt(data: {
   firstName: string; email: string; courseName: string;
 }) {
-  const dashboardUrl = `${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/dashboard`;
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">You&apos;re already set up, ${escHtml(data.firstName)}.</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">
-      <strong>${escHtml(data.courseName)}</strong> already has a GreenReserve page, so there&apos;s nothing to set up again.
-      To change your contact details, your rates or anything else on the page, sign in to your dashboard — that&apos;s the
-      one place those live, and changes there go out straight away.
-    </p>
-    <a href="${dashboardUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:12px;">
-      Sign in to your dashboard
-    </a>
-    <p style="margin:0 0 24px;color:#6B706A;font-size:12px;text-align:center;">Use the email address your course is registered under.</p>
-    <p style="margin:16px 0 0;color:#6B706A;font-size:12px;text-align:center;">
-      Can&apos;t get in, or think this isn&apos;t your course? Reply to this email or reach us at <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>.
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'inquiry_already_built' },
-    from: FROM_ADMIN,
-    to: data.email,
-    subject: `${data.courseName} already has a GreenReserve page`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'inquiry_already_built' }, from: FROM_ADMIN, to: data.email, ...mail(inquiryAlreadyBuiltEmail(data)) });
 }
 
 // SD-11: the code that proves someone reads the address on file, sent when a
@@ -945,30 +681,7 @@ export async function sendInquiryAlreadyBuilt(data: {
 export async function sendInquirySigninCode(data: {
   email: string; firstName: string; courseName: string; code: string;
 }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your code is ${escHtml(data.code)}</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">
-      Someone just asked to get back into <strong>${escHtml(data.courseName)}</strong> from the GreenReserve
-      sign-up form. Enter this code on that page to confirm it&apos;s you, and we&apos;ll show you where to sign in.
-    </p>
-    <div style="text-align:center;margin:0 0 20px;padding:18px;background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;">
-      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:32px;font-weight:700;letter-spacing:8px;color:#173B2A;">${escHtml(data.code)}</div>
-      <div style="margin-top:8px;color:#6B706A;font-size:12px;">Expires in 10 minutes</div>
-    </div>
-    <p style="margin:0 0 24px;color:#6B706A;font-size:13px;">
-      This code does not sign you in on its own &mdash; you&apos;ll still use your normal password.
-      <strong>If you didn&apos;t ask for it, ignore this email</strong>; nothing has changed and nobody has been let in.
-    </p>
-    <p style="margin:16px 0 0;color:#6B706A;font-size:12px;text-align:center;">
-      Questions? Reach us at <a href="mailto:${ADMIN_EMAIL}" style="color:#3F453E;">${ADMIN_EMAIL}</a>.
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'inquiry_signin_code' },
-    from: FROM_NOREPLY,
-    to: data.email,
-    subject: `${data.code} is your GreenReserve code`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'inquiry_signin_code' }, from: FROM_NOREPLY, to: data.email, ...mail(inquirySigninCodeEmail(data)) });
 }
 
 // SD-11 review (HIGH): the "your login isn't ready" screen promises that the
@@ -977,25 +690,11 @@ export async function sendInquirySigninCode(data: {
 export async function sendLockedOutOperatorAlert(data: {
   courseName: string; inquiryId: string; operatorEmail: string; reason: 'no-account' | 'unverified';
 }) {
-  const why = data.reason === 'no-account'
-    ? 'No CourseOperator row exists for that address at all.'
-    : 'A CourseOperator row exists but its email is still unverified, so they cannot complete a login.';
-  const html = baseTemplate(`
-    <h2 style="margin:0 0 4px;color:#141814;font-size:20px;font-weight:700;">An operator proved their email and still cannot get in</h2>
-    <p style="margin:0 0 12px;color:#3F453E;font-size:14px;">
-      Someone at <strong>${escHtml(data.courseName)}</strong> used the public sign-up form, confirmed a code sent to
-      <strong>${escHtml(data.operatorEmail)}</strong> &mdash; so they do read that inbox &mdash; and hit a dead end.
-    </p>
-    <p style="margin:0 0 16px;color:#6B706A;font-size:13px;">${escHtml(why)}</p>
-    <p style="margin:0 0 16px;color:#6B706A;font-size:13px;">They were told someone would email them. That is this email&apos;s job.</p>
-    <a href="${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/admin/inquiries/${data.inquiryId}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;">Open the inquiry &rarr;</a>
-  `, ADMIN_EMAIL);
   const r = await getResend().emails.send({ meta: { kind: 'locked_out_operator_alert', inquiryId: data.inquiryId },
     from: FROM_ADMIN,
     to: ADMIN_EMAIL,
     replyTo: data.operatorEmail,
-    subject: `Locked out: ${subj(data.courseName)} confirmed their email but has no login`,
-    html,
+    ...mail(lockedOutAlertEmail(data)),
   });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
@@ -1004,35 +703,8 @@ export async function sendDetailsSheetConfirmationEmail(data: {
   firstName: string; contactName: string; email: string; courseName: string;
   details: Record<string, unknown>;
 }) {
-  // Cam 2026-10-26: "send a recap email of what you submitted and what's happening
-  // next". The same plain-words recap and next steps as the done screen
-  // (lib/setup-sheet-recap) — it used to print raw field names ("WD $52 / WE $68",
-  // "Interval (min)") and missed memberships entered in the current format.
-  const rows = sheetRecap(data.details).map(r => `
-    <tr>
-      <td style="padding:7px 12px 7px 0;color:#6B706A;font-size:13px;width:34%;vertical-align:top;border-top:1px solid #E3E4DE;">${escHtml(r.label)}</td>
-      <td style="padding:7px 0;color:#141814;font-size:14px;vertical-align:top;border-top:1px solid #E3E4DE;">${escHtml(r.value)}</td>
-    </tr>`).join('');
-  const steps = SHEET_NEXT_STEPS.map((t, i) => `
-    <tr>
-      <td style="padding:6px 12px 6px 0;width:26px;vertical-align:top;"><div style="width:22px;height:22px;border-radius:11px;background:#173B2A;color:#fff;font-size:12px;font-weight:600;line-height:22px;text-align:center;">${i + 1}</div></td>
-      <td style="padding:7px 0;color:#141814;font-size:14px;line-height:1.5;">${escHtml(t)}</td>
-    </tr>`).join('');
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your setup sheet is in, ${escHtml(firstName(data.firstName || data.contactName))}.</h1>
-    <p style="margin:0 0 24px;color:#3F453E;font-size:15px;">Thanks for the details for <strong>${escHtml(data.courseName)}</strong>. Here&rsquo;s what happens next, and a copy of what you sent us.</p>
-    <p style="margin:0 0 8px;color:#141814;font-size:15px;font-weight:700;">What happens next</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:26px;">${steps}</table>
-    ${rows ? `<p style="margin:0 0 8px;color:#141814;font-size:15px;font-weight:700;">What you sent us</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">${rows}</table>` : ''}
-    <p style="margin:0;color:#3F453E;font-size:14px;">Something wrong? Reply to this email and we&rsquo;ll fix it before we build.</p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'details_sheet_confirmation_email' },
-    from: FROM_ADMIN,
-    to: data.email,
-    subject: subj(`Your setup sheet is in — ${data.courseName}`),
-    html,
-  });
+  // Cam 2026-10-26: the same plain-words recap and next steps as the done screen (lib/setup-sheet-recap).
+  await getResend().emails.send({ meta: { kind: 'details_sheet_confirmation_email' }, from: FROM_ADMIN, to: data.email, ...mail(detailsSheetConfirmationEmail(data)) });
 }
 
 // CG-1 (Cam 2026-09-29): sent with one click when the discovery call ends —
@@ -1078,31 +750,7 @@ export async function sendCallFollowupEmail(data: {
 export async function sendDetailsRequestEmail(data: {
   contactName: string; email: string; courseName: string; detailsLink: string;
 }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">One short form to get ${data.courseName} live.</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;line-height:1.6;">
-      Hi ${firstName(data.contactName)} — great news. We reviewed your inquiry and we&apos;d love to have ${data.courseName} on GreenReserve.
-      Before we build your booking page, we need a few specifics: tee sheet schedule, green fees, policies, and facilities.
-      Takes about 5 minutes. It saves as you go, so you can close and come back anytime.
-    </p>
-    <a href="${data.detailsLink}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:20px;">
-      Fill Out Setup Sheet &rarr;
-    </a>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
-      <tr><td style="padding:10px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;font-weight:600;">1. Fill out the sheet</td><td style="padding:10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">~5 minutes — one screen at a time</td></tr>
-      <tr><td style="padding:10px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;font-weight:600;">2. We build your page</td><td style="padding:10px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">Usually the same business day</td></tr>
-      <tr><td style="padding:10px 0;color:#141814;font-size:14px;font-weight:600;">3. You go live</td><td style="padding:10px 0;color:#6B706A;font-size:14px;">Review everything before golfers can book</td></tr>
-    </table>
-    <p style="margin:0;color:#6B706A;font-size:12px;">
-      Questions? Reply to this email — ${ADMIN_EMAIL}.
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'details_request_email' },
-    from: FROM_ADMIN,
-    to: data.email,
-    subject: `Quick setup sheet for ${data.courseName}`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'details_request_email' }, from: FROM_ADMIN, to: data.email, ...mail(detailsRequestEmail(data)) });
 }
 
 // Sent when an inquiry is declined. Deliberately does NOT name the internal
@@ -1114,23 +762,7 @@ export async function sendDetailsRequestEmail(data: {
 export async function sendCallInviteEmail(data: {
   firstName: string; email: string; courseName: string; url: string; agendaLines: string[];
 }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Set up your call with GreenReserve</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;line-height:1.6;">
-      Hi ${escHtml(data.firstName)} — thanks for the note about <strong>${escHtml(data.courseName)}</strong>.
-      Pick a 30-minute time that suits you and I'll call you then.
-    </p>
-    <a href="${data.url}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:20px;">
-      Pick a time &rarr;
-    </a>
-    <p style="margin:0 0 6px;color:#141814;font-size:14px;font-weight:600;">What the call covers</p>
-    <ul style="margin:0 0 20px;padding-left:20px;color:#3F453E;font-size:14px;line-height:1.6;">
-      ${data.agendaLines.map(l => `<li>${escHtml(l)}</li>`).join('')}
-    </ul>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:14px;line-height:1.6;">If none of the times work, just reply to this email.</p>
-    <p style="margin:0;color:#141814;font-size:14px;">Cam<br /><span style="color:#6B706A;font-size:12px;">GreenReserve · ${ADMIN_EMAIL}</span></p>
-  `, ADMIN_EMAIL);
-  const r = await getResend().emails.send({ meta: { kind: 'call_invite_email' }, from: FROM_ADMIN, to: data.email, subject: 'Set up your call with GreenReserve', html });
+  const r = await getResend().emails.send({ meta: { kind: 'call_invite_email' }, from: FROM_ADMIN, to: data.email, ...mail(callInviteEmail(data)) });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 
@@ -1138,19 +770,7 @@ export async function sendCallInviteEmail(data: {
 export async function sendCallReminderEmail(data: {
   contactName: string; email: string; courseName: string; scheduledAt: Date; durationMin?: number; direction: string; phone: string; manageUrl: string | null;
 }) {
-  const clock = data.scheduledAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
-  const when = data.scheduledAt.toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
-  const first = escHtml(data.contactName.split(' ')[0] || data.contactName);
-  const who = data.direction === 'they_call' ? 'You call us — the number is in your confirmation email.' : `We\u2019ll call you at ${escHtml(data.phone)}.`;
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Talking tomorrow at ${clock}</h1>
-    <p style="margin:0 0 12px;color:#3F453E;font-size:15px;line-height:1.6;">Hi ${first} — a quick reminder about our call about <strong>${escHtml(data.courseName)}</strong>.</p>
-    <p style="margin:0 0 4px;color:#141814;font-size:15px;line-height:1.6;"><strong>${when} ET</strong> · about ${data.durationMin || 30} minutes</p>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;line-height:1.6;">${who}</p>
-    ${data.manageUrl ? `<p style="margin:0 0 16px;color:#3F453E;font-size:14px;line-height:1.6;">Need to move it? <a href="${data.manageUrl}" style="color:#173B2A;">Reschedule or cancel</a>.</p>` : `<p style="margin:0 0 16px;color:#3F453E;font-size:14px;line-height:1.6;">Need to move it? Just reply to this email.</p>`}
-    <p style="margin:0;color:#6B706A;font-size:12px;">Questions? Reply to this email — ${ADMIN_EMAIL}.</p>
-  `, ADMIN_EMAIL);
-  const r = await getResend().emails.send({ meta: { kind: 'call_reminder_email' }, from: FROM_ADMIN, to: data.email, subject: `Talking tomorrow at ${clock} — GreenReserve`, html });
+  const r = await getResend().emails.send({ meta: { kind: 'call_reminder_email' }, from: FROM_ADMIN, to: data.email, ...mail(callReminderEmail(data)) });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 
@@ -1191,91 +811,22 @@ export async function sendCallScheduledEmail(data: {
   contactName: string; email: string; courseName: string;
   scheduledAt: Date; durationMin: number; direction: string; phone: string; agendaLabels: string[];
 }) {
-  const when = data.scheduledAt.toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
-  const who = data.direction === 'they_call'
-    ? `You call us${data.phone ? ` at ${data.phone}` : ''}.`
-    : `We call you${data.phone ? ` at ${data.phone}` : ''}.`;
-  const agenda = data.agendaLabels.length
-    ? `<p style="margin:16px 0 6px;color:#141814;font-size:14px;font-weight:600;">What we'll go over</p><ul style="margin:0 0 16px;padding-left:20px;color:#3F453E;font-size:14px;line-height:1.6;">${data.agendaLabels.map(l => `<li>${l}</li>`).join('')}</ul>`
-    : '';
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your call with GreenReserve</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;line-height:1.6;">
-      Hi ${firstName(data.contactName)} — here are the details for our call about <strong>${data.courseName}</strong>.
-    </p>
-    <p style="margin:0 0 4px;color:#141814;font-size:15px;line-height:1.6;"><strong>${when} ET</strong> · about ${data.durationMin} minutes</p>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;line-height:1.6;">${who}</p>
-    ${agenda}
-    <p style="margin:0;color:#3F453E;font-size:14px;line-height:1.6;">Reply to this email if the time doesn't work and we'll find another.</p>
-  `, ADMIN_EMAIL);
-  const r = await getResend().emails.send({ meta: { kind: 'call_scheduled_email' }, from: FROM_ADMIN, to: data.email, subject: `Your call with GreenReserve — ${when} ET`, html });
+  const r = await getResend().emails.send({ meta: { kind: 'call_scheduled_email' }, from: FROM_ADMIN, to: data.email, ...mail(callScheduledEmail(data)) });
   if (r.error) throw new Error(r.error.message);
 }
 
 export async function sendInquiryDeclinedEmail(data: {
   contactName: string; email: string; courseName: string;
 }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Thanks for considering GreenReserve.</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;line-height:1.6;">
-      Hi ${firstName(data.contactName)} — we&apos;ve looked over your inquiry for <strong>${data.courseName}</strong>,
-      and we&apos;re not able to take it on right now.
-    </p>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;line-height:1.6;">
-      That is not a verdict on your course. We are a small team bringing courses on in a deliberate order,
-      and where we are in that order changes. If you would like us to take another look later,
-      just reply to this email — we keep every inquiry on file.
-    </p>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;line-height:1.6;">
-      Either way, thank you for the time you spent telling us about ${data.courseName}.
-    </p>
-    <p style="margin:0;color:#6B706A;font-size:12px;">
-      Questions? Reply to this email — ${ADMIN_EMAIL}.
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'inquiry_declined_email' },
-    from: FROM_ADMIN,
-    to: data.email,
-    subject: `Your GreenReserve inquiry — ${data.courseName}`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'inquiry_declined_email' }, from: FROM_ADMIN, to: data.email, ...mail(inquiryDeclinedEmail(data)) });
 }
 
 export async function sendDetailsSubmittedNotification(data: { courseName: string; contactName: string }) {
-  const html = baseTemplate(`
-    <h2 style="margin:0 0 4px;color:#141814;font-size:22px;font-weight:700;">Setup sheet submitted ✅</h2>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:14px;">
-      <strong>${escHtml(data.contactName)}</strong> from <strong>${escHtml(data.courseName)}</strong> just submitted their detail sheet.
-      It's ready to build.
-    </p>
-    <a href="${process.env.NEXT_PUBLIC_URL}/admin" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;">
-      Review in Admin &rarr;
-    </a>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'details_submitted_notification' },
-    from: FROM_ADMIN,
-    to: ADMIN_EMAIL,
-    subject: `Setup sheet ready: ${data.courseName}`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'details_submitted_notification' }, from: FROM_ADMIN, to: ADMIN_EMAIL, ...mail(detailsSubmittedEmail(data)) });
 }
 
 export async function sendCourseApprovedNotification(data: { courseName: string; contactName: string }) {
-  const html = baseTemplate(`
-    <h2 style="margin:0 0 4px;color:#141814;font-size:22px;font-weight:700;">Course approved their page ✅</h2>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:14px;">
-      <strong>${data.contactName}</strong> from <strong>${data.courseName}</strong> reviewed their preview page and approved it — ready to go live.
-    </p>
-    <a href="${process.env.NEXT_PUBLIC_URL}/admin" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;">
-      Review in Admin &rarr;
-    </a>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'course_approved_notification' },
-    from: FROM_ADMIN,
-    to: ADMIN_EMAIL,
-    subject: `Approved: ${data.courseName}`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'course_approved_notification' }, from: FROM_ADMIN, to: ADMIN_EMAIL, ...mail(courseApprovedEmail(data)) });
 }
 
 // Sent the moment a course actually goes live (mark_live), not at account
@@ -1346,28 +897,7 @@ export async function sendCourseLiveOrientationEmail(data: {
 export async function sendOnboardingChaseEmail(data: {
   operatorName: string; operatorEmail: string; courseName: string; remainingSteps: string[];
 }) {
-  const dashboardUrl = `${process.env.NEXT_PUBLIC_URL}/dashboard`;
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Finish setting up ${data.courseName}</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;line-height:1.6;">
-      Hi ${firstName(data.operatorName)} — ${data.courseName} isn&apos;t bookable yet. Here&apos;s what's left:
-    </p>
-    <ul style="margin:0 0 20px;padding-left:20px;color:#3F453E;font-size:14px;line-height:1.8;">
-      ${data.remainingSteps.map(s => `<li>${s}</li>`).join('')}
-    </ul>
-    <a href="${dashboardUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;">
-      Finish Setup &rarr;
-    </a>
-    <p style="margin:16px 0 0;color:#6B706A;font-size:12px;">
-      Stuck on something? Reply to this email — ${ADMIN_EMAIL}.
-    </p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'onboarding_chase_email' },
-    from: FROM_ADMIN,
-    to: data.operatorEmail,
-    subject: `${data.courseName} is still waiting to go live`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'onboarding_chase_email' }, from: FROM_ADMIN, to: data.operatorEmail, ...mail(onboardingChaseEmail(data)) });
 }
 
 export async function sendMembershipPaymentLinkEmail(data: {
@@ -1417,7 +947,6 @@ export async function sendMemberLoginCode(data: { email: string; courseName: str
 
 // MEM-RENEW (lib/membership-autorenew): the four auto-renew emails — on (the terms they agreed to),
 // the reminder before each renewal, a declined renewal (pay link), and off. Built in lib/email-golfer.
-const manageButton = (link: string, label: string) => `<a href="${link}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:700;font-size:15px;margin:20px 0 12px;">${label}</a>`;
 
 export async function sendAutoRenewOnEmail(data: { name: string; email: string; courseName: string; tierName: string; terms: string; renewsOn: Date | null; totalCents: number; manageLink: string; courseId?: string }) {
   const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
@@ -1469,21 +998,7 @@ export async function sendMessageNotificationEmail(data: {
   messageBody: string;
   replyUrl: string;
 }) {
-  const preview = data.messageBody.length > 200 ? data.messageBody.slice(0, 200) + '…' : data.messageBody;
-  const bodyLines = preview.split('\n').map(l => `<p style="margin:0 0 8px;color:#3F453E;font-size:15px;">${escapeHtml(l)}</p>`).join('');
-  const html = baseTemplate(`
-    <p style="color:#3F453E;font-size:15px;margin:0 0 16px;">Hi ${escapeHtml(firstName(data.recipientName))},</p>
-    <p style="color:#3F453E;font-size:15px;margin:0 0 20px;"><strong>${escapeHtml(data.senderName)}</strong> sent a message about <strong>${escapeHtml(data.courseName)}</strong>:</p>
-    <div style="background:#F6F4EC;border-left:3px solid #173B2A;padding:14px 18px;margin:0 0 24px;border-radius:0 6px 6px 0;">${bodyLines}</div>
-    <a href="${data.replyUrl}" style="display:inline-block;background:#173B2A;color:#ffffff;font-size:14px;font-weight:600;padding:10px 22px;border-radius:6px;text-decoration:none;">View &amp; Reply</a>
-    <p style="color:#6B706A;font-size:12px;margin:20px 0 0;">Reply directly at greenreserve.app — no need to respond to this email.</p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'message_notification_email' },
-    from: FROM_ADMIN,
-    to: data.recipientEmail,
-    subject: `Message from ${data.senderName} — ${data.courseName}`,
-    html,
-  });
+  await getResend().emails.send({ meta: { kind: 'message_notification_email' }, from: FROM_NOREPLY, to: data.recipientEmail, ...mail(messageNotificationEmail(data)) });
 }
 
 export async function sendAnnouncementEmail(data: {
@@ -1492,25 +1007,8 @@ export async function sendAnnouncementEmail(data: {
   title: string;
   body: string;
 }) {
-  const bodyHtml = data.body
-    .split('\n')
-    .map(line => line.trim() ? `<p style="margin:0 0 12px;color:#3F453E;font-size:15px;">${line}</p>` : '')
-    .join('');
-  const html = baseTemplate(`
-    <div style="margin-bottom:8px;"><span style="display:inline-block;background:#F7EFE2;color:#7A4A10;font-size:13px;font-weight:600;padding:4px 14px;border-radius:6px;">Platform announcement</span></div>
-    <h1 style="margin:16px 0 16px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${data.title}</h1>
-    <div style="margin:0 0 20px;">${bodyHtml}</div>
-    <p style="margin:0;color:#6B706A;font-size:12px;">This message is from the GreenReserve team to all course operators on the platform.</p>
-  `, ADMIN_EMAIL);
-  // MP-7a: the Resend SDK returns { error } rather than throwing, and this
-  // function discarded it — a rejected email counted as sent. Throw, so the
-  // broadcast route's per-recipient tally is real.
-  const r = await getResend().emails.send({ meta: { kind: 'announcement_email' },
-    from: FROM_ADMIN,
-    to: data.operatorEmail,
-    subject: `[GreenReserve] ${data.title}`,
-    html,
-  });
+  // MP-7a: the Resend SDK returns { error } rather than throwing — throw, so the broadcast route's tally is real.
+  const r = await getResend().emails.send({ meta: { kind: 'announcement_email' }, from: FROM_NOREPLY, to: data.operatorEmail, ...mail(announcementEmail(data)) });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 
@@ -1535,25 +1033,12 @@ export async function sendSignedAgreementsEmail(data: {
   pending: string[];
   attachments: { filename: string; content: Buffer }[];
 }) {
-  const when = data.acceptedAt.toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'long', timeStyle: 'short' }) + ' ET';
-  const list = data.documents.map(d => `<li style="margin:0 0 4px;">${d.title} <span style="color:#3F453E;">v${d.version}</span></li>`).join('');
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your signed GreenReserve agreements</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;line-height:1.6;">
-      Hi ${firstName(data.operatorName)} &mdash; ${data.signerName || 'you'} signed the following for <strong>${data.legalName || data.courseName}</strong> on ${when}.
-      ${data.attachments.length ? 'The signed copies are attached.' : ''}
-    </p>
-    <ul style="margin:0 0 16px;padding-left:20px;color:#141814;font-size:14px;">${list}</ul>
-    ${data.pending.length ? `<p style="margin:0 0 16px;color:#7A4A10;font-size:13px;">The PDF for ${data.pending.join(' and ')} is still being prepared and will follow.</p>` : ''}
-    <p style="margin:0;color:#6B706A;font-size:12px;">Signed electronically from ${data.signerEmail}. Keep this email for your records. Questions? Reply to this email &mdash; ${ADMIN_EMAIL}.</p>
-  `, ADMIN_EMAIL);
   const r = await getResend().emails.send({ meta: { kind: 'signed_agreements_email' },
     from: FROM_ADMIN,
     to: data.operatorEmail,
     cc: ADMIN_EMAIL,
     replyTo: ADMIN_EMAIL,
-    subject: `Your signed GreenReserve agreements — ${data.courseName}`,
-    html,
+    ...mail(signedAgreementsEmail({ ...data, attached: data.attachments.length > 0 })),
     attachments: data.attachments.map(a => ({ filename: a.filename, content: a.content })),
   });
   if (r.error) throw new Error(r.error.message);
@@ -1564,34 +1049,15 @@ export async function sendAgreementBumpNoticeEmail(data: {
   operatorName: string; operatorEmail: string; courseName: string;
   title: string; version: string; effectiveAt: Date; reacceptBy: Date; changeSummary: string;
 }) {
-  const d = (x: Date) => x.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' });
-  const signUrl = `${process.env.NEXT_PUBLIC_URL}/dashboard/sign`;
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">The ${data.title} has changed</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;line-height:1.6;">
-      Hi ${firstName(data.operatorName)} &mdash; a new version (v${data.version}) of the GreenReserve ${data.title} took effect on ${d(data.effectiveAt)} for <strong>${data.courseName}</strong>.
-      Please review and sign it by <strong>${d(data.reacceptBy)}</strong>.
-    </p>
-    ${data.changeSummary ? `<div style="background:#F6F4EC;border:1px solid #E3E4DE;border-radius:6px;padding:16px;margin-bottom:20px;"><p style="margin:0 0 4px;color:#6B706A;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">What changed</p><p style="margin:0;color:#3F453E;font-size:14px;line-height:1.6;">${data.changeSummary}</p></div>` : ''}
-    <a href="${signUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:20px;">Review and sign &rarr;</a>
-    <p style="margin:0 0 12px;color:#6B706A;font-size:13px;line-height:1.6;">After ${d(data.reacceptBy)}, course settings in your dashboard become read-only until the new version is signed. Bookings and check-ins are never affected.</p>
-    <p style="margin:0;color:#6B706A;font-size:12px;">Questions? Reply to this email &mdash; ${ADMIN_EMAIL}.</p>
-  `, ADMIN_EMAIL);
   const r = await getResend().emails.send({ meta: { kind: 'agreement_bump_notice_email' },
     from: FROM_ADMIN, to: data.operatorEmail, replyTo: ADMIN_EMAIL,
-    subject: `Action needed: the GreenReserve ${data.title} changed — sign by ${d(data.reacceptBy)}`,
-    html,
+    ...mail(agreementBumpEmail(data)),
   });
   if (r.error) throw new Error(r.error.message);
 }
 
 export async function sendAgreementBumpAdminSummaryEmail(data: { title: string; version: string; reacceptBy: Date; notified: number; failures: string[] }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${data.title} v${data.version}: day-0 notice sent</h1>
-    <p style="margin:0 0 12px;color:#3F453E;font-size:14px;line-height:1.6;">${data.notified} operator${data.notified === 1 ? '' : 's'} notified. Re-acceptance deadline ${data.reacceptBy.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' })}.</p>
-    ${data.failures.length ? `<p style="margin:0;color:#7A4A10;font-size:13px;">Failed to send to: ${data.failures.join(', ')} — contact them another way.</p>` : ''}
-  `, ADMIN_EMAIL);
-  const r = await getResend().emails.send({ meta: { kind: 'agreement_bump_admin_summary_email' }, from: FROM_ADMIN, to: ADMIN_EMAIL, subject: `[GreenReserve] ${data.title} v${data.version} notice sent to ${data.notified}`, html });
+  const r = await getResend().emails.send({ meta: { kind: 'agreement_bump_admin_summary_email' }, from: FROM_ADMIN, to: ADMIN_EMAIL, ...mail(agreementBumpSummaryEmail(data)) });
   if (r.error) throw new Error(r.error.message);
 }
 
@@ -1602,20 +1068,8 @@ export async function sendMonthlyReviewEmail(data: {
   to: string; courseName: string; monthLabel: string; isBaseline: boolean;
   review: { verdict: string; wentWell: string[]; fellShort: string[]; recommendations: string[] };
 }) {
-  const list = (title: string, items: string[]) => items.length ? `
-    <p style="margin:20px 0 6px;color:#141814;font-size:15px;font-weight:700;">${title}</p>
-    <ul style="margin:0;padding-left:18px;color:#3F453E;font-size:14px;line-height:1.55;">${items.map(i => `<li style="margin:0 0 6px;">${escHtml(i)}</li>`).join('')}</ul>` : '';
-  const url = `${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/dashboard/analytics#reviews`;
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${escHtml(data.courseName)}: ${escHtml(data.monthLabel)} review</h1>
-    <p style="margin:0 0 18px;color:#3F453E;font-size:14px;">${data.isBaseline ? 'Your first full month. These numbers are the starting line your next reviews measure against.' : 'Measured against your starting month and the month before.'}</p>
-    <p style="margin:0;color:#141814;font-size:16px;line-height:1.5;">${escHtml(data.review.verdict)}</p>
-    ${list('What went well', data.review.wentWell)}
-    ${list('Where you fell short', data.review.fellShort)}
-    ${list('What to try next', data.review.recommendations)}
-    <a href="${url}" style="display:block;margin-top:24px;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:13px;border-radius:6px;font-weight:600;font-size:15px;">See the numbers &rarr;</a>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'monthly_review_email' }, from: FROM_ADMIN, to: data.to, subject: `${data.courseName}: your ${data.monthLabel} review`, html });
+  // Emails redo (Cam 2026-11-19): no metrics in the email — one line and a button to the review in the dashboard.
+  await getResend().emails.send({ meta: { kind: 'monthly_review_email' }, from: FROM_NOREPLY, to: data.to, ...mail(monthlyReviewEmail(data)) });
 }
 
 /** MSG-1: a course's notice to the golfers booked on a day ("frost delay,
@@ -1669,128 +1123,35 @@ export async function sendShopReceiptEmail(data: {
 // The link opens a confirm page (a click there approves) — mail scanners that
 // follow links can't approve a device. Sent only after a correct password.
 export async function sendOwnerDeviceApproval(data: { email: string; name: string; approvalUrl: string; device: string; place: string; when: string }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Approve a new device</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — someone with your password is signing in to the GreenReserve owner account from a device it hasn't seen before.</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">Device</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.device)}</td></tr>
-      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">Where</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.place || 'Unknown')}</td></tr>
-      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">When</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.when)}</td></tr>
-    </table>
-    <a href="${data.approvalUrl}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-bottom:16px;">Review this device</a>
-    <p style="margin:0;color:#6B706A;font-size:13px;">The link works for 15 minutes. If this wasn't you, don't approve it — change your password now, because whoever it was knows it.</p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'owner_device_approval' }, from: FROM_NOREPLY, to: data.email, subject: 'Approve a new device for GreenReserve', html });
+  await getResend().emails.send({ meta: { kind: 'owner_device_approval' }, from: FROM_NOREPLY, to: data.email, ...mail(ownerDeviceApprovalEmail(data)) });
 }
 
 // AW-1: every owner sign-in, so a break-in is seen at once.
 export async function sendOwnerSignInAlert(data: { email: string; name: string; device: string; place: string; when: string; method: string }) {
-  const how = data.method === 'passkey' ? 'a passkey' : data.method === 'totp' ? 'your authenticator app' : data.method === 'recovery' ? 'a recovery code' : 'an emailed code';
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">You signed in</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — the GreenReserve owner account just signed in with ${how}.</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">Device</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.device)}</td></tr>
-      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">Where</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.place || 'Unknown')}</td></tr>
-      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">When</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.when)}</td></tr>
-    </table>
-    <p style="margin:0;color:#6B706A;font-size:13px;">Not you? Sign in, go to My profile and choose “Sign out everywhere”, then change your password.</p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'owner_sign_in_alert' }, from: FROM_NOREPLY, to: data.email, subject: 'GreenReserve owner sign-in', html });
+  await getResend().emails.send({ meta: { kind: 'owner_sign_in_alert' }, from: FROM_NOREPLY, to: data.email, ...mail(ownerSignInEmail(data)) });
 }
 
 // Cam 2026-11-16: the owner's password was changed or set, on any path. Sent at once, awaited by
 // passwordChanged() (lib/admin-password.ts); no link in it, like the other owner alerts.
 export async function sendOwnerPasswordChanged(data: { email: string; name: string; how: string; device: string; place: string; when: string }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Your password was changed</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — the password on the GreenReserve owner account was just changed (${escapeHtml(data.how)}).</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">Device</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.device)}</td></tr>
-      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">Where</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.place || 'Unknown')}</td></tr>
-      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">When</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.when)}</td></tr>
-    </table>
-    <p style="margin:0;color:#6B706A;font-size:13px;">Not you? Use “Forgot password” on the admin sign-in page to set a new one right away, then sign in, go to My profile and choose “Sign out everywhere”.</p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'owner_password_changed' }, from: FROM_NOREPLY, to: data.email, subject: 'Your GreenReserve owner password was changed', html });
+  await getResend().emails.send({ meta: { kind: 'owner_password_changed' }, from: FROM_NOREPLY, to: data.email, ...mail(ownerPasswordChangedEmail(data)) });
 }
 
 // AW-1c: a passkey was added to or removed from the owner account — the one
 // change that alters how the account signs in, so it is always announced.
 export async function sendOwnerPasskeyChanged(data: { email: string; name: string; change: 'added' | 'removed'; passkey: string; device: string; when: string }) {
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">A passkey was ${data.change}</h1>
-    <p style="margin:0 0 20px;color:#3F453E;font-size:15px;">Hi ${firstName(data.name)} — a passkey was ${data.change} ${data.change === 'added' ? 'to' : 'from'} the GreenReserve owner account.</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">Passkey</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.passkey)}</td></tr>
-      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">From</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.device)}</td></tr>
-      <tr><td style="padding:6px 0;color:#6B706A;font-size:14px;">When</td><td align="right" style="padding:6px 0;color:#141814;font-size:14px;font-weight:600;">${escapeHtml(data.when)}</td></tr>
-    </table>
-    <p style="margin:0;color:#6B706A;font-size:13px;">Not you? Sign in, go to My profile and choose “Sign out everywhere”, remove the passkey, then change your password.</p>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'owner_passkey_changed' }, from: FROM_NOREPLY, to: data.email, subject: `GreenReserve passkey ${data.change}`, html });
+  await getResend().emails.send({ meta: { kind: 'owner_passkey_changed' }, from: FROM_NOREPLY, to: data.email, ...mail(ownerPasskeyChangedEmail(data)) });
 }
 
 // AW-5: the admin's own alerts, to the admin inbox (admin@, MAIL-1). Urgent: the
 // problems that just started (lib/admin-checks.ts emails each once). Digest: every morning.
-const adminUrl = (href: string) => `${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}${href}`;
 
 export async function sendAdminUrgentAlert(data: { findings: { title: string; detail: string; href: string }[] }) {
-  const n = data.findings.length;
-  const rows = data.findings.map(f => `
-    <tr><td style="padding:12px 0;border-bottom:1px solid #E3E4DE;">
-      <a href="${adminUrl(f.href)}" style="color:#141814;font-size:15px;font-weight:600;text-decoration:none;">${escHtml(f.title)}</a>
-      <div style="color:#3F453E;font-size:14px;margin-top:2px;">${escHtml(f.detail)}</div>
-    </td></tr>`).join('');
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">${n === 1 ? 'Something needs you' : `${n} things need you`}</h1>
-    <p style="margin:0 0 12px;color:#3F453E;font-size:15px;">The hourly check just found ${n === 1 ? 'this' : 'these'}. You won't be emailed about ${n === 1 ? 'it' : 'them'} again unless ${n === 1 ? 'it clears and comes back' : 'one clears and comes back'}.</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">${rows}</table>
-    <a href="${adminUrl('/admin')}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;">Open Today</a>
-  `, ADMIN_EMAIL);
-  const subject = n === 1 ? `[GreenReserve] ${data.findings[0].title}` : `[GreenReserve] ${n} things need you`;
-  await getResend().emails.send({ meta: { kind: 'admin_urgent_alert' }, from: FROM_ADMIN, to: ADMIN_EMAIL, subject: subject.replace(/[\r\n]+/g, ' ').slice(0, 150), html });
+  await getResend().emails.send({ meta: { kind: 'admin_urgent_alert' }, from: FROM_ADMIN, to: ADMIN_EMAIL, ...mail(adminUrgentEmail(data)) });
 }
 
-export async function sendAdminDigest(data: {
-  summary: string;
-  facts: {
-    date: string;
-    urgentOpen: { title: string; detail: string; since: string }[];
-    needsYou: { total: number; money: number; stalled: number };
-    money: { daysIn: number; volume: number; volumeLastMonth: number; fees: number; feesLastMonth: number; net: number | null; netLastMonth: number | null };
-    onboarding: { stage: string; count: number; stuck: number }[];
-  };
-}) {
-  const f = data.facts;
-  const usd = (v: number | null) => v === null ? '—' : `${v < 0 ? '-' : ''}$${Math.abs(v).toFixed(2)}`;
-  const row = (label: string, value: string, sub = '') => `
-    <tr><td style="padding:8px 0;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:14px;">${label}</td>
-    <td align="right" style="padding:8px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;font-weight:600;">${value}${sub ? `<div style="color:#6B706A;font-size:12px;font-weight:400;">${sub}</div>` : ''}</td></tr>`;
-  const head = (t: string) => `<p style="margin:22px 0 6px;color:#141814;font-size:15px;font-weight:700;">${t}</p>`;
-  const urgent = f.urgentOpen.length
-    ? f.urgentOpen.map(u => `<li style="margin:0 0 6px;"><strong>${escHtml(u.title)}</strong> — ${escHtml(u.detail)} <span style="color:#6B706A;">(since ${u.since})</span></li>`).join('')
-    : '<li style="margin:0;">Nothing urgent.</li>';
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 4px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:26px;line-height:1.2;font-weight:600;">Good morning</h1>
-    ${data.summary ? `<p style="margin:0 0 4px;color:#3F453E;font-size:15px;line-height:1.55;">${escHtml(data.summary)}</p>` : ''}
-    ${head('Urgent')}
-    <ul style="margin:0;padding-left:18px;color:#3F453E;font-size:14px;line-height:1.55;">${urgent}</ul>
-    ${head('Needs you')}
-    <p style="margin:0;color:#3F453E;font-size:14px;">${f.needsYou.total === 0 ? 'Nothing on the list.' : `${f.needsYou.total} on the list — ${f.needsYou.money} about money, ${f.needsYou.stalled} stalled.`}</p>
-    ${head(`This month so far (${f.money.daysIn} day${f.money.daysIn === 1 ? '' : 's'})`)}
-    <table width="100%" cellpadding="0" cellspacing="0">
-      ${row('Booked through courses', usd(f.money.volume), `${usd(f.money.volumeLastMonth)} by now last month`)}
-      ${row('GreenReserve fees', usd(f.money.fees), `${usd(f.money.feesLastMonth)} by now last month`)}
-      ${row('Net after Stripe and expenses', usd(f.money.net), f.money.net === null ? 'Stripe didn’t answer' : `${usd(f.money.netLastMonth)} by now last month`)}
-    </table>
-    ${head('Onboarding')}
-    <table width="100%" cellpadding="0" cellspacing="0">
-      ${f.onboarding.map(o => row(escHtml(o.stage), String(o.count), o.stuck ? `${o.stuck} stuck` : '')).join('')}
-    </table>
-    <a href="${adminUrl('/admin')}" style="display:block;background:#173B2A;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:6px;font-weight:600;font-size:15px;margin-top:24px;">Open Today</a>
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'admin_digest' }, from: FROM_ADMIN, to: ADMIN_EMAIL, subject: `[GreenReserve] Morning digest — ${f.date}`, html });
+export async function sendAdminDigest(data: { summary: string; facts: DigestFacts }) {
+  await getResend().emails.send({ meta: { kind: 'admin_digest' }, from: FROM_ADMIN, to: ADMIN_EMAIL, ...mail(adminDigestEmail(data)) });
 }
 
 /** W2-9: a player's group in an event — sent from the event's player list. Replies go to the course (the staff who sent it). */
@@ -1828,16 +1189,7 @@ export async function sendEventSignupEmail(data: {
 // Low-stock email (Cam 2026-11-15): the course's owner, from admin@ (course-facing mail, lib/contact.ts). Sent by
 // lib/low-stock.ts once per drop to an item's "Remind me when it's down to" number.
 export async function sendLowStockEmail(data: { courseId: string; courseName: string; ownerName: string | null; ownerEmail: string; items: { name: string; stockCount: number; reorderAt: number }[] }) {
-  const one = data.items.length === 1;
-  const rows = data.items.map(i => `<tr><td style="padding:8px 12px 8px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;">${escHtml(i.name)}</td><td align="right" style="padding:8px 0;border-bottom:1px solid #E3E4DE;color:#141814;font-size:14px;font-weight:600;white-space:nowrap;">${Math.max(0, i.stockCount)} left</td><td align="right" style="padding:8px 0 8px 12px;border-bottom:1px solid #E3E4DE;color:#6B706A;font-size:13px;white-space:nowrap;">reminder at ${i.reorderAt}</td></tr>`).join('');
-  const site = process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app';
-  const html = baseTemplate(`
-    <h1 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;color:#141814;font-size:24px;line-height:1.25;font-weight:600;">${one ? 'An item is running low' : `${data.items.length} items are running low`}</h1>
-    <p style="margin:0 0 16px;color:#3F453E;font-size:15px;">Hi ${escHtml(firstName(data.ownerName))} — ${one ? 'this item' : 'these items'} in the <strong>${escHtml(data.courseName)}</strong> pro shop reached the number you set to be reminded at. We won't email about ${one ? 'it' : 'them'} again until ${one ? 'it is' : 'each is'} restocked above that number.</p>
-    <table width="100%" cellpadding="0" cellspacing="0">${rows}</table>
-    ${manageButton(`${site}/dashboard/shop`, 'Open the pro shop')}
-  `, ADMIN_EMAIL);
-  await getResend().emails.send({ meta: { kind: 'shop_low_stock', courseId: data.courseId }, from: FROM_ADMIN, to: data.ownerEmail, subject: one ? `Low stock: ${data.items[0].name}` : `Low stock: ${data.items.length} items at ${data.courseName}`, html });
+  await getResend().emails.send({ meta: { kind: 'shop_low_stock', courseId: data.courseId }, from: FROM_NOREPLY, to: data.ownerEmail, ...mail(lowStockEmail(data)) });
 }
 
 // MEM-ACCT part 2: member account statements. Built in lib/email-golfer; sent as the course.
@@ -1855,4 +1207,15 @@ export async function sendStatementDeclinedEmail(data: { name: string; email: st
 export async function sendStatementPaidEmail(data: { name: string; email: string; courseName: string; period: string; amountCents: number; cardSaved: boolean; link: string; courseId?: string }) {
   const ctx = await emailCourse({ courseId: data.courseId }, data.courseName);
   await getResend().emails.send({ meta: { kind: 'member_statement_paid', courseId: data.courseId }, from: courseFrom(ctx.course.name, NOREPLY_EMAIL), to: data.email, ...mail(statementPaidEmail(data, ctx.course)) });
+}
+
+/**
+ * Outreach to a new course (emails redo, Cam 2026-11-19; the Outreach lane sends from here once it is built).
+ * From Cam at admin@, so a reply (or "no thanks") reaches him. Refuses to send while OUTREACH_POSTAL_ADDRESS
+ * (lib/contact.ts) is empty: outreachEmail() throws before anything reaches Resend.
+ */
+export async function sendOutreachEmail(data: { to: string; subject: string; paragraphs: string[]; inquiryId?: string | null; senderName?: string }) {
+  const e = outreachEmail(data, OUTREACH_POSTAL_ADDRESS);
+  const r = await getResend().emails.send({ meta: { kind: 'outreach_email', inquiryId: data.inquiryId ?? null }, from: `${(data.senderName || 'Cam Sanchez').replace(/[\r\n"<>]/g, ' ')} <${ADMIN_EMAIL}>`, to: data.to, ...mail(e) });
+  if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
