@@ -68,6 +68,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     await prisma.courseMembership.update({ where: { id: m.id }, data: { accountCustomerId: customerId, accountPaymentMethodId: pm, accountCardConsentAt: new Date(), accountCardTerms: statementCardTerms(st.course.name) } });
   }
   const email = m.inviteEmail || m.golfer?.email;
-  if (email) after(sendStatementPaidEmail({ name: m.inviteName || [m.golfer?.firstName, m.golfer?.lastName].filter(Boolean).join(' '), email, courseName: st.course.name, period: st.period, amountCents: paid.amountCents, cardSaved: saveCard, link: statementLink(st) }).catch(console.error));
+  if (email) after(sendStatementPaidEmail({ name: m.inviteName || [m.golfer?.firstName, m.golfer?.lastName].filter(Boolean).join(' '), email, courseName: st.course.name, courseId: st.courseId, period: st.period, amountCents: paid.amountCents, cardSaved: saveCard, link: statementLink(st) }).catch(console.error));
   return NextResponse.json({ ok: true, amountCents: paid.amountCents, cardSaved: saveCard });
 }

@@ -8,7 +8,8 @@ export async function GET(
   const { slug } = await params;
   const date = req.nextUrl.searchParams.get('date');
   if (!date) return NextResponse.json({ error: 'date param required' }, { status: 400 });
-  const r = await loadPublicTeeTimes(slug, date);
+  // ?viewer=1 (the Book page): the logged-in golfer's own window at this course (lib/public-tee-times).
+  const r = await loadPublicTeeTimes(slug, date, { viewer: req.nextUrl.searchParams.get('viewer') === '1' });
   if (!r.ok) return NextResponse.json(r.body, { status: r.status });
   return NextResponse.json(r.teeTimes);
 }

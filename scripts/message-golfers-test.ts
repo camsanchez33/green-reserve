@@ -21,7 +21,7 @@ ok('text: 0 by email, 2 by text (agreed numbers only), 2 to call', t.email === 0
 ok('both: 2 + 2, only the golfer with neither to call', b.email === 2 && b.sms === 2 && b.unreachable === 1);
 ok('texting off: text reaches nobody', reach(list, false, 'text').sms === 0 && reach(list, false, 'text').unreachable === 4);
 ok('who to call is exactly who it misses', toCall(list, true, 'email').map(x => x.name).join() === 'C,D' && toCall(list, true, 'both').map(x => x.name).join() === 'D');
-ok('the text always carries the STOP line', noticeText('Pines', 'Hi').endsWith('Reply STOP to opt out.') && noticeText('Pines', 'Hi').startsWith('GreenReserve (Pines): '));
+ok('the text always carries the STOP line', noticeText('Pines', 'Hi').endsWith('Reply STOP to opt out.') && noticeText('Pines', 'Hi').startsWith('Pines update: '));
 ok('via is only email, text or both', isVia('email') && isVia('both') && !isVia('sms') && !isVia(undefined));
 
 ok('the assistant may not add a number', addedNumbers('First tee is now 9:30.', 'first tee now 9:00').length > 0 && addedNumbers('The first tee is now 9:00.', 'frost, first tee 9:00').length === 0);
@@ -36,7 +36,7 @@ ok('the preview returns the real email and text and sends nothing', (() => { con
 ok('the old sms flag still means email + text (course alert)', route.includes("o.sms === true ? 'both' : 'email'"));
 ok('text-only is refused while texting is off', route.includes("if (via === 'text' && !texting)"));
 ok('text only sends no email', route.includes("email: via !== 'text'") && read('src/lib/golfer-messages.ts').includes('if (doEmail && r.email)'));
-ok('the email the golfer gets is one function, used to send and to preview', read('src/lib/email.ts').includes('export function courseNoticeEmail(') && read('src/lib/email.ts').includes('const { subject, html } = courseNoticeEmail(data);'));
+ok('the email the golfer gets is one function, used to send and to preview', read('src/lib/email-golfer.ts').includes('export function courseNoticeEmail(') && read('src/lib/email.ts').includes('const { subject, html, text } = courseNoticeEmail({ ...data, course: ctx.course });'));
 ok('the draft route: same permission, kill switch, 20 an hour, refuses an added number', draft.includes("requirePermission(session, 'sheet.message_golfers')") && draft.includes('if (!birdieEnabled())') && draft.includes('`birdie:msg-draft:${session.courseId}`, 20, 3600') && read('src/lib/notice-draft.ts').includes('if (addedNumbers(text, typed).length) return { ok: false'));
 ok('the window: who, how, start from, help, what they get, to call', modal.includes("aria-label=\"How\"") && modal.includes('READY.map') && modal.includes('Help me write it') && modal.includes('What they get') && modal.includes('sandbox=""') && modal.includes('to call</p>'));
 ok('Send says exactly who and how', modal.includes('`Send to ${reachable} golfer${reachable === 1 ? \'\' : \'s\'} ${channelWord}`'));

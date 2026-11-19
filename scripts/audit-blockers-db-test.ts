@@ -80,8 +80,12 @@ async function cleanup() {
 
   // 4. Emails
   const email = read('src/lib/email.ts');
-  ok('4. the day-before reminder says the link opens tomorrow', email.includes('The link below opens tomorrow, the day of your round') && email.includes('Check In &amp; Pay Tomorrow &rarr;') && !email.includes('Check in and pay below before you head out, or do it'));
-  ok('4. the no-card confirmation says online is on the day of the round', email.includes('or online from the link below on the day of your round.') && !email.includes('or use the link below to pay online.'));
+  // Emails redo (Cam 2026-11-19): the reminder and the confirmation carry no pay link at all — the pay link comes
+  // in its own email on the day of the round (lib/check-in-email), so neither can promise it early.
+  const golfer = read('src/lib/email-golfer.ts');
+  const fnOf = (n: string) => golfer.slice(golfer.indexOf(`export function ${n}(`), golfer.indexOf('\nexport ', golfer.indexOf(`export function ${n}(`) + 1));
+  ok('4. the day-before reminder offers no pay link before the day', email.includes('reminderEmail(') && fnOf('reminderEmail').includes("label: 'See booking details'") && !fnOf('reminderEmail').includes('l.pay'));
+  ok('4. the confirmation offers no pay link before the day', email.includes('bookingConfirmationEmail(') && !fnOf('bookingConfirmationEmail').includes('l.pay'));
 
   await cleanup();
   await prisma.$disconnect();

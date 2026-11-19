@@ -120,10 +120,10 @@ async function cleanup() {
   const base = { golferName: 'G', golferEmail: 'g@example.test', courseName: 'C', courseAddress: 'A', date: '2026-11-21', time: '08:40', players: 1, holes: 18, greenFeeTotal: 1, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 151, bookingId: 'test', appliedRate: 'standard', noCard: true, testSend: true };
   await sendBookingConfirmation({ ...base, parts: confirmationPartsOf({}) });
   const html0 = JSON.parse(sent[0]).html as string;
-  ok('a course that wrote nothing gets today’s line, byte for byte', html0.includes('<p style="margin:8px 0 0;color:#141814;font-size:12px;">Arrive 15 minutes early and check in at the pro shop.</p>') && !html0.includes('Arrival.'));
+  ok('a course that wrote nothing gets today’s line, word for word', html0.includes('Arrive 15 minutes early and check in at the pro shop.</p>') && !html0.includes('Arrival.'));
   await sendBookingConfirmation({ ...base, parts: confirmationPartsOf({ confirmationArrival: 'Check in <early>', dresscode: ['Collared shirts required.', 'No denim.'] }) });
   const html1 = JSON.parse(sent[1]).html as string;
-  ok('written parts show labelled, escaped, one dress rule per line', html1.includes('<strong>Arrival.</strong> Check in &lt;early&gt;') && html1.includes('<strong>Dress code.</strong> Collared shirts required.\nNo denim.'));
+  ok('written parts show labelled, escaped, one dress rule per line', html1.includes('Arrival.</strong> Check in &lt;early&gt;') && html1.includes('Dress code.</strong> Collared shirts required.<br>No denim.'));
   globalThis.fetch = realFetch;
 
   // Test reader: a payment claimed in our database makes the reader busy, even before Stripe shows it.

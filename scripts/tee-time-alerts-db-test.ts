@@ -73,7 +73,7 @@ async function main() {
   ok('…stored with the alert wording version', (await prisma.smsConsent.findFirst({ where: { phone: P5, scope: 'alerts', method: 'sms_reply' }, orderBy: { createdAt: 'desc' } }))?.wording === 'alerts-2026-11-18');
   ok('…STOP then START brings back alert texts only', JSON.stringify(back) === '["alerts"]' && (await hasSmsConsent(P5, 'alerts')) && !(await hasSmsConsent(P5)), back);
   ok('a number with no record replying START gets booking texts, as before', JSON.stringify(await optInByReply(P6)) === '["bookings"]' && (await hasSmsConsent(P6)) && !(await hasSmsConsent(P6, 'alerts')));
-  ok('the reply webhook uses optInByReply and answers with the matching confirmation', /optInByReply\(from\)/.test(read('src/app/api/twilio/inbound/route.ts')) && /ALERT_SMS_CONFIRMATION/.test(read('src/app/api/twilio/inbound/route.ts')));
+  ok('the reply webhook uses optInByReply and answers with the matching confirmation', /optInByReply\(from\)/.test(read('src/app/api/twilio/inbound/route.ts')) && /alertOptInText\(course\?\.name\)/.test(read('src/app/api/twilio/inbound/route.ts')));
   ok('a repeat alert yes records nothing', !(await recordSmsConsent(P2, 'opt_in', { method: 'web_alert', scope: 'alerts' })));
 
   // Every text sender before ALERTS-2 keeps needing the booking-text yes: only the alert sender passes 'alerts'.
@@ -127,7 +127,7 @@ async function main() {
   const second = await createAlert({ courseId: c.id, dates: [d2], parts: [], players: 1, email: `${TAG}-v@t.local`, phone: P7, textConsent: true }, null);
   ok('a re-asked pending alert gets a new confirm link', first.ok && second.ok && first.alert.id === second.alert.id && first.alert.token !== second.alert.token);
   ok('…so the first email can no longer turn on a phone it never named', first.ok && (await confirmAlert(first.alert.token)).result === 'missing' && !(await hasSmsConsent(P7, 'alerts')));
-  ok('the confirm email and page name the phone’s last four digits', /number ending \$\{escHtml\(data\.phone\.slice\(-4\)\)\}/.test(read('src/lib/email.ts')) && /number ending \$\{alert\.phone\.slice\(-4\)\}/.test(read('src/app/api/alerts/confirm/[token]/route.ts')));
+  ok('the confirm email and page name the phone’s last four digits', /number ending \$\{String\(d\.phone\)\.slice\(-4\)\}/.test(read('src/lib/email-golfer.ts')) && /number ending \$\{alert\.phone\.slice\(-4\)\}/.test(read('src/app/api/alerts/confirm/[token]/route.ts')));
   const keysLapsed = alertRateKeys({ courseId: c.id, email: `${TAG}-l@t.local` }, { courseId: c.id, email: 'Victim@T.local' });
   ok('a logged-in golfer typing another email is counted against that email too', keysLapsed.includes('victim@t.local') && keysLapsed.includes(`${TAG}-l@t.local`), keysLapsed);
   ok('a log-in at another course counts only the typed email', JSON.stringify(alertRateKeys({ courseId: 'other', email: 'me@t.local' }, { courseId: c.id, email: 'v@t.local' })) === '["v@t.local"]');
