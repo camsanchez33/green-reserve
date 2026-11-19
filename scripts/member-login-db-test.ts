@@ -505,12 +505,12 @@ async function main() {
   check('…Members pricing off: the line keeps the window and guest passes, not the rate', hsOff.body?.benefits === 'You can book 9 days out. 6 guest passes a year.', hsOff.body?.benefits);
   check('…and the session sends no member rate fields for a page to rebuild a price from', hsOff.body?.tier && hsOff.body.tier.discountPct === null && hsOff.body.tier.greenFeeWeekday === null && hsOff.body.tier.greenFeeWeekend === null && hsOff.body.tier.cartFeeWeekday === null && hsOff.body.tier.cartFeeWeekend === null, hsOff.body?.tier);
   check('(with it on, the tier\'s rate is sent)', hs.body?.tier?.discountPct === 20, hs.body?.tier);
-  // withoutRates drops the prices and keeps the window and passes (the invite itself sends no benefits with pricing off).
+  // withoutRates drops the prices and keeps the window and passes; the invite uses it with Members pricing off.
   check('withoutRates keeps the window and passes only', memberBenefitsLine(withoutRates({ discountPct: 20, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null, advanceBookingDays: 9, windowPublic: false, guestPassesPerYear: 6 }), {}) === 'book 9 days out · 6 guest passes a year');
   const welcomeSrc = (await import('fs')).readFileSync('src/lib/member-welcome.ts', 'utf8');
-  check('…and sendWelcome applies it from the course\'s switch', welcomeSrc.includes("benefits: memberPricingOn(m.course) ? memberBenefitsLine(m.tier, m.course) : ''") && welcomeSrc.includes('memberPricing: memberPricingOn(m.course)') && welcomeSrc.includes('hasMemberPricing: true'));
+  check('…and sendWelcome applies it from the course\'s switch', welcomeSrc.includes('benefits: memberBenefitsLine(m.tier && !memberPricingOn(m.course) ? withoutRates(m.tier) : m.tier, m.course)') && welcomeSrc.includes('memberPricing: memberPricingOn(m.course)') && welcomeSrc.includes('hasMemberPricing: true'));
   const emailSrc = (await import('fs')).readFileSync('src/lib/email.ts', 'utf8');
-  check('…the invite reads "with this email to book." with Members pricing off, and "to get your rates" with it on', emailSrc.includes("with this email ${data.memberPricing ? `to get your rates") && emailSrc.includes(": 'to book.'}"));
+  check('…the invite reads "with this email to book: <window> · <passes>" with Members pricing off, "to get your rates: …" with it on', emailSrc.includes("with this email ${data.memberPricing ? 'to get your rates' : 'to book'}${data.benefits ? `: ${escHtml(data.benefits)}` : '.'}"));
   // The dues-history route is gone (no page has used it since #502).
   check('the member payments route is gone (404)', (await get(`/api/member/${home.slug}/payments`, await cookie(home.id, homeEmail))).status === 404);
   await prisma.course.update({ where: { id: home.id }, data: { hasMemberPricing: true } });
