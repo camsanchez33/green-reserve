@@ -1,12 +1,13 @@
 // A longer booking window gets its tee times at once (Build 2026-11-19, lib/window-generation), not at the 03:00-UTC
 // nightly run: only when the horizon grew, only for that course, never for a course with no active schedule (its
-// hand-added times survive), starting one day before the course's today, far end first, inside a 120 s budget.
-// The three routes that can lengthen a window call the one helper inside after().
+// hand-added times survive), only the new days (from one before the old end, never a day already gone), far end first,
+// inside a 120 s budget. The routes that can lengthen a window call the one helper inside after().
 // Run: npx tsx scripts/window-generation-db-test.ts (needs DATABASE_URL)
 import { readFileSync } from 'fs';
 import { prisma } from '../src/lib/prisma';
 import { regenerateUpcoming } from '../src/lib/tee-sheet-engine';
-import { generateForLongerWindow, windowHorizonDays, WINDOW_GENERATION_BUDGET_MS } from '../src/lib/window-generation';
+import { generateForLongerWindow, windowHorizonDays, WINDOW_GENERATION_BUDGET_MS, OPERATOR_WINDOW_FIELDS, ADMIN_WINDOW_FIELDS, touchesWindow, tierWindowChange } from '../src/lib/window-generation';
+import { withPriceSwitch } from '../src/lib/pricing-switch';
 import { todayIn, addDaysStr } from '../src/lib/course-time';
 
 const TAG = 'wingen';
@@ -24,6 +25,18 @@ for (const p of ['src/app/api/operator/settings/route.ts', 'src/app/api/operator
   ok(`${p}: allows the function time for the 120 s budget`, /export const maxDuration = (1[3-9]\d|[2-9]\d\d)/.test(s));
 }
 ok('the budget is 120 s', WINDOW_GENERATION_BUDGET_MS === 120_000);
+// Which saves count as a window change.
+ok('operator Settings: public, member and resident windows, and the Resident pricing switch', ['publicAdvanceDays', 'memberAdvanceDays', 'residentAdvanceDays', 'hasResidentPricing'].every(k => touchesWindow(OPERATOR_WINDOW_FIELDS, { [k]: 1 })) && !touchesWindow(OPERATOR_WINDOW_FIELDS, { name: 'x' }));
+ok('admin editor: public and member windows and the Resident pricing switch (it cannot write the resident window)', ['publicAdvanceDays', 'memberAdvanceDays', 'hasResidentPricing'].every(k => touchesWindow(ADMIN_WINDOW_FIELDS, { [k]: 1 })) && !touchesWindow(ADMIN_WINDOW_FIELDS, { name: 'x' }));
+ok('a membership edit: its days or the public-window switch', tierWindowChange({ advanceBookingDays: 30 }) && tierWindowChange({ windowPublic: false }) && !tierWindowChange({ name: 'x' }));
+ok('the routes use those lists', src('src/app/api/operator/settings/route.ts').includes('touchesWindow(OPERATOR_WINDOW_FIELDS, data)') && src('src/app/api/admin/course-settings/route.ts').includes('touchesWindow(ADMIN_WINDOW_FIELDS, data)') && src('src/app/api/operator/tiers/route.ts').includes('tierWindowChange(updates) ? await windowHorizonDays('));
+// Schedule saves (they can switch Resident pricing on): every price-switching save goes through withPriceSwitchAndWindow.
+for (const p of ['src/app/api/operator/schedule/route.ts', 'src/app/api/admin/schedule/route.ts']) {
+  const s = src(p);
+  ok(`${p}: every save that can switch a price on also generates a window it opens`, !s.includes('withPriceSwitch(') && (s.match(/withPriceSwitchAndWindow\(/g)?.length ?? 0) >= 2 && /export const maxDuration = 300/.test(s));
+}
+const lib = src('src/lib/window-generation.ts');
+ok('withPriceSwitchAndWindow reads the horizon first and generates inside after()', /const before = await windowHorizonDays\(courseId\);\s*const result = await withPriceSwitch\(courseId, write\);\s*after\(\(\) => generateForLongerWindow\(courseId, before\)\);/.test(lib));
 
 async function cleanup() {
   const ids = (await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } })).map(c => c.id);
@@ -58,12 +71,12 @@ async function cleanup() {
   await prisma.course.update({ where: { id: a.id }, data: { publicAdvanceDays: 20 } });
   const r = await generateForLongerWindow(a.id, before);
   ok('a longer window runs and finishes', r.ran && r.complete && r.failedDays === 0, r);
-  ok('it runs from the day before today to the window\'s last day', r.ran && r.from === addDaysStr(today, -1) && r.to === addDaysStr(today, 20), r);
+  ok('it makes only the new days: from one before the old end (day 7) to the window\'s last day', r.ran && r.from === addDaysStr(today, 7) && r.to === addDaysStr(today, 20) && r.days === 14, r);
   ok('the window\'s last day (today + 20) has tee times', (await count(a.id, addDaysStr(today, 20))) === 4);
   ok('every day from today to today + 20 has its 4 times', (await prisma.teeTime.groupBy({ by: ['date'], where: { courseId: a.id, date: { gte: today, lte: addDaysStr(today, 20) } }, _count: true })).every(g => g._count === 4)
     && (await prisma.teeTime.groupBy({ by: ['date'], where: { courseId: a.id, date: { gte: today, lte: addDaysStr(today, 20) } } })).length === 21);
   ok('nothing past the horizon', (await count(a.id, addDaysStr(today, 21))) === 0);
-  ok('the day before today is covered too', (await count(a.id, addDaysStr(today, -1))) === 4);
+  ok('never a day already gone: nothing made before today', (await count(a.id, addDaysStr(today, -1))) === 0);
   ok('only this course: the other course is untouched', (await count(other.id)) === otherBefore);
   const again = await generateForLongerWindow(a.id, await windowHorizonDays(a.id));
   ok('saving the same window again does nothing', !again.ran && again.reason === 'not_longer', again);
@@ -94,6 +107,14 @@ async function cleanup() {
   const res = await generateForLongerWindow(a.id, hRes);
   ok('turning Resident pricing on with a 40-day window makes day 40', res.ran && (await count(a.id, addDaysStr(today, 40))) === 4, res);
 
+  // A schedule save adds a resident rate: withPriceSwitch turns Resident pricing on after the save, opening a 50-day
+  // resident window already set; the schedule routes then run the helper (withPriceSwitchAndWindow, inside after()).
+  await prisma.course.update({ where: { id: a.id }, data: { hasResidentPricing: false, residentAdvanceDays: 50 } });
+  const hSched = await windowHorizonDays(a.id);
+  await withPriceSwitch(a.id, () => prisma.teeTimeSchedule.updateMany({ where: { courseId: a.id }, data: { residentRateWeekdayCents: 2000 } }));
+  const sw = await generateForLongerWindow(a.id, hSched);
+  ok('a schedule save that switches Resident pricing on makes the resident window\'s days', (await prisma.course.findUnique({ where: { id: a.id } }))?.hasResidentPricing === true && sw.ran && (await count(a.id, addDaysStr(today, 50))) === 4, sw);
+
   // No active schedule: skipped, so hand-added times are never deleted.
   const hand = await mk('hand');
   const handTime = await prisma.teeTime.create({ data: { courseId: hand.id, date: addDaysStr(today, 3), time: '09:00', holes: 18, greenFeeCents: 4000, playersAvailable: 4, playersBooked: 0 } });
@@ -118,10 +139,23 @@ async function cleanup() {
   const clock = () => (tick++ < 4 ? 0 : WINDOW_GENERATION_BUDGET_MS + 1); // three days fit, then the budget is spent
   const br = await generateForLongerWindow(b.id, hB, { clock });
   ok('past the budget it stops without throwing and reports it', br.ran && !br.complete && br.days === 3, br);
-  ok('the far end came first: days 60, 59, 58 made, today not', (await count(b.id, addDaysStr(today, 60))) === 4 && (await count(b.id, addDaysStr(today, 58))) === 4
-    && (await count(b.id, addDaysStr(today, 57))) === 0 && (await count(b.id, today)) === 0);
+  ok('the far end came first: days 60, 59, 58 made, 57 not', (await count(b.id, addDaysStr(today, 60))) === 4 && (await count(b.id, addDaysStr(today, 58))) === 4
+    && (await count(b.id, addDaysStr(today, 57))) === 0);
 
-  // A course west of UTC: "today" is the course's own, the run starts the day before it.
+  // A day already gone is never touched, even when the schedule changed since it was made.
+  const past = await mk('past');
+  const ps = await sched(past.id);
+  await regenerateUpcoming(past.id);
+  const yesterday = addDaysStr(today, -1);
+  await prisma.teeTime.createMany({ data: ['08:00', '08:10'].map(time => ({ courseId: past.id, date: yesterday, time, holes: 18, greenFeeCents: 5000, playersAvailable: 4, playersBooked: 0 })) });
+  await prisma.teeTimeSchedule.update({ where: { id: ps.id }, data: { greenFeeWeekdayCents: 9000, greenFeeWeekendCents: 9000, intervalMinutes: 12 } });
+  const hP = await windowHorizonDays(past.id);
+  await prisma.course.update({ where: { id: past.id }, data: { publicAdvanceDays: 12 } });
+  await generateForLongerWindow(past.id, hP);
+  const y = await prisma.teeTime.findMany({ where: { courseId: past.id, date: yesterday }, orderBy: { time: 'asc' } });
+  ok('yesterday\'s open times keep their times and prices', y.length === 2 && y.every(t => t.greenFeeCents === 5000) && y.map(t => t.time).join() === '08:00,08:10', y.map(t => `${t.time}@${t.greenFeeCents}`));
+
+  // A course west of UTC: "today" is the course's own.
   const west = await mk('west', 'America/Los_Angeles');
   await sched(west.id);
   const hW = await windowHorizonDays(west.id);
@@ -129,7 +163,7 @@ async function cleanup() {
   const now = new Date(`${today}T05:00:00Z`); // 9 PM the evening before in Los Angeles
   const wr = await generateForLongerWindow(west.id, hW, { now });
   const laToday = todayIn('America/Los_Angeles', now);
-  ok('a western course runs from the day before its own today', wr.ran && wr.from === addDaysStr(laToday, -1) && wr.to === addDaysStr(laToday, 9), { wr, laToday });
+  ok('a western course counts from its own today', wr.ran && wr.from === addDaysStr(laToday, 7) && wr.to === addDaysStr(laToday, 9), { wr, laToday });
 
   ok('an unknown course does nothing', (await generateForLongerWindow('nope', 1)).ran === false);
 

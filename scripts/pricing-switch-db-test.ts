@@ -73,7 +73,7 @@ async function cleanup() {
     ];
     for (const [file, needles] of paths) { const src = read(file); ok(`2. ${file} reads the switch`, needles.every(n => src.includes(n)), needles.filter(n => !src.includes(n))); }
     for (const [file, call] of [['src/app/api/operator/tiers/route.ts', 2], ['src/app/api/operator/schedule/route.ts', 4], ['src/app/api/admin/schedule/route.ts', 2]] as const) {
-      ok(`3. ${file} wraps its price writes (${call})`, (read(file).match(/withPriceSwitch\(/g) ?? []).length === call);
+      ok(`3. ${file} wraps its price writes (${call})`, (read(file).match(/withPriceSwitch(?:AndWindow)?\(/g) ?? []).length === call); // the schedule routes use the window-opening wrapper (lib/window-generation)
     }
 
     // 3. Auto-on

@@ -9,7 +9,7 @@ import { parseLineRates, type LineRates } from '@/lib/tier-rates';
 import { tierPriceList } from '@/lib/tier-price-list';
 import { resolveDashboardSession, requirePermission } from '@/lib/session';
 import { readAccountSettings } from '@/lib/member-account';
-import { windowHorizonDays, generateForLongerWindow } from '@/lib/window-generation';
+import { windowHorizonDays, generateForLongerWindow, tierWindowChange } from '@/lib/window-generation';
 
 // A membership with a longer window generates its new days after the response (lib/window-generation: a 120 s budget).
 export const maxDuration = 150;
@@ -153,7 +153,7 @@ export async function PATCH(req: NextRequest) {
   }
   if (updates.windowPublic !== undefined && typeof updates.windowPublic !== 'boolean') return NextResponse.json({ error: 'Pick the public window or a number of days.' }, { status: 400 });
 
-  const horizonBefore = updates.advanceBookingDays != null || updates.windowPublic !== undefined ? await windowHorizonDays(session.courseId) : null;
+  const horizonBefore = tierWindowChange(updates) ? await windowHorizonDays(session.courseId) : null;
   const updated = await withPriceSwitch(session.courseId, () => prisma.membershipTier.update({
     where: { id },
     data: {
