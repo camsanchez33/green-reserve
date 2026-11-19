@@ -4,9 +4,8 @@
 // with the GreenReserve logo at the top and greenreserve.app in the footer. Cam's own replies are
 // plain personal emails (plainEmail), with no layout.
 //
-// Where replies go is unchanged from before, except routine staff notices (new booking, low stock,
-// support message, announcement, monthly review), which now come from noreply@ and point to Course
-// support in the dashboard, as the mockup's staff email does.
+// Where replies go is unchanged from before: admin@ (a reply reaches Cam) for everything but codes,
+// sign-in links and security alerts, which come from noreply@ and name admin@ instead (MAIL-1).
 //
 // Pure: each builder takes the data and returns { subject, html, text }. scripts/emails-staff-test.ts
 // renders every one.
@@ -20,8 +19,8 @@ const gr = (subject: string, input: Omit<LetterInput, 'from'>): BuiltEmail => ({
 const site = () => emailSite();
 const first = (full: string | null | undefined) => (full ?? '').trim().split(/\s+/)[0] || 'there';
 
-/** The line every routine staff notice ends with: they come from noreply@ (mockup, staff email). */
-export const STAFF_QUESTIONS = 'Questions? Ask in Course support in your dashboard. Replies to this email aren’t read.';
+/** The line routine staff notices end with (they come from admin@, so a reply reaches Cam). */
+export const STAFF_QUESTIONS = 'Questions? Reply to this email, or ask in Course support in your dashboard.';
 /** LQ-2 (legal/LQ-2_FEE_COPY.md), the allowed sentences, verbatim. */
 export const FEE_SENTENCES = 'Golfers pay $1.50 per player on each online booking, added to your price. Stripe’s standard card-processing fee applies to the payment, the same as any card you take today. GreenReserve charges you nothing on top of it.';
 
@@ -48,9 +47,9 @@ export function operatorBookingEmail(d: OperatorBookingData): BuiltEmail {
     : d.feePaidAtBooking
       ? 'Their card is saved. Only GreenReserve’s booking fee was charged; the round is charged when they check in (or when free cancellation ends).'
       : 'Their card is saved. Nothing is charged until they check in (or when free cancellation ends).';
-  return gr(`New booking: ${plural(d.players, 'player')} – ${emailDate(d.date)} at ${emailTime(d.time)}`, {
+  return gr(`New booking at ${d.courseName}: ${plural(d.players, 'player')} – ${emailDate(d.date)} at ${emailTime(d.time)}`, {
     preheader: `${d.golferName}, ${plural(d.players, 'player')}.`,
-    line: `New online booking for ${emailDate(d.date)} at ${emailTime(d.time)}.`,
+    line: `New online booking at ${d.courseName}.`,
     rows,
     after: [card, `Expected once they check in and pay. ${FEE_SENTENCES.split('. ')[0]}.`, STAFF_QUESTIONS],
     button: { label: 'Open the tee sheet', url: `${site()}/dashboard` },
@@ -101,7 +100,7 @@ export function operatorPasswordResetEmail(d: { operatorEmail: string; resetLink
     line: 'Reset your password.',
     paragraphs: [`We got a request to reset the password on your GreenReserve dashboard (${d.operatorEmail}). If this wasn’t you, you can ignore this email.`],
     button: { label: 'Set a new password', url: d.resetLink },
-    after: ['This link expires in 1 hour.'],
+    after: [`This link expires in 1 hour. Questions? Email ${ADMIN_EMAIL}.`],
   });
 }
 
@@ -111,7 +110,7 @@ export function operatorVerifyEmail(d: { operatorEmail: string; verifyLink: stri
     line: 'Confirm your email.',
     paragraphs: [`Confirm ${d.operatorEmail} to finish setting up your GreenReserve dashboard.`],
     button: { label: 'Confirm my email', url: d.verifyLink },
-    after: ['Didn’t ask for this? You can ignore this email.'],
+    after: [`Didn’t ask for this? You can ignore this email. Questions? Email ${ADMIN_EMAIL}.`],
   });
 }
 
@@ -141,7 +140,7 @@ export function messageNotificationEmail(d: { senderName: string; courseName: st
     line: `${d.senderName} sent a message about ${d.courseName}.`,
     paragraphs: [preview],
     button: { label: 'View and reply', url: d.replyUrl },
-    after: ['Reply in Course support in your dashboard. Replies to this email aren’t read.'],
+    after: ['Reply from the button so the conversation stays in one place.'],
   });
 }
 
@@ -233,7 +232,7 @@ export function inquirySigninCodeEmail(d: { courseName: string; code: string }):
     line: 'Your code',
     code: d.code,
     paragraphs: [`Someone just asked to get back into ${d.courseName} from the GreenReserve sign-up form. Enter this code on that page to confirm it’s you, and we’ll show you where to sign in. It expires in 10 minutes.`],
-    after: ['This code doesn’t sign you in on its own: you’ll still use your normal password. If you didn’t ask for it, ignore this email; nothing has changed and nobody has been let in.'],
+    after: ['This code doesn’t sign you in on its own: you’ll still use your normal password. If you didn’t ask for it, ignore this email; nothing has changed and nobody has been let in.', `Questions? Email ${ADMIN_EMAIL}.`],
   });
 }
 
@@ -458,7 +457,7 @@ export function adminPasswordResetEmail(d: { adminEmail: string; resetLink: stri
     line: 'Reset your admin password.',
     paragraphs: [`We got a request to reset the password on your GreenReserve admin account (${d.adminEmail}). If this wasn’t you, you can ignore this email.`],
     button: { label: 'Set a new password', url: d.resetLink },
-    after: ['This link expires in 24 hours.'],
+    after: [`This link expires in 24 hours. Questions? Email ${ADMIN_EMAIL}.`],
   });
 }
 

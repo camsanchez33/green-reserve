@@ -270,7 +270,12 @@ export type PlainInput = {
 /** No layout on purpose: it reads like a person wrote it (mockup "Outreach: plain personal email"). */
 export function plainEmail(i: PlainInput): RenderedEmail {
   // A bare http(s) link in a paragraph becomes a link (escaped first, so only our own anchor is markup).
-  const linkify = (h: string) => h.replace(/https?:\/\/[^\s<]+/g, u => `<a href="${u}" style="color:#1F4D34">${u}</a>`);
+  const linkify = (h: string) => h.replace(/https?:\/\/[^\s<]+/g, raw => {
+    // Sentence punctuation and an escaped quote or bracket after a link are not part of it.
+    const m = /^(.*?)((?:[.,;:!?)\]]|&quot;|&#39;|&gt;)*)$/.exec(raw)!;
+    const u = m[1], tail = m[2];
+    return u.length > 'https://'.length ? `<a href="${u}" style="color:#1F4D34">${u}</a>${tail}` : raw;
+  });
   const p = (t: string) => `<p style="margin:0 0 14px;font:15px/1.6 ${T.sans};color:#1F2420">${linkify(br(t))}</p>`;
   const sig = `<p style="margin:0 0 14px;font:15px/1.6 ${T.sans};color:#1F2420">${i.signature.map(esc).join('<br>')}</p>`;
   const quote = i.quote ? `<p style="margin:22px 0 0;padding-top:14px;border-top:1px solid ${T.line};font:13px/1.55 ${T.sans};color:${T.muted}">${br(i.quote)}</p>` : '';

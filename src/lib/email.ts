@@ -83,9 +83,8 @@ function getResend(): Sender {
   return _resend as unknown as Sender;
 }
 // MAIL-1 (Cam 2026-10-22), emails redo (Cam 2026-11-19): golfer emails come from the course at
-// noreply@ (courseFrom); GreenReserve's own come from admin@ where a reply should reach Cam
-// (onboarding, agreements, Cam's own replies) and noreply@ for codes, security alerts and routine
-// staff notices, which point to Course support instead (lib/email-staff).
+// noreply@ (courseFrom); GreenReserve's own come from admin@, so a reply reaches Cam, except codes,
+// sign-in links and security alerts, which come from noreply@ (lib/email-staff).
 const FROM_ADMIN = `GreenReserve <${ADMIN_EMAIL}>`;
 // No inbox exists, so a reply bounces (Cam 2026-10-22): these emails never ask for one.
 const FROM_NOREPLY = `GreenReserve <${NOREPLY_EMAIL}>`;
@@ -211,7 +210,7 @@ export async function sendBookingConfirmation(data: BookingEmailData) {
 
 export async function sendOperatorBookingNotification(data: BookingEmailData & { operatorEmail: string }) {
   // "Expected" = green + cart fee — matches the Payments page and dashboard tee sheet. Nothing is charged yet.
-  await getResend().emails.send({ meta: { kind: 'operator_booking_notification', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_NOREPLY, to: data.operatorEmail, ...mail(operatorBookingEmail(data)) });
+  await getResend().emails.send({ meta: { kind: 'operator_booking_notification', bookingId: data.bookingId, courseSlug: data.courseSlug }, from: FROM_ADMIN, to: data.operatorEmail, ...mail(operatorBookingEmail(data)) });
 }
 
 export async function sendCancellationEmail(data: {
@@ -998,7 +997,7 @@ export async function sendMessageNotificationEmail(data: {
   messageBody: string;
   replyUrl: string;
 }) {
-  await getResend().emails.send({ meta: { kind: 'message_notification_email' }, from: FROM_NOREPLY, to: data.recipientEmail, ...mail(messageNotificationEmail(data)) });
+  await getResend().emails.send({ meta: { kind: 'message_notification_email' }, from: FROM_ADMIN, to: data.recipientEmail, ...mail(messageNotificationEmail(data)) });
 }
 
 export async function sendAnnouncementEmail(data: {
@@ -1008,7 +1007,7 @@ export async function sendAnnouncementEmail(data: {
   body: string;
 }) {
   // MP-7a: the Resend SDK returns { error } rather than throwing — throw, so the broadcast route's tally is real.
-  const r = await getResend().emails.send({ meta: { kind: 'announcement_email' }, from: FROM_NOREPLY, to: data.operatorEmail, ...mail(announcementEmail(data)) });
+  const r = await getResend().emails.send({ meta: { kind: 'announcement_email' }, from: FROM_ADMIN, to: data.operatorEmail, ...mail(announcementEmail(data)) });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
 
@@ -1069,7 +1068,7 @@ export async function sendMonthlyReviewEmail(data: {
   review: { verdict: string; wentWell: string[]; fellShort: string[]; recommendations: string[] };
 }) {
   // Emails redo (Cam 2026-11-19): no metrics in the email — one line and a button to the review in the dashboard.
-  await getResend().emails.send({ meta: { kind: 'monthly_review_email' }, from: FROM_NOREPLY, to: data.to, ...mail(monthlyReviewEmail(data)) });
+  await getResend().emails.send({ meta: { kind: 'monthly_review_email' }, from: FROM_ADMIN, to: data.to, ...mail(monthlyReviewEmail(data)) });
 }
 
 /** MSG-1: a course's notice to the golfers booked on a day ("frost delay,
@@ -1189,7 +1188,7 @@ export async function sendEventSignupEmail(data: {
 // Low-stock email (Cam 2026-11-15): the course's owner, from admin@ (course-facing mail, lib/contact.ts). Sent by
 // lib/low-stock.ts once per drop to an item's "Remind me when it's down to" number.
 export async function sendLowStockEmail(data: { courseId: string; courseName: string; ownerName: string | null; ownerEmail: string; items: { name: string; stockCount: number; reorderAt: number }[] }) {
-  await getResend().emails.send({ meta: { kind: 'shop_low_stock', courseId: data.courseId }, from: FROM_NOREPLY, to: data.ownerEmail, ...mail(lowStockEmail(data)) });
+  await getResend().emails.send({ meta: { kind: 'shop_low_stock', courseId: data.courseId }, from: FROM_ADMIN, to: data.ownerEmail, ...mail(lowStockEmail(data)) });
 }
 
 // MEM-ACCT part 2: member account statements. Built in lib/email-golfer; sent as the course.
@@ -1216,6 +1215,6 @@ export async function sendStatementPaidEmail(data: { name: string; email: string
  */
 export async function sendOutreachEmail(data: { to: string; subject: string; paragraphs: string[]; inquiryId?: string | null; senderName?: string }) {
   const e = outreachEmail(data, OUTREACH_POSTAL_ADDRESS);
-  const r = await getResend().emails.send({ meta: { kind: 'outreach_email', inquiryId: data.inquiryId ?? null }, from: `${(data.senderName || 'Cam Sanchez').replace(/[\r\n"<>]/g, ' ')} <${ADMIN_EMAIL}>`, to: data.to, ...mail(e) });
+  const r = await getResend().emails.send({ meta: { kind: 'outreach_email', inquiryId: data.inquiryId ?? null }, from: courseFrom(data.senderName || 'Cam Sanchez', ADMIN_EMAIL), to: data.to, ...mail(e) });
   if (r.error) throw new Error(r.error.message || 'Resend rejected the email');
 }
