@@ -5,7 +5,7 @@
 import { prisma } from './prisma';
 import { ciEquals } from './like-exact';
 import { todayIn, clockIn } from './course-time';
-import { withinWindow } from './booking-window';
+import { withinWindow, windowFor } from './booking-window';
 import { rulesFor } from './booking-rules';
 import { memberBenefitParts, withoutRates, type BenefitTier } from './member-benefits';
 import { feeCoveredCents } from './booking-fees';
@@ -23,7 +23,7 @@ const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 export function benefitsSentence(tier: BenefitTier | null, member: boolean, resident: boolean, course: WindowCourse, memberPricing: boolean): string | null {
   if (member) {
     const priced = tier && !memberPricing ? withoutRates(tier) : tier;
-    const parts = memberBenefitParts(priced, course);
+    const parts = memberBenefitParts(priced, course, { resident });
     const rate = parts.find(p => !p.startsWith('book ') && !p.includes('guest pass'));
     const window = parts.find(p => p.startsWith('book '));
     const passes = parts.find(p => p.includes('guest pass'));
@@ -31,7 +31,11 @@ export function benefitsSentence(tier: BenefitTier | null, member: boolean, resi
     const out = [first ? first[0].toUpperCase() + first.slice(1) + '.' : '', passes ? passes[0].toUpperCase() + passes.slice(1) + '.' : ''].filter(Boolean).join(' ');
     if (out) return out;
   }
-  if (resident) return 'The resident rate on your own round.';
+  if (resident) {
+    // The resident window (Build 2026-11-19): said when it reaches past the public one, as booking enforces it.
+    const w = windowFor(course, null, { resident: true });
+    return w.ownWindow ? `The resident rate on your own round, and you can book ${w.days} day${w.days === 1 ? '' : 's'} out.` : 'The resident rate on your own round.';
+  }
   return null;
 }
 

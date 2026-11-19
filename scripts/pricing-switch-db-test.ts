@@ -63,7 +63,7 @@ async function cleanup() {
     // 2. Every pricing path reads the switch
     const paths: [string, string[]][] = [
       ['src/app/api/bookings/route.ts', ["live && membership!.tier && memberPricingOn(teeTimeFull.course)", 'residentPricingOn(teeTimeFull.course)']],
-      ['src/app/api/member/[courseSlug]/tee-times/route.ts', ['live && memberPricingOn(course) ? tier : null', '!pricingTier && residentPricingOn(course)']],
+      ['src/app/api/member/[courseSlug]/tee-times/route.ts', ['live && memberPricingOn(course) ? tier : null', 'const residentCard = residentPricingOn(course) ? await residentOn(', 'const resident = !pricingTier ? residentCard : null;']],
       ['src/app/api/bookings/resident-rate/route.ts', ['if (!memberPricingOn(tt.course)) tier = null;', '!residentPricingOn(tt.course)', 'hasMemberPricing: true, hasResidentPricing: true']],
       ['src/app/api/manage/[bookingId]/swap-time/route.ts', ['residentPricingOn(switches)']],
       ['src/lib/move-booking.ts', ["opts.pricing !== 'keep' && !memberPricingOn(b.course)", "opts.pricing !== 'keep' && !residentPricingOn(b.course) ? 0"]],

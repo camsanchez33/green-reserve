@@ -17,7 +17,8 @@ export function withoutRates<T extends BenefitTier>(tier: T): T {
 
 const dollars = (c: number) => (c % 100 === 0 ? `$${c / 100}` : `$${(c / 100).toFixed(2)}`);
 
-export function memberBenefitParts(tier: BenefitTier | null, course: WindowCourse): string[] {
+/** `opts.resident`: the member also holds a resident card good today, so the window said is the one enforced (the longer). */
+export function memberBenefitParts(tier: BenefitTier | null, course: WindowCourse, opts: { resident?: boolean } = {}): string[] {
   const out: string[] = [];
   if (tier) {
     if (readLineRates(tier.lineRates)) out.push('member prices on your rounds');
@@ -27,10 +28,8 @@ export function memberBenefitParts(tier: BenefitTier | null, course: WindowCours
       out.push(low === 0 ? 'free rounds' : `rounds from ${dollars(low)}`);
     }
   }
-  if (!tier?.windowPublic) {
-    const w = windowFor(course, { tier });
-    out.push(`book ${w.days} day${w.days === 1 ? '' : 's'} out`);
-  }
+  const w = windowFor(course, { tier }, opts);
+  if (w.ownWindow) out.push(`book ${w.days} day${w.days === 1 ? '' : 's'} out`);
   if (tier && tier.guestPassesPerYear > 0) out.push(`${tier.guestPassesPerYear} guest pass${tier.guestPassesPerYear === 1 ? '' : 'es'} a year`);
   return out;
 }

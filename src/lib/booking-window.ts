@@ -6,6 +6,8 @@
 //   public / anonymous  → Course.publicAdvanceDays (default 7)
 //   recognized member   → their tier's advanceBookingDays, else
 //                         Course.memberAdvanceDays (default 14)
+//   logged-in resident  → Course.residentAdvanceDays (null = the public window), only with Resident pricing on
+//                         (GOLFER-LOGIN-1 2b, Build 2026-11-19). A member who is also a resident gets the longer.
 //
 // "N days ahead" is inclusive: today plus the next N calendar days. Dates are
 // the tee sheet's YYYY-MM-DD strings. Revamp 3 fix 8 (Cam 2026-10-29): "today"
@@ -46,18 +48,33 @@ export function lastBookableDate(windowDays: number, now: Date = new Date(), tz?
   return addDaysStr(windowToday(now, tz), Math.max(0, windowDays));
 }
 
-export type WindowCourse = { publicAdvanceDays?: number | null; memberAdvanceDays?: number | null };
+export type WindowCourse = { publicAdvanceDays?: number | null; memberAdvanceDays?: number | null; residentAdvanceDays?: number | null; hasResidentPricing?: boolean | null };
+
+/** The resident window in days, or null when it doesn't apply (no value set, or Resident pricing off — the switch is the
+ *  whole resident program: lib/pricing-switch residentPricingOn, read inline here because this file runs in the browser). */
+export function residentWindowDays(course: WindowCourse): number | null {
+  return course.hasResidentPricing && course.residentAdvanceDays != null ? course.residentAdvanceDays : null;
+}
 /** windowPublic (Memberships item 3): the membership books as far ahead as the public, no further. */
 export type WindowTier = { advanceBookingDays?: number | null; windowPublic?: boolean | null } | null | undefined;
 
-/** The window for a viewer: a member's tier, a tierless member's course default, or the public window. */
-export function windowFor(course: WindowCourse, member: { tier?: WindowTier } | null): { days: number; scope: 'public' | 'member' } {
+/**
+ * The window for a viewer: a member's tier, a tierless member's course default, or the public window; a logged-in
+ * resident (`opts.resident`: a resident card good on the date) gets the longer of that and the resident window.
+ * `ownWindow`: the viewer has a window of their own past the public one, so a round's shorter public window doesn't
+ * hold for them (a member not on the public window, or a resident window longer than the public).
+ */
+export function windowFor(course: WindowCourse, member: { tier?: WindowTier } | null, opts: { resident?: boolean } = {}): { days: number; scope: 'public' | 'member'; ownWindow: boolean } {
+  const pub = course.publicAdvanceDays ?? DEFAULT_PUBLIC_WINDOW_DAYS;
+  let win: { days: number; scope: 'public' | 'member'; ownWindow: boolean } = { days: pub, scope: 'public', ownWindow: false };
   if (member) {
-    if (member.tier?.windowPublic) return { days: course.publicAdvanceDays ?? DEFAULT_PUBLIC_WINDOW_DAYS, scope: 'member' };
-    const tierDays = member.tier?.advanceBookingDays;
-    return { days: tierDays ?? course.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS, scope: 'member' };
+    win = member.tier?.windowPublic
+      ? { days: pub, scope: 'member', ownWindow: false }
+      : { days: member.tier?.advanceBookingDays ?? course.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS, scope: 'member', ownWindow: true };
   }
-  return { days: course.publicAdvanceDays ?? DEFAULT_PUBLIC_WINDOW_DAYS, scope: 'public' };
+  const res = opts.resident ? residentWindowDays(course) : null;
+  if (res != null && res > pub && res > win.days) win = { days: res, scope: 'member', ownWindow: true };
+  return win;
 }
 
 /** How many days of tee times a course needs generated: its widest window, plus one. Never below the old 8. */
@@ -65,6 +82,7 @@ export function generationHorizonDays(course: WindowCourse, tiers: { advanceBook
   const widest = Math.max(
     course.publicAdvanceDays ?? DEFAULT_PUBLIC_WINDOW_DAYS,
     course.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS,
+    residentWindowDays(course) ?? 0,
     // A membership on the public window books no further than the public (its advanceBookingDays is unused).
     ...tiers.map(t => (t.windowPublic ? 0 : t.advanceBookingDays ?? 0)),
   );

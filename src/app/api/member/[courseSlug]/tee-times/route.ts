@@ -37,9 +37,13 @@ export async function GET(
   // Members switched off in Settings (lib/pricing-switch): the window stays, the rate doesn't.
   const pricingTier = live && memberPricingOn(course) ? tier : null;
 
+  // RES-1: a resident card good on the date (Resident pricing on). It gives the resident window (GOLFER-LOGIN-1 2b),
+  // and the resident rate below when no membership price applies.
+  const residentCard = residentPricingOn(course) ? await residentOn(course.id, session.email, date) : null;
+
   // BOOKING WINDOWS: a member sees as far ahead as their tier allows (the
-  // course's member default when the tier does not say).
-  const win = windowFor(course, live ? { tier } : null);
+  // course's member default when the tier does not say); a resident, the longer of that and the resident window.
+  const win = windowFor(course, live ? { tier } : null, { resident: !!residentCard });
   if (!withinWindow(date, win.days, new Date(), course.timezone)) {
     return NextResponse.json(outsideWindowBody(win.days, win.scope, course), { status: 403 });
   }
@@ -58,7 +62,8 @@ export async function GET(
     : teeTimes)
     // W2-6 slice 3: a round's shorter public window holds for a non-member here too.
     // Memberships item 3: a member on "the public window" sees what the public sees, each round's shorter window too.
-    .filter(t => (win.scope === 'member' && !tier?.windowPublic) || withinWindow(date, rulesFor(course, t.product).publicAdvanceDays, new Date(), course.timezone));
+    // A resident window past the public one counts the same way (ownWindow, lib/booking-window).
+    .filter(t => win.ownWindow || withinWindow(date, rulesFor(course, t.product).publicAdvanceDays, new Date(), course.timezone));
 
   // A member pays exactly what applyTierRates says — the one function booking
   // (api/bookings), moves and check-in pricing use. This list used to carry its
@@ -69,7 +74,7 @@ export async function GET(
   // resident rate when no membership price applied and their resident card is
   // good on the date (api/bookings: loggedInResident, groupGreenFee). Same lookup
   // here, so the list can show it; the page adds it up the same way.
-  const resident = !pricingTier && residentPricingOn(course) ? await residentOn(course.id, session.email, date) : null;
+  const resident = !pricingTier ? residentCard : null;
 
   // Memberships item 3: a membership priced by the price list has a member price wherever one of its green lines is set.
   const lines = pricingTier ? readLineRates(pricingTier.lineRates) : null;

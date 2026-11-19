@@ -89,6 +89,13 @@ export function validateSettingsPatch(body: Record<string, unknown>, allowed: st
     if (!(key in body)) continue;
     const v = body[key];
 
+    // GOLFER-LOGIN-1 2b (Build 2026-11-19): how far ahead a logged-in resident books. Blank = the public window.
+    if (key === 'residentAdvanceDays') {
+      if (v === null || v === '') { data[key] = null; continue; }
+      const n = Number(v);
+      if (!Number.isInteger(n) || n < 1 || n > 365) return { ok: false, error: 'The resident booking window must be 1 to 365 days, or blank for the public window.' };
+      data[key] = n; continue;
+    }
     if (key in INT_RANGES) {
       if (v === null || v === '') { if (key === 'establishedYear') { data[key] = null; continue; } return { ok: false, error: `${key} is required.` }; }
       const n = Number(v);

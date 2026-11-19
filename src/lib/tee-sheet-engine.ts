@@ -51,7 +51,7 @@ export async function regenerateUpcoming(courseId: string, days?: number): Promi
 
 /** How many days ahead a schedule change rebuilds: the course's widest booking window plus one, never below 8 (as the nightly run). */
 export async function regenerationDays(courseId: string): Promise<number> {
-  const c = await prisma.course.findUnique({ where: { id: courseId }, select: { publicAdvanceDays: true, memberAdvanceDays: true, membershipTiers: { select: { advanceBookingDays: true, windowPublic: true } } } });
+  const c = await prisma.course.findUnique({ where: { id: courseId }, select: { publicAdvanceDays: true, memberAdvanceDays: true, residentAdvanceDays: true, hasResidentPricing: true, membershipTiers: { select: { advanceBookingDays: true, windowPublic: true } } } });
   return c ? Math.max(8, generationHorizonDays(c, c.membershipTiers)) : 8;
 }
 
@@ -271,7 +271,7 @@ export async function generateForAllCourses(minDaysAhead = 8): Promise<{ courseI
   // never hardcoded, and never below the old 8.
   const windows = await prisma.course.findMany({
     where: { id: { in: schedules.map(s => s.courseId) } },
-    select: { id: true, timezone: true, publicAdvanceDays: true, memberAdvanceDays: true, membershipTiers: { select: { advanceBookingDays: true, windowPublic: true } } },
+    select: { id: true, timezone: true, publicAdvanceDays: true, memberAdvanceDays: true, residentAdvanceDays: true, hasResidentPricing: true, membershipTiers: { select: { advanceBookingDays: true, windowPublic: true } } },
   });
   const horizon = new Map(windows.map(c => [c.id, Math.max(minDaysAhead, generationHorizonDays(c, c.membershipTiers))]));
   const tzOf = new Map(windows.map(c => [c.id, c.timezone]));

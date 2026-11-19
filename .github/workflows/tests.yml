@@ -44,7 +44,7 @@ jobs:
       # Links and redirects in emails and sign-in routes are built from this (as in production, .env.example).
       NEXT_PUBLIC_URL: http://localhost:3000
       TEST_URL: http://localhost:3000
-      SERVER_TESTS: "isolation-test.ts concurrency-test.ts load-test.ts member-portal-price-test.ts member-login-db-test.ts"
+      SERVER_TESTS: "isolation-test.ts concurrency-test.ts load-test.ts member-portal-price-test.ts member-login-db-test.ts resident-window-db-test.ts"
 
     steps:
       - uses: actions/checkout@v7
@@ -96,6 +96,9 @@ jobs:
 
       - name: Per-course log-in (members and residents)
         run: npx tsx scripts/member-login-db-test.ts
+
+      - name: Resident booking window
+        run: npx tsx scripts/resident-window-db-test.ts
 
       - name: Server log
         if: failure()
