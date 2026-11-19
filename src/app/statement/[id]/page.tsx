@@ -73,7 +73,7 @@ function PayForm({ id, token, info, look, onPaid }: { id: string; token: string;
         </div>
       </div>
       {info.offerSaveCard && !info.cardSaved && (
-        <label className="flex items-start gap-2 text-[13px] text-ink"><input type="checkbox" className="mt-0.5" style={{ accentColor: 'var(--g-acc)' }} checked={saveCard} onChange={e => setSaveCard(e.target.checked)} />{info.cardTerms}</label>
+        <label className="flex items-start gap-2 text-[13px] text-ink"><input type="checkbox" className="mt-0.5" checked={saveCard} onChange={e => setSaveCard(e.target.checked)} />{info.cardTerms}</label>
       )}
       {error && <p className="text-sm text-bad bg-bad/5 border border-bad/20 rounded-md px-3 py-2" role="alert">{error}</p>}
       <button onClick={pay} disabled={busy || !stripe} className="w-full py-3.5 rounded-md font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-70" style={{ backgroundColor: 'var(--g-acc)', color: 'var(--g-on-acc)' }}>

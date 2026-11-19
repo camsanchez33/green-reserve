@@ -93,7 +93,7 @@ function PayForm({ saleId, token, sale, look, onPaid, onError }: { saleId: strin
       {needsTerms && (
         <div className="bg-paper/70 rounded-md p-3 text-[13px] text-ink space-y-2">
           {sale.terms!.split('\n\n').map((t, i) => <p key={i}>{t}</p>)}
-          <label className="flex items-start gap-2 font-medium"><input type="checkbox" className="mt-0.5" style={{ accentColor: 'var(--g-acc)' }} checked={agreed} onChange={e => { setAgreed(e.target.checked); agreedRef.current = e.target.checked; }} />I agree to these terms</label>
+          <label className="flex items-start gap-2 font-medium"><input type="checkbox" className="mt-0.5" checked={agreed} onChange={e => { setAgreed(e.target.checked); agreedRef.current = e.target.checked; }} />I agree to these terms</label>
         </div>
       )}
       {wallet && ready && (

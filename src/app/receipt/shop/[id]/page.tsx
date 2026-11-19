@@ -32,7 +32,8 @@ export default async function ShopReceiptPage({ params, searchParams }: { params
           footer { display: none !important; }
           body { background: #fff !important; }
           .shop-receipt { background: #fff !important; box-shadow: none !important; }
-          .shop-receipt * { color: #000 !important; border-color: #000 !important; }
+          .shop-receipt * { color: #000 !important; background: transparent !important; border-color: #000 !important; }
+          .shop-receipt img { display: none !important; }
         }
       `}</style>
       {lc && <LookBackground course={lc} />}

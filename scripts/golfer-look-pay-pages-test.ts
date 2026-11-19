@@ -37,13 +37,15 @@ for (const f of [PAGES.eventPay, PAGES.shopPay, PAGES.statement]) {
 for (const f of [PAGES.eventPay, PAGES.shopPay]) {
   check(`${f}: the wallet button flips to light on Dark`, code(f).includes("theme: look === 'dark' ? 'light' : 'dark'"));
 }
-check('shop receipt: prints black on white, footer hidden', read(PAGES.shopReceipt).includes('@media print') && read(PAGES.shopReceipt).includes('.shop-receipt * { color: #000 !important;') && read(PAGES.shopReceipt).includes('print:bg-white'));
+check('shop receipt: prints black on white (the band\'s colour and the logo dropped), footer hidden', read(PAGES.shopReceipt).includes('@media print') && read(PAGES.shopReceipt).includes('.shop-receipt * { color: #000 !important; background: transparent !important;') && read(PAGES.shopReceipt).includes('.shop-receipt img { display: none !important; }') && read(PAGES.shopReceipt).includes('print:bg-white'));
 check('shop receipt: the footer wears the look only when the course picked one', code(PAGES.shopReceipt).includes('<LookFooter vars={lc && lookPicked(lc) ? vars : undefined} />'));
 
 // The sign-up form
 const fc = code(form);
 check('sign-up form: cards on the look\'s card colour, Add a player not white', !/<Card[\s>]/.test(fc) && !/(^|[\s"'`])bg-white\b/.test(fc) && fc.includes('bg-card border border-line'));
 check('sign-up form: the accent comes from the look (no brandColor prop)', !/\baccent\b(?!Color)/.test(fc.replace(/accentColor/g, '')) && fc.includes("style={{ accentColor: 'var(--g-acc)' }}") && fc.includes("style={{ backgroundColor: 'var(--g-acc)', color: 'var(--g-on-acc)' }}"));
+
+check('the terms and save-card boxes keep the browser\'s own tick (no accent added: no-look parity)', !/type="checkbox"[^>]*accentColor/.test(read(PAGES.shopPay)) && !/type="checkbox"[^>]*accentColor/.test(read(PAGES.statement)));
 
 // Visual only: every request and its body is as it was.
 const sameCalls: Array<[string, string[]]> = [
