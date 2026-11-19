@@ -25,6 +25,9 @@ async function main() {
   const csp = h['content-security-policy'] ?? '';
   check('enforced policy: no framing, no <base> hijack, no plugins, HTTPS only', ["frame-ancestors 'none'", "base-uri 'self'", "object-src 'none'", 'upgrade-insecure-requests'].every(d => csp.includes(d)), csp);
   const ro = h['content-security-policy-report-only'] ?? '';
+  // Homepage Book a call (Cal.com's inline embed): report-only only, never the enforced policy.
+  check('report-only allows the Cal.com embed script and frame', /script-src [^;]*https:\/\/app\.cal\.com/.test(ro) && /frame-src [^;]*https:\/\/app\.cal\.com/.test(ro), ro);
+  check('the enforced policy is exactly its four directives, no third-party host', csp.split(';').map(x => x.trim()).filter(Boolean).length === 4 && !/cal\.com|stripe/.test(csp), csp);
   check('the full policy runs report-only and allows Stripe', /default-src 'self'/.test(ro) && /js\.stripe\.com/.test(ro) && /worker-src 'self' blob:/.test(ro), ro);
 }
 

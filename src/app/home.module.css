@@ -360,6 +360,11 @@
 
 /* Book a call: Cal.com's inline embed in a card (homepage mockup .cal). */
 .calBox { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--lift); min-height: 360px; overflow: hidden; }
+.calBoxFailed { min-height: 0; }
+/* Cal.com shows month + times side by side only from ~780px wide; narrower it stacks into a tall list.
+   So the calendar column gets 820px on wide screens, and below 1200px the heading sits above a full-width calendar. */
+.closerIn.closerCal { grid-template-columns: minmax(0, 1fr) minmax(0, 820px); }
+@media (max-width: 1200px) { .closerIn.closerCal { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
 .calInline { width: 100%; min-height: 360px; overflow: auto; }
 .calHidden { display: none; }
 .calNote { margin: 0; padding: 14px 18px; font-size: 14px; color: var(--muted2); }

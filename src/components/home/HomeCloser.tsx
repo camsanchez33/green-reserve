@@ -11,7 +11,7 @@ export default function HomeCloser() {
   const bookingUrl = calcomBookingUrl();
   return (
     <section className={s.closer} id="demo" aria-labelledby="closerH">
-      <div className={`${s.wrap} ${s.closerIn}`}>
+      <div className={bookingUrl ? `${s.wrap} ${s.closerIn} ${s.closerCal}` : `${s.wrap} ${s.closerIn}`}>
         <div>
           <h2 id="closerH" className={s.display}>Book a call.</h2>
           <p>Pick a time and we&apos;ll walk through GreenReserve with your own times, rates and members.</p>

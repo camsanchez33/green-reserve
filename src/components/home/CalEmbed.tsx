@@ -16,13 +16,13 @@ const NS = 'grhome';
 const EMBED_JS = 'https://app.cal.com/embed/embed.js';
 
 /** Cal.com's documented loader: queues calls on window.Cal until embed.js has loaded. */
-function loadCal(): CalFn {
+function loadCal(onError: () => void): CalFn {
   if (window.Cal) return window.Cal;
   const cal = function (...args: unknown[]) {
     const c = cal as CalFn;
     if (!c.loaded) {
       c.ns = {}; c.q = c.q || [];
-      const sc = document.createElement('script'); sc.src = EMBED_JS; sc.async = true; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = EMBED_JS; sc.async = true; sc.onerror = onError; document.head.appendChild(sc);
       c.loaded = true;
     }
     if (args[0] === 'init') {
@@ -41,14 +41,15 @@ function loadCal(): CalFn {
 
 export default function CalEmbed({ bookingUrl }: { bookingUrl: string }) {
   const box = useRef<HTMLDivElement>(null);
-  const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
+  // 'slow': no word yet after 15s — the calendar stays in place (it may still arrive) and the link is offered.
+  const [state, setState] = useState<'loading' | 'ready' | 'slow' | 'failed'>('loading');
   const u = new URL(bookingUrl);
   const calLink = u.pathname.replace(/^\/+|\/+$/g, '');
   const fallback = '/demo';
 
   useEffect(() => {
     if (!box.current) return;
-    const Cal = loadCal();
+    const Cal = loadCal(() => setState('failed'));
     Cal('init', NS, { origin: u.origin });
     const api = () => Cal.ns![NS];
     api()('inline', {
@@ -60,18 +61,18 @@ export default function CalEmbed({ bookingUrl }: { bookingUrl: string }) {
     api()('on', { action: 'linkReady', callback: () => setState('ready') });
     api()('on', { action: 'linkFailed', callback: () => setState('failed') });
     // No word from the embed (script blocked, network) — say so instead of leaving a blank box.
-    const t = window.setTimeout(() => setState(st => (st === 'loading' ? 'failed' : st)), 15000);
+    const t = window.setTimeout(() => setState(st => (st === 'loading' ? 'slow' : st)), 15000);
     return () => window.clearTimeout(t);
     // The booking link is fixed for the page's life.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <div className={s.calBox}>
+    <div className={state === 'failed' ? `${s.calBox} ${s.calBoxFailed}` : s.calBox}>
       <div id="gr-cal-inline" ref={box} className={state === 'failed' ? s.calHidden : s.calInline} aria-busy={state === 'loading'} />
       {state !== 'ready' && (
         <p className={s.calNote} aria-live="polite">
-          {state === 'loading' ? 'Loading the calendar. ' : 'The calendar didn’t load here. '}
+          {state === 'loading' ? 'Loading the calendar. ' : state === 'slow' ? 'The calendar is slow to load. ' : 'The calendar didn’t load here. '}
           <a href={fallback}>Open the calendar</a>
         </p>
       )}

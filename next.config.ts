@@ -32,8 +32,8 @@ function reportOnlyCsp(): string {
     "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com https://*.stripe.com",
     "font-src 'self' data:",
     "connect-src 'self' https://api.stripe.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
-    // Cal.com's booking calendar frame (homepage Book a call; its origin is CALCOM_BOOKING_URL's, cal.com).
-    "frame-src https://js.stripe.com https://hooks.stripe.com https://cal.com https://app.cal.com",
+    // Cal.com's booking calendar frame (homepage Book a call): embed.js serves cal.com links from app.cal.com.
+    "frame-src https://js.stripe.com https://hooks.stripe.com https://app.cal.com",
     "worker-src 'self' blob:",
     "form-action 'self'",
     "frame-ancestors 'none'",
