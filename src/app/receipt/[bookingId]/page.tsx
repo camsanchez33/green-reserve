@@ -8,6 +8,7 @@ import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { LookFooter } from '@/components/golfer/LookFooter';
 import { lookPicked, lookSiteVars, lookBandHex, type BookingAccent } from '@/components/golfer/look';
+import { useLookBackground } from '@/components/golfer/useLookBackground';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { BILLING_EMAIL } from '@/lib/contact';
 
@@ -67,6 +68,8 @@ function ReceiptPageInner({ onLook }: { onLook: (v: CSSProperties | undefined) =
     const lc = data ? { booking_look: data.booking_look?.accent ? { look: data.booking_look.look, accent: data.booking_look.accent } : null, brand_color: data.brandColor } : null;
     onLook(lc && lookPicked(lc) ? lookSiteVars(lc) : undefined);
   }, [data, onLook]);
+  // On Dark, html and body take the look's background while this page is open (LOOK-BG).
+  useLookBackground(data ? { booking_look: data.booking_look?.accent ? { look: data.booking_look.look, accent: data.booking_look.accent } : null, brand_color: data.brandColor } : null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
