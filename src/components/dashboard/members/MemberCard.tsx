@@ -44,7 +44,11 @@ export function MemberCard({ m, tier, tiers, dues, owed, can, onChanged, onClose
   const saveChange = async () => { if (change && await patch('change', { tierId: change })) { setChange(null); await onChanged(); toast('Membership changed.', 'ok'); } };
   const saveDetails = async () => {
     if (!edit) return;
-    if (await patch('edit', { notes: edit.notes, expiresAt: edit.expiresAt || null, name: edit.name, email: edit.email, phone: edit.phone })) { setEdit(null); await onChanged(); }
+    // "Runs until" goes only when it was changed, with the day this card showed, so a renewal paid since the page
+    // loaded is never overwritten (the API refuses a stale day).
+    const was = m.expiresAt ? m.expiresAt.slice(0, 10) : '';
+    const dates = edit.expiresAt !== was ? { expiresAt: edit.expiresAt || null, expiresAtWas: was } : {};
+    if (await patch('edit', { notes: edit.notes, ...dates, name: edit.name, email: edit.email, phone: edit.phone })) { setEdit(null); await onChanged(); }
   };
   const setActive = async (on: boolean) => {
     if (!on && !confirm(`End ${m.name || m.email}'s membership? They stop getting member rates. You can make it active again.`)) return;

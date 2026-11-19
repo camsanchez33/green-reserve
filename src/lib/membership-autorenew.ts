@@ -62,27 +62,31 @@ export const STOP_DATA = () => ({ autoRenew: false, autoRenewCancelledAt: new Da
 // CourseSettingChange (field 'membership.expiresAt:<id>', the date before and after, the signed-in login as actor).
 // A LATER date still to come also clears a declined renewal, so automatic renewal can try again on the new date. It
 // never charges sooner than that: chargesDue needs a fresh reminder for the new date (autoRenewRemindedFor ===
-// expiresAt), and chargeRenewal skips a term that runs into the future. A shorter, past or blank date clears nothing.
+// expiresAt; clearing also clears the reminded-for date and amount, so putting the old date back never re-arms a
+// charge), and chargeRenewal skips a term that runs into the future. A shorter, past or blank date clears nothing.
 export type EndDateActor = { type: 'operator' | 'staff'; id: string; name: string };
 const ymdUtc = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : '');
 // Dates compare by their UTC day: staff type a day, a paid term stores a time of day (lib/membership-dues).
 export const clearsDeclinedRenewal = (cur: { expiresAt: Date | null; autoRenewFailedAt: Date | null; autoRenewRetryAt: Date | null }, next: Date | null, now = new Date()) =>
   !!next && next.getTime() > now.getTime() && (!cur.expiresAt || ymdUtc(next) > ymdUtc(cur.expiresAt)) && (cur.autoRenewFailedAt != null || cur.autoRenewRetryAt != null);
 
-/** Writes the new end date only if it hasn't moved since staff read it and no dues payment is in flight (the same
- *  claim chargeRenewal takes), so a renewal paid meanwhile is never overwritten and a charge never lands on a date
- *  staff just changed. `ok: false` = changed meanwhile or being paid now; nothing is written. */
+/** Writes the new end date only if it is still the day staff had on screen (`was`, 'YYYY-MM-DD' or '' for none) and no
+ *  dues payment is in flight (the same claim chargeRenewal takes), so a renewal paid meanwhile is never overwritten
+ *  and a charge never lands on a date staff just changed. `ok: false` = changed meanwhile or being paid now; nothing
+ *  is written. */
 export async function setEndDateByStaff(
   m: { id: string; courseId: string; expiresAt: Date | null; autoRenewFailedAt: Date | null; autoRenewRetryAt: Date | null },
-  next: Date | null, actor: EndDateActor, now = new Date(),
+  change: { was: string; next: Date | null }, actor: EndDateActor, now = new Date(),
 ): Promise<{ ok: true; cleared: boolean } | { ok: false }> {
+  const { was, next } = change;
+  if (ymdUtc(m.expiresAt) !== was) return { ok: false };
   // The same day sent back (the member card sends "Runs until" with every edit): no change, the stored time kept.
   if (ymdUtc(m.expiresAt) === ymdUtc(next)) return { ok: true, cleared: false };
   const cleared = clearsDeclinedRenewal(m, next, now);
   const done = await prisma.$transaction(async tx => {
     const w = await tx.courseMembership.updateMany({
       where: { id: m.id, courseId: m.courseId, expiresAt: m.expiresAt, duesReaderId: '', OR: [{ duesChargeStartedAt: null }, { duesChargeStartedAt: { lt: new Date(now.getTime() - 10 * 60_000) } }] },
-      data: { expiresAt: next, ...(cleared ? { autoRenewFailedAt: null, autoRenewRetryAt: null } : {}) },
+      data: { expiresAt: next, ...(cleared ? { autoRenewFailedAt: null, autoRenewRetryAt: null, autoRenewRemindedFor: null, autoRenewRemindedCents: null } : {}) },
     });
     if (!w.count) return false;
     await tx.courseSettingChange.create({ data: { courseId: m.courseId, actorType: actor.type, actorId: actor.id, actorName: actor.name.slice(0, 120), field: `membership.expiresAt:${m.id}`, before: ymdUtc(m.expiresAt), after: ymdUtc(next) } });

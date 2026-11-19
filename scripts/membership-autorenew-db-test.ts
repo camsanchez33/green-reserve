@@ -112,13 +112,16 @@ const declining = async () => { throw new Error('Your card was declined.'); };
   // Staff move "Runs until" by hand (Build 2026-11-19): a later date still to come clears a declined renewal; the
   // charge then waits for a fresh notice for the new date, never charges twice for a term, and every change is logged.
   const actor = { type: 'operator' as const, id: op.id, name: 'Owner' };
+  const day = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : '');
+  // What the route does: the row read now, and the day the staff member's card showed.
+  const setEnd = async (id: string, next: Date | null, was?: string) => { const row = await fresh(id); return setEndDateByStaff(row, { was: was ?? day(row.expiresAt), next }, actor, now); };
   const fresh = (id: string) => prisma.courseMembership.findUniqueOrThrow({ where: { id } });
   const audits = (id: string) => prisma.courseSettingChange.findMany({ where: { courseId: c.id, field: `membership.expiresAt:${id}` }, orderBy: { createdAt: 'asc' } });
   const x = await mk(yearly.id, new Date(now.getTime() - DAY));
   await prisma.courseMembership.update({ where: { id: x.id }, data: { autoRenewRemindedFor: x.expiresAt, renewalRemindedAt: new Date(now.getTime() - 31 * DAY) } });
   ok('(set-up) declined at the end of the term, a retry pending', (await chargeRenewal(x.id, declining, now)).status === 'declined' && !!(await fresh(x.id)).autoRenewRetryAt);
   const newEnd = new Date(`${new Date(now.getTime() + 31 * DAY).toISOString().slice(0, 10)}T00:00:00Z`);
-  const ext = await setEndDateByStaff(await fresh(x.id), newEnd, actor, now);
+  const ext = await setEnd(x.id, newEnd);
   const x1 = await fresh(x.id);
   ok('staff extend to a later date: the declined flag and the retry are cleared, the date moved', ext.ok && ext.cleared && x1.autoRenewFailedAt === null && x1.autoRenewRetryAt === null && x1.expiresAt?.getTime() === newEnd.getTime(), { ext, x1: [x1.autoRenewFailedAt, x1.autoRenewRetryAt, x1.expiresAt] });
   const xa = await audits(x.id);
@@ -136,45 +139,56 @@ const declining = async () => { throw new Error('Your card was declined.'); };
 
   // Paid through a later date meanwhile: staff's stale edit is refused, and nothing is charged.
   const y = await mk(yearly.id, new Date(now.getTime() - DAY), { autoRenewFailedAt: now, autoRenewRetryAt: new Date(now.getTime() + RETRY_DAYS * DAY) });
-  const yStale = await fresh(y.id);
+  const shownOnCard = day(y.expiresAt);
   const paidThrough = new Date(now.getTime() + 365 * DAY);
   await prisma.courseMembership.update({ where: { id: y.id }, data: { lastPaidAt: now, expiresAt: paidThrough, autoRenewFailedAt: null, autoRenewRetryAt: null } });
-  const yRes = await setEndDateByStaff(yStale, new Date(now.getTime() + 30 * DAY), actor, now);
+  // The route reads the fresh (paid) row; the card still shows the old day.
+  const yRes = await setEnd(y.id, new Date(now.getTime() + 30 * DAY), shownOnCard);
   const y1 = await fresh(y.id);
   ok('a renewal paid after staff opened the member: their edit is refused, the paid date stands, nothing logged', !yRes.ok && y1.expiresAt?.getTime() === paidThrough.getTime() && (await audits(y.id)).length === 0, { yRes, y1: y1.expiresAt });
   const n1 = charges.length;
   ok('…and a membership paid through the date is never charged', (await chargeRenewal(y.id, paying, now)).status === 'skipped' && (await chargeRenewal(y.id, paying, new Date(now.getTime() + 200 * DAY))).status === 'skipped' && charges.length === n1);
   // A shorter date on a paid-through membership with an old flag: logged, the flag stays, no charge before its date.
   await prisma.courseMembership.update({ where: { id: y.id }, data: { autoRenewFailedAt: now } });
-  const yShort = await setEndDateByStaff(await fresh(y.id), new Date(now.getTime() + 200 * DAY), actor, now);
+  const yShort = await setEnd(y.id, new Date(now.getTime() + 200 * DAY));
   ok('a shorter date clears nothing (logged)', yShort.ok && !yShort.cleared && (await fresh(y.id)).autoRenewFailedAt !== null && (await audits(y.id)).length === 1, yShort);
 
   // A later date that is already past, or a blank one: logged, nothing cleared, no reminder.
   const z = await mk(yearly.id, new Date(now.getTime() - 3 * DAY), { autoRenewFailedAt: now, autoRenewRetryAt: new Date(now.getTime() + RETRY_DAYS * DAY) });
-  const zPast = await setEndDateByStaff(await fresh(z.id), new Date(now.getTime() - DAY), actor, now);
+  const zPast = await setEnd(z.id, new Date(now.getTime() - DAY));
   const z1 = await fresh(z.id);
   ok('a later date that has already passed clears nothing', zPast.ok && !zPast.cleared && z1.autoRenewFailedAt !== null && z1.autoRenewRetryAt !== null && !(await remindersDue(now)).some(r => r.id === z.id), zPast);
-  const zBlank = await setEndDateByStaff(await fresh(z.id), null, actor, now);
+  const zBlank = await setEnd(z.id, null);
   const za = await audits(z.id);
   ok('a blank date clears nothing and is logged with an empty after', zBlank.ok && !zBlank.cleared && (await fresh(z.id)).autoRenewFailedAt !== null && za.length === 2 && za[1].after === '', za);
-  const zSame = await setEndDateByStaff(await fresh(z.id), null, actor, now);
+  const zSame = await setEnd(z.id, null);
   ok('the same date again: nothing written', zSame.ok && !zSame.cleared && (await audits(z.id)).length === 2);
   // The member card sends "Runs until" with every edit: the same day back keeps a paid term's time and logs nothing.
   const xNow = await fresh(x.id);
-  const sameDay = await setEndDateByStaff(xNow, new Date(`${xNow.expiresAt!.toISOString().slice(0, 10)}T00:00:00Z`), actor, now);
+  const sameDay = await setEnd(x.id, new Date(`${xNow.expiresAt!.toISOString().slice(0, 10)}T00:00:00Z`));
   ok('an edit that sends the same day back changes nothing (the paid term\'s time of day stays, no log)', sameDay.ok && !sameDay.cleared && (await fresh(x.id)).expiresAt?.getTime() === xNow.expiresAt?.getTime() && (await audits(x.id)).length === 1, sameDay);
 
   // Dues being paid right now (a renewal charge or the card reader): the date waits.
   const w = await mk(yearly.id, new Date(now.getTime() - DAY), { autoRenewFailedAt: now, duesChargeStartedAt: now });
-  const wRes = await setEndDateByStaff(await fresh(w.id), new Date(now.getTime() + 60 * DAY), actor, now);
+  const wRes = await setEnd(w.id, new Date(now.getTime() + 60 * DAY));
   const w1 = await fresh(w.id);
   ok('a charge in flight: refused, nothing changed or logged', !wRes.ok && w1.expiresAt?.getTime() === w.expiresAt?.getTime() && w1.autoRenewFailedAt !== null && (await audits(w.id)).length === 0, wRes);
   await prisma.courseMembership.update({ where: { id: w.id }, data: { duesChargeStartedAt: null, duesReaderId: 'tmr_x' } });
-  ok('…dues on the card reader: refused too', !(await setEndDateByStaff(await fresh(w.id), new Date(now.getTime() + 60 * DAY), actor, now)).ok);
-  ok('…another course\'s membership is never written', !(await setEndDateByStaff({ ...(await fresh(x.id)), courseId: 'another-course' }, new Date(now.getTime() + 500 * DAY), actor, now)).ok);
+  ok('…dues on the card reader: refused too', !(await setEnd(w.id, new Date(now.getTime() + 60 * DAY))).ok);
+  { const xr = await fresh(x.id); ok('…another course\'s membership is never written', !(await setEndDateByStaff({ ...xr, courseId: 'another-course' }, { was: day(xr.expiresAt), next: new Date(now.getTime() + 500 * DAY) }, actor, now)).ok); }
+  // Extend by mistake, then put the old date back: the old reminder is gone with the flag, so no charge re-arms.
+  const v = await mk(yearly.id, new Date(`${day(new Date(now.getTime() - DAY))}T00:00:00Z`));
+  await prisma.courseMembership.update({ where: { id: v.id }, data: { autoRenewRemindedFor: v.expiresAt, renewalRemindedAt: new Date(now.getTime() - 31 * DAY) } });
+  await chargeRenewal(v.id, declining, now);
+  await setEnd(v.id, new Date(now.getTime() + 40 * DAY));
+  const vBack = await setEnd(v.id, v.expiresAt);
+  const v1 = await fresh(v.id);
+  ok('extend, then put the old date back: no charge re-armed, no reminder for the old date', vBack.ok && v1.expiresAt?.getTime() === v.expiresAt?.getTime() && v1.autoRenewRemindedFor === null && !(await chargesDue(now)).some(r => r.id === v.id), { v1: [v1.autoRenewRemindedFor, v1.autoRenewFailedAt] });
   const memRoute = readFileSync('src/app/api/operator/members/route.ts', 'utf8');
-  ok('the members route sets "Runs until" only through setEndDateByStaff, as the signed-in login, 409 when refused', memRoute.includes('await setEndDateByStaff(membership, expiresAt ? new Date(expiresAt) : null, actor)') && !/^\s+expiresAt: expiresAt !== undefined/m.test(memRoute) && memRoute.includes("? { type: 'staff' as const, id: session.staffId ?? '', name: me?.name ?? '' }") && /if \(!set\.ok\) return NextResponse\.json\(\{ error: [^}]+\}, \{ status: 409 \}\)/.test(memRoute));
+  ok('the members route sets "Runs until" only through setEndDateByStaff, as the signed-in login, 409 when refused', memRoute.includes('await setEndDateByStaff(current, { was, next: expiresAt ? new Date(expiresAt) : null }, actor)') && memRoute.includes("const was = body.expiresAtWas;") && memRoute.includes('await settleStaleDuesReader(membership);') && !/^\s+expiresAt: expiresAt !== undefined/m.test(memRoute) && memRoute.includes("? { type: 'staff' as const, id: session.staffId ?? '', name: me?.name ?? '' }") && /if \(!set\.ok\) return NextResponse\.json\(\{ error: [^}]+\}, \{ status: 409 \}\)/.test(memRoute));
 
+  const card = readFileSync('src/components/dashboard/members/MemberCard.tsx', 'utf8');
+  ok('the member card sends "Runs until" only when changed, with the day it showed', card.includes("const dates = edit.expiresAt !== was ? { expiresAt: edit.expiresAt || null, expiresAtWas: was } : {};") && card.includes('...dates,') && !card.includes('expiresAt: edit.expiresAt || null, name'));
   // Wiring.
   // Memberships item 1: the pay link's charge is lib/dues-payment (by 'golfer'); staff paying never turn renewal on.
   const pay = readFileSync('src/app/api/membership/[id]/route.ts', 'utf8') + readFileSync('src/lib/dues-payment.ts', 'utf8');

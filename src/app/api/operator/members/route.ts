@@ -305,6 +305,12 @@ export async function PATCH(req: NextRequest) {
   // "Runs until" changed by hand: written on its own, only if it hasn't moved since staff loaded it and no dues payment
   // is in flight, with an audit row; a later date clears a declined renewal (lib/membership-autorenew setEndDateByStaff).
   if (expiresAt !== undefined) {
+    // The day the card showed: a renewal paid since the page loaded must never be overwritten by a stale card.
+    const was = body.expiresAtWas;
+    if (typeof was !== 'string' || (was !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(was))) return NextResponse.json({ error: 'Reload the page and try again.' }, { status: 409 });
+    // Dues left on the card reader 10 minutes are settled first (as mark_paid and the renewal charge do), then re-read.
+    await settleStaleDuesReader(membership);
+    const current = await prisma.courseMembership.findUniqueOrThrow({ where: { id }, select: { id: true, courseId: true, expiresAt: true, autoRenewFailedAt: true, autoRenewRetryAt: true } });
     const me = session.isStaff
       ? await prisma.courseStaff.findUnique({ where: { id: session.staffId ?? '' }, select: { name: true } })
       : await prisma.courseOperator.findUnique({ where: { id: session.operatorId ?? '' }, select: { name: true } });
@@ -312,7 +318,7 @@ export async function PATCH(req: NextRequest) {
     const actor = session.isStaff
       ? { type: 'staff' as const, id: session.staffId ?? '', name: me?.name ?? '' }
       : { type: 'operator' as const, id: session.operatorId ?? '', name: me?.name ?? '' };
-    const set = await setEndDateByStaff(membership, expiresAt ? new Date(expiresAt) : null, actor);
+    const set = await setEndDateByStaff(current, { was, next: expiresAt ? new Date(expiresAt) : null }, actor);
     if (!set.ok) return NextResponse.json({ error: 'This membership changed or is being paid right now. Reload and try again.' }, { status: 409 });
   }
 
