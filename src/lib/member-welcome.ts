@@ -15,7 +15,7 @@ export async function sendWelcome(membershipId: string): Promise<void> {
   const m = await prisma.courseMembership.findUnique({
     where: { id: membershipId },
     select: {
-      status: true, inviteEmail: true, inviteName: true, membershipType: true,
+      status: true, courseId: true, inviteEmail: true, inviteName: true, membershipType: true,
       golfer: { select: { firstName: true, lastName: true, email: true } },
       tier: { select: { name: true, discountPct: true, greenFeeWeekdayCents: true, greenFeeWeekendCents: true, lineRates: true, advanceBookingDays: true, windowPublic: true, guestPassesPerYear: true } },
       course: { select: { name: true, slug: true, publicAdvanceDays: true, memberAdvanceDays: true, hasMemberPricing: true } },
@@ -29,6 +29,7 @@ export async function sendWelcome(membershipId: string): Promise<void> {
     name: m.inviteName || (m.golfer ? `${m.golfer.firstName} ${m.golfer.lastName}`.trim() : ''),
     email: to,
     courseName: m.course.name || 'your course',
+    courseId: m.courseId,
     groupName: m.tier?.name ?? m.membershipType ?? 'Member',
     coursePageUrl: `${process.env.NEXT_PUBLIC_URL}/courses/${m.course.slug}`,
     // Members pricing off (Build 2026-11-19): no rate is promised, but the window and guest passes still hold.
@@ -42,11 +43,11 @@ export async function sendWelcome(membershipId: string): Promise<void> {
  * member added at the counter pays — the welcome. The pay link sends its own receipt; it calls welcomeIfFirst only.
  */
 export async function afterDuesPaid(membershipId: string, paid: { amountCents: number; feeCents: number; firstPayment: boolean }): Promise<void> {
-  const m = await prisma.courseMembership.findUnique({ where: { id: membershipId }, select: { inviteName: true, inviteEmail: true, expiresAt: true, membershipType: true, tier: { select: { name: true } }, course: { select: { name: true } }, golfer: { select: { email: true } } } });
+  const m = await prisma.courseMembership.findUnique({ where: { id: membershipId }, select: { courseId: true, inviteName: true, inviteEmail: true, expiresAt: true, membershipType: true, tier: { select: { name: true } }, course: { select: { name: true } }, golfer: { select: { email: true } } } });
   if (!m) return;
   const to = m.inviteEmail || m.golfer?.email;
   // The receipt failing never costs the welcome (it is sent once).
-  if (to) await sendMembershipReceiptEmail({ name: m.inviteName, email: to, courseName: m.course.name, tierName: m.tier?.name ?? m.membershipType, amountPaid: paid.amountCents / 100, serviceFee: paid.feeCents / 100, expiresAt: m.expiresAt }).catch(err => console.error(JSON.stringify({ ev: 'membership.receipt_email_fail', membershipId, error: err instanceof Error ? err.message : String(err) })));
+  if (to) await sendMembershipReceiptEmail({ name: m.inviteName, email: to, courseName: m.course.name, courseId: m.courseId, tierName: m.tier?.name ?? m.membershipType, amountPaid: paid.amountCents / 100, serviceFee: paid.feeCents / 100, expiresAt: m.expiresAt }).catch(err => console.error(JSON.stringify({ ev: 'membership.receipt_email_fail', membershipId, error: err instanceof Error ? err.message : String(err) })));
   await welcomeIfFirst(membershipId, paid.firstPayment);
 }
 
