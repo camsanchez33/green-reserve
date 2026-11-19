@@ -34,14 +34,25 @@ async function main() {
       amountCents: b.totalAmount, platformFeeCents: b.accessFeeTotal, bookingId: b.id, at: b.paidAt!, actor: 'seed' });
   }
 
+  // ── Course settings the pages show: a cancellation policy with late-cancel and no-show fees, member and
+  // resident prices on, a driving range whose buckets sell online, the pro shop, and Log in on the booking page. ──
+  await prisma.course.update({ where: { id: course.id }, data: {
+    lateFeeTiming: 'late_cancel_or_no_show', lateCancellationFeeCents: 1000, noShowFeeCents: 2500, cancellationHours: 24,
+    hasMemberPricing: true, hasResidentPricing: true, hasDrivingRange: true, hasProShop: true, sellRangeOnline: true, rangeBallsFree: false, memberLoginOn: true,
+  } });
+  // A cart is $15 a rider from today on, so the booking page offers Walk or Ride.
+  await prisma.teeTime.updateMany({ where: { courseId: course.id, date: { gte: today } }, data: { cartFeeCents: 1500 } });
+  await prisma.shopItem.updateMany({ where: { courseId: course.id, name: 'Range balls, small bucket' }, data: { rangeBalls: 50 } });
+  await prisma.shopItem.updateMany({ where: { courseId: course.id, name: 'Range balls, large bucket' }, data: { rangeBalls: 100 } });
+
   // ── Memberships ──
   await prisma.courseMembership.deleteMany({ where: { courseId: course.id } });
   await prisma.membershipTier.deleteMany({ where: { courseId: course.id } });
   await prisma.courseResident.deleteMany({ where: { courseId: course.id } });
   const TIERS = [
     { name: 'Full Member', color: '#1b4332', annualFeeCents: 240000, greenFeeWeekdayCents: 0, greenFeeWeekendCents: 0, advanceBookingDays: 14 },
-    { name: 'Senior', color: '#7a4f12', annualFeeCents: 160000, greenFeeWeekdayCents: 1500, greenFeeWeekendCents: 2500, advanceBookingDays: 10 },
-    { name: 'Junior', color: '#2f6696', annualFeeCents: 45000, greenFeeWeekdayCents: 1000, greenFeeWeekendCents: 2000, advanceBookingDays: 7 },
+    { name: 'Senior', color: '#7a4f12', annualFeeCents: 160000, greenFeeWeekdayCents: 3500, greenFeeWeekendCents: 4500, advanceBookingDays: 10 },
+    { name: 'Junior', color: '#2f6696', annualFeeCents: 45000, greenFeeWeekdayCents: 2500, greenFeeWeekendCents: 3500, advanceBookingDays: 7 },
   ];
   const PEOPLE = ['Marcus Bell', 'Priya Raman', 'Tom Kowalski', 'Grace Okafor', 'Kevin Brandt', 'Erin Gallagher', 'Sam Teixeira', 'Nora Lindqvist',
     'Jamal Price', 'Hannah Mercer', 'Owen Fitzgerald', 'Rosa Delgado', 'Brian Novak', 'Mei Tanaka', 'Chris Albright'];
@@ -66,7 +77,12 @@ async function main() {
       }
     }
   }
-  await prisma.teeTimeSchedule.updateMany({ where: { courseId: course.id }, data: { residentRateWeekdayCents: 3500, residentRateWeekendCents: 4500 } });
+  // The sheet's times were seeded directly, so these two schedules describe them (weekday $52, weekend $65) and carry the resident rate.
+  await prisma.teeTimeSchedule.deleteMany({ where: { courseId: course.id } });
+  await prisma.teeTimeSchedule.create({ data: { courseId: course.id, daysOfWeek: [1, 2, 3, 4, 5], startTime: '07:00', endTime: '16:00', intervalMinutes: 10, holes: 18,
+    cartFeeCents: 1500, greenFeeWeekdayCents: 5200, greenFeeWeekendCents: 6500, residentRateWeekdayCents: 3500, residentRateWeekendCents: 4500 } });
+  await prisma.teeTimeSchedule.create({ data: { courseId: course.id, daysOfWeek: [0, 6], startTime: '07:00', endTime: '16:00', intervalMinutes: 10, holes: 18,
+    cartFeeCents: 1500, greenFeeWeekdayCents: 5200, greenFeeWeekendCents: 6500, residentRateWeekdayCents: 3500, residentRateWeekendCents: 4500 } });
   for (const name of ['Leah Moreau', 'Victor Danforth', 'Tessa Castellano', 'Andre Whitaker']) {
     await prisma.courseResident.create({ data: { courseId: course.id, name, email: `${name.toLowerCase().replace(/[^a-z]+/g, '.')}@example.com`, cardNumber: `R-${name.length}0${name.charCodeAt(0)}`, addedBy: actor } });
   }
