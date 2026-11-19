@@ -73,10 +73,14 @@ async function cleanup() {
       ok(`${name} (${label}): booking_look carries only look and accent`, !!body.booking_look && JSON.stringify(Object.keys(body.booking_look as object).sort()) === JSON.stringify(KEYS));
       ok(`${name} (${label}): brandColor still sent`, body.brandColor === '#7A1F5C');
       const wire = JSON.stringify(body);
-      ok(`${name} (${label}): no raw columns or internal notes`, !wire.includes('bookingAccent') && !wire.includes('"bookingLook"') && !wire.includes('INTERNAL-NOTE') && !wire.includes('adminNotes'));
+      ok(`${name} (${label}): no raw columns or internal notes`, !wire.includes('bookingAccent') && !wire.includes('"bookingLook"') && !wire.includes('INTERNAL-NOTE') && !wire.includes('adminNotes') && !wire.includes('stripeAccount'));
     }
-    // The token still gates each route: a wrong one gets no look.
+    // The token still gates every route: a wrong one gets no look.
     ok(`manage (${label}): a wrong token is refused`, !(await manageGET(req(`/api/manage/${b.id}?token=nope`), params('bookingId', b.id))).ok);
+    ok(`check-in (${label}): a wrong token is refused`, !(await checkinGET(req(`/api/checkin/${b.id}?token=nope`), params('bookingId', b.id))).ok);
+    // The cookie stub leaves no admin signed in, so the receipt route still needs the token.
+    ok(`receipt (${label}): a wrong token is refused`, !(await receiptGET(req(`/api/receipt/${b.id}?token=nope`), params('bookingId', b.id))).ok);
+    ok(`event pay (${label}): a wrong token is refused`, !(await eventPayGET(req(`/api/event-payment/${pay.id}?token=nope`), params('id', pay.id))).ok);
     ok(`shop pay (${label}): a wrong token is refused`, !(await shopPayGET(req(`/api/shop-sale/${sale.id}?token=nope`), params('id', sale.id))).ok);
     ok(`shop receipt (${label}): a wrong token is refused`, (await publicShopReceipt(sale.id, 'nope')) === null);
   }
@@ -85,4 +89,4 @@ async function cleanup() {
   await prisma.$disconnect();
   console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
   process.exit(failed ? 1 : 0);
-})().catch(async e => { console.error(e); await prisma.$disconnect(); process.exit(1); });
+})().catch(async e => { console.error(e); await cleanup().catch(() => {}); await prisma.$disconnect(); process.exit(1); });
