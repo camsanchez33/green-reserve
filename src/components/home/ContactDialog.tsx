@@ -1,12 +1,14 @@
 'use client';
 import { useRef, useState } from 'react';
+import { US_STATES } from '@/lib/tax-categories';
 import s from '@/app/home.module.css';
 
 // "Contact us" (homepage redo, Cam 2026-11-18): the question form as a pop-up over the page. It posts to the
 // existing inquiry intake (/api/inquiries), so the question lands in admin Inquiries like the /for-courses
 // form's. The intake needs a first and last name and the course's town and state (its duplicate check is
 // course + town + state), so the form asks for those beside the mockup's name, email, course and message.
-// A native modal <dialog>: the page behind is inert, Escape closes it, focus returns to the button.
+// State is a select over the same two-letter codes the /for-courses form sends, so typed or autofilled "Ohio"
+// can't slip past that duplicate check. A native modal <dialog>: the page behind is inert, Escape closes it, focus returns to the button.
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -18,7 +20,7 @@ export default function ContactDialog() {
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
-  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF(v => ({ ...v, [k]: e.target.value }));
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF(v => ({ ...v, [k]: e.target.value }));
 
   const open = () => { setErr(''); setSent(false); dlg.current?.showModal(); };
   const close = () => dlg.current?.close();
@@ -78,10 +80,17 @@ export default function ContactDialog() {
             <label htmlFor="cCourse">Course<input id="cCourse" autoComplete="organization" value={f.course} onChange={set('course')} /></label>
             <div className={s.f2}>
               <label htmlFor="cCity">Town<input id="cCity" autoComplete="address-level2" value={f.city} onChange={set('city')} /></label>
-              <label htmlFor="cState">State<input id="cState" autoComplete="address-level1" value={f.state} onChange={set('state')} /></label>
+              <label htmlFor="cState">State<select id="cState" autoComplete="address-level1" value={f.state} onChange={set('state')}>
+                <option value="">Choose</option>
+                {US_STATES.map(st => <option key={st} value={st}>{st}</option>)}
+              </select></label>
             </div>
             <label htmlFor="cMsg">Message<textarea id="cMsg" value={f.message} onChange={set('message')} /></label>
-            <input ref={hp} type="text" name="hp" tabIndex={-1} autoComplete="off" aria-hidden="true" className={s.sr} />
+            {/* Honeypot, hardened as the /for-courses one (FB-1): nothing autofill or a password manager knows. */}
+            <div className={s.sr} aria-hidden="true">
+              <label htmlFor="cHpQ7">Leave this empty</label>
+              <input ref={hp} id="cHpQ7" name="gr_hp_q7" type="text" tabIndex={-1} autoComplete="new-password" data-1p-ignore data-lpignore="true" defaultValue="" />
+            </div>
             {err && <p className={s.errNote} role="alert">{err}</p>}
             <div><button className={s.btn} type="submit" disabled={busy}>{busy ? 'Sending…' : 'Send'}</button></div>
           </form>
