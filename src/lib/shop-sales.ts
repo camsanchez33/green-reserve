@@ -407,7 +407,7 @@ export async function saleForPayPage(saleId: string, token: string) {
   if (!token) return null;
   const sale = await prisma.shopSale.findUnique({
     where: { id: saleId },
-    include: { lines: LINES, course: { select: { name: true, brandColor: true, logoUrl: true, stripeAccountId: true, stripeAccountActive: true } } },
+    include: { lines: LINES, course: { select: { name: true, brandColor: true, bookingLook: true, bookingAccent: true, logoUrl: true, stripeAccountId: true, stripeAccountActive: true } } },
   });
   if (!sale || !sale.payToken || sale.payToken !== token) return null;
   return sale;

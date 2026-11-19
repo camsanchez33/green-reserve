@@ -95,6 +95,8 @@ export default function YourCourseClient({ course, linkFailed }: { course: Login
                       <span><b>{member.group}</b>{member.when ? <> &middot; {member.when}</> : null}</span>
                     </p>
                   )}
+                  {member?.problem && <p className={g.formerr}>{member.problem}</p>}
+                  {member?.note && <p className={g.ymemnote}>{member.note}</p>}
                   {resident && (
                     <p className={g.ymem}>
                       <StatusDot status={resident.dot} />

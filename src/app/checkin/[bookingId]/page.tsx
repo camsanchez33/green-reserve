@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState, Suspense } from 'react';
+import type { CSSProperties } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js/pure';
@@ -7,10 +8,14 @@ import { Elements, CardElement, PaymentRequestButtonElement, useStripe, useEleme
 import type { PaymentRequest } from '@stripe/stripe-js';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import Link from 'next/link';
-import { CARD } from '@/components/ui/Card';
+import { LookFooter } from '@/components/golfer/LookFooter';
+import { lookPicked, lookSiteVars, lookBandHex, lookMode, lookText, type BookingAccent } from '@/components/golfer/look';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { SHOP_FEE_LABEL } from '@/lib/booking-fees';
 import { BILLING_EMAIL } from '@/lib/contact';
+
+// BOOKING-LOOK-1: the card reads the look's card colour (white on Light, as CARD was).
+const CARD_L = 'bg-card rounded-lg shadow-card';
 
 // PERF: Stripe.js loads only when the card form is on screen (the /pure entry adds no
 // script on import) — never on "See you …", a finished check-in or a saved-card pay.
@@ -20,15 +25,21 @@ function getStripePromise() {
   return _stripePromise;
 }
 
-const cardStyle = {
-  style: {
-    base: { fontSize: '15px', color: '#141814', '::placeholder': { color: '#979B94' } },
-    invalid: { color: '#A3452F' },
-  },
-};
+// The card field draws in Stripe's iframe, which reads no CSS variables: plain colours by look (Light as it was).
+function cardStyleFor(look: 'light' | 'dark') {
+  const t = lookText(look);
+  return {
+    style: {
+      base: { fontSize: '15px', color: t.ink, '::placeholder': { color: look === 'dark' ? t.muted : '#979B94' } },
+      invalid: { color: t.bad },
+    },
+  };
+}
 
 type CheckInInfo = {
   golferName: string; courseName: string; courseSlug: string; courseAddress: string; brandColor: string; heroImageUrl?: string; logoUrl?: string;
+  /** BOOKING-LOOK-1: the course's look (Course.bookingLook / bookingAccent); absent or no accent = today's light page. */
+  booking_look?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null;
   date: string; time: string; players: number; holes: number; productLabel?: string | null; status: string;
   totalAmount: number; greenFeeTotal: number; cartFeeTotal: number; rangeBallsTotal: number; accessFeeTotal: number;
   /** POS-1a: pro-shop items the course added to the round; totalAmount includes them and their fee. */
@@ -54,8 +65,8 @@ function fmtDate(d: string) {
   return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
-function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, courseName, accent, addCart, onResult, onError }: {
-  bookingId: string; token: string; totalAmount: number; golferName: string; courseName: string; accent: string; addCart: boolean;
+function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, courseName, look, addCart, onResult, onError }: {
+  bookingId: string; token: string; totalAmount: number; golferName: string; courseName: string; look: 'light' | 'dark'; addCart: boolean;
   onResult: (r: { totalCharged: number; feeRefunded: boolean; feeRefundFailed?: boolean; feeRefundAmount: number }) => void;
   onError: (msg: string) => void;
 }) {
@@ -140,7 +151,7 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, courseNa
     <div className="space-y-4">
       {walletRequest && (
         <>
-          <PaymentRequestButtonElement options={{ paymentRequest: walletRequest, style: { paymentRequestButton: { type: 'buy', theme: 'dark', height: '48px' } } }} />
+          <PaymentRequestButtonElement options={{ paymentRequest: walletRequest, style: { paymentRequestButton: { type: 'buy', theme: look === 'dark' ? 'light' : 'dark', height: '48px' } } }} />
           <div className="flex items-center gap-3 text-xs text-ink-muted">
             <span className="h-px flex-1 bg-line" />or pay with a card<span className="h-px flex-1 bg-line" />
           </div>
@@ -149,14 +160,14 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, courseNa
       <div>
         <label className="block text-[13px] font-semibold text-ink mb-1.5">Card details</label>
         <div className="w-full px-4 py-3.5 rounded-md border border-line bg-paper focus-within:border-pine/40 focus-within:ring-2 focus-within:ring-pine/10 transition-all">
-          <CardElement options={cardStyle} />
+          <CardElement options={cardStyleFor(look)} />
         </div>
       </div>
       <button
         onClick={handleSubmit}
         disabled={loading || !stripe}
-        className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
-        style={{ backgroundColor: accent || '#173B2A' }}
+        className="w-full py-3.5 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed"
+        style={{ backgroundColor: 'var(--g-acc)', color: 'var(--g-on-acc)' }}
       >
         {loading ? <><Loader2 size={16} className="animate-spin" /> Charging…</> : `Check in · pay $${(totalAmount / 100).toFixed(2)}`}
       </button>
@@ -170,13 +181,18 @@ function WalkUpCheckInForm({ bookingId, token, totalAmount, golferName, courseNa
   );
 }
 
-function CheckInPageInner() {
+function CheckInPageInner({ onLook }: { onLook: (v: CSSProperties | undefined) => void }) {
   const params = useParams();
   const search = useSearchParams();
   const bookingId = String(params.bookingId || '');
   const token = search.get('token') || '';
 
   const [info, setInfo] = useState<CheckInInfo | null>(null);
+  // The page's footer sits outside this component: hand it the look once the booking has loaded.
+  useEffect(() => {
+    const lc = info ? { booking_look: info.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info.brandColor } : null;
+    onLook(lc && lookPicked(lc) ? lookSiteVars(lc) : undefined);
+  }, [info, onLook]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [checkingIn, setCheckingIn] = useState(false);
@@ -217,7 +233,7 @@ function CheckInPageInner() {
   if (error && !info) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className={`${CARD} max-w-md w-full p-8 text-center`}>
+        <div className={`${CARD_L} max-w-md w-full p-8 text-center`}>
           
           <h1 className="font-semibold text-ink mb-2">Can&apos;t check in</h1>
           <p className="text-ink-soft text-sm">{error}</p>
@@ -228,16 +244,20 @@ function CheckInPageInner() {
 
   if (!info) return null;
 
+  // BOOKING-LOOK-1: this page wears the course look (visual only); without a picked look it is today's light page.
+  const lookCourse = { booking_look: info?.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info?.brandColor };
+  const lookVars = lookSiteVars(lookCourse);
+  const band = lookBandHex(lookCourse);
   // R-GOLF-011: a cancelled booking has nothing to pay — never show it the pay form.
   if (info.status === 'cancelled' && !result) {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
-          <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
+      <div style={lookVars} className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className={`${CARD_L} max-w-lg w-full overflow-hidden`}>
+          <CourseHeaderBar courseName={info.courseName} accent={band} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
           <div className="p-8 text-center">
             <h1 className="text-[30px] font-serif leading-none text-ink mb-3">This booking was cancelled</h1>
             <p className="text-ink-soft mb-6 text-sm">There&apos;s nothing to check in or pay. To play, book a new tee time.</p>
-            <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} accent={info.brandColor} />
+            <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} />
           </div>
         </div>
       </div>
@@ -249,9 +269,9 @@ function CheckInPageInner() {
     const paidAtCounter = !result && !!info.paidOffline;
     const onAccount = !result && !!info.onAccount;
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
-          <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
+      <div style={lookVars} className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className={`${CARD_L} max-w-lg w-full overflow-hidden`}>
+          <CourseHeaderBar courseName={info.courseName} accent={band} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
           <div className="p-8 text-center">
             <h1 className="text-[30px] font-serif leading-none text-ink mb-3">You&apos;re checked in!</h1>
             <p className="text-ink-soft mb-6 text-sm">{onAccount ? 'On your member account. Enjoy your round.' : paidAtCounter ? 'Paid at the course. Enjoy your round.' : <>${(charged / 100).toFixed(2)} was charged to your card. Enjoy your round.</>}</p>
@@ -271,12 +291,12 @@ function CheckInPageInner() {
             {token && (
               <a href={`/receipt/${bookingId}?token=${encodeURIComponent(token)}`}
                 className="text-sm font-medium hover:underline mb-6 block"
-                style={{ color: info.brandColor || '#173B2A' }}>
+                style={{ color: 'var(--g-acc)' }}>
                 View receipt →
               </a>
             )}
             <div className="mt-6">
-              <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} accent={info.brandColor} />
+              <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} />
             </div>
           </div>
         </div>
@@ -312,12 +332,12 @@ function CheckInPageInner() {
       </div>
       {/* B-5: a cart for a booking that has none, priced at the tee time's cart fee. */}
       {cartAddOn > 0 && !info.opensOn && (
-        <label className="mt-3 flex items-center justify-between gap-3 bg-white border border-line rounded-md px-3.5 py-3 cursor-pointer">
+        <label className="mt-3 flex items-center justify-between gap-3 bg-card border border-line rounded-md px-3.5 py-3 cursor-pointer">
           <span className="text-sm text-ink">
             <span className="font-medium">Add a cart today?</span>
             <span className="text-ink-muted"> +${(cartAddOn / 100).toFixed(2)} for {info.players} player{info.players === 1 ? '' : 's'}</span>
           </span>
-          <input type="checkbox" checked={addCart} onChange={e => setAddCart(e.target.checked)} className="w-5 h-5" style={{ accentColor: info.brandColor || '#173B2A' }} disabled={checkingIn} />
+          <input type="checkbox" checked={addCart} onChange={e => setAddCart(e.target.checked)} className="w-5 h-5" style={{ accentColor: 'var(--g-acc)' }} disabled={checkingIn} />
         </label>
       )}
     </div>
@@ -325,9 +345,9 @@ function CheckInPageInner() {
 
   // Launch walk (Cam 2026-10-31): check-in and paying open on the round's day.
   if (info.opensOn) return (
-    <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
-      <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
-        <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
+    <div style={lookVars} className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
+      <div className={`${CARD_L} max-w-lg w-full overflow-hidden`}>
+        <CourseHeaderBar courseName={info.courseName} accent={band} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
         <div className="p-8">
           <h1 className="text-[30px] font-serif leading-none text-ink mb-2">See you {new Date(`${info.opensOn}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' })}</h1>
           <p className="text-ink-soft text-sm mb-6">Use this link that day to check in and pay.</p>
@@ -344,9 +364,9 @@ function CheckInPageInner() {
   );
 
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
-      <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
-        <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
+    <div style={lookVars} className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
+      <div className={`${CARD_L} max-w-lg w-full overflow-hidden`}>
+        <CourseHeaderBar courseName={info.courseName} accent={band} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
         <div className="p-8">
           <h1 className="text-[30px] font-serif leading-none text-ink mb-2">Check in, {info.golferName.split(' ')[0]}?</h1>
           <p className="text-ink-soft text-sm mb-6">
@@ -368,8 +388,8 @@ function CheckInPageInner() {
               <button
                 onClick={handleSavedCardCheckIn}
                 disabled={checkingIn}
-                className="w-full py-3.5 rounded-md font-medium text-white text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-70"
-                style={{ backgroundColor: info.brandColor || '#173B2A' }}
+                className="w-full py-3.5 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-70"
+                style={{ backgroundColor: 'var(--g-acc)', color: 'var(--g-on-acc)' }}
               >
                 {checkingIn ? <><Loader2 size={16} className="animate-spin" /> Charging your card…</> : `Check in · pay $${(payTotal / 100).toFixed(2)}`}
               </button>
@@ -387,7 +407,7 @@ function CheckInPageInner() {
                 totalAmount={payTotal}
                 golferName={info.golferName}
                 courseName={info.courseName}
-                accent={info.brandColor}
+                look={lookMode(lookCourse)}
                 addCart={addCart}
                 onResult={setResult}
                 onError={setError}
@@ -404,9 +424,14 @@ function CheckInPageInner() {
 }
 
 export default function CheckInPage() {
+  // BOOKING-LOOK-1: the footer wears the course look too (the site footer skips this page).
+  const [lookVars, setLookVars] = useState<CSSProperties | undefined>(undefined);
   return (
-    <Suspense fallback={<div className="min-h-screen bg-paper" />}>
-      <CheckInPageInner />
-    </Suspense>
+    <>
+      <Suspense fallback={<div className="min-h-screen bg-paper" />}>
+        <CheckInPageInner onLook={setLookVars} />
+      </Suspense>
+      <LookFooter vars={lookVars} />
+    </>
   );
 }

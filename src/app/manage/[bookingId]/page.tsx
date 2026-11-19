@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, Suspense } from 'react';
+import type { CSSProperties } from 'react';
 import { partyFees } from '@/lib/member-rates';
 import { cartsFor, resizeCart } from '@/lib/cart-pricing';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -8,8 +9,12 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import { GolferExitLinks } from '@/components/GolferExitLinks';
 import { CourseHeaderBar } from '@/components/CourseHeaderBar';
 import { StatusDot } from '@/components/ui/StatusDot';
-import { CARD } from '@/components/ui/Card';
+import { LookFooter } from '@/components/golfer/LookFooter';
+import { lookPicked, lookSiteVars, lookBandHex, type BookingAccent } from '@/components/golfer/look';
 import { cancelNowWords } from '@/lib/cancel-policy';
+
+// BOOKING-LOOK-1: the card reads the look's card colour (white on Light, as CARD was).
+const CARD_L = 'bg-card rounded-lg shadow-card';
 
 type BookingInfo = {
   bookingId: string;
@@ -20,6 +25,8 @@ type BookingInfo = {
   courseAddress: string;
   coursePhone?: string;
   brandColor: string;
+  /** BOOKING-LOOK-1: the course's look (Course.bookingLook / bookingAccent); absent or no accent = today's light page. */
+  booking_look?: { look?: 'light' | 'dark'; accent?: BookingAccent | null } | null;
   heroImageUrl?: string; logoUrl?: string;
   date: string;
   time: string;
@@ -115,13 +122,18 @@ function ActionCard({ title, subtitle, onClick, tone = 'neutral' }: {
 
 type View = 'main' | 'cancel-confirm' | 'change-time' | 'change-time-confirm' | 'change-players' | 'change-players-confirm' | 'modified';
 
-function ManagePageInner() {
+function ManagePageInner({ onLook }: { onLook: (v: CSSProperties | undefined) => void }) {
   const params = useParams();
   const search = useSearchParams();
   const bookingId = String(params.bookingId || '');
   const token = search.get('token') || '';
 
   const [info, setInfo] = useState<BookingInfo | null>(null);
+  // The page's footer sits outside this component: hand it the look once the booking has loaded.
+  useEffect(() => {
+    const lc = info ? { booking_look: info.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info.brandColor } : null;
+    onLook(lc && lookPicked(lc) ? lookSiteVars(lc) : undefined);
+  }, [info, onLook]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [expired, setExpired] = useState(false);
@@ -195,6 +207,18 @@ function ManagePageInner() {
     setSlotsLoading(false);
   }
 
+  // The updated confirmation email, after a change is saved. Its failure is said on the "Booking updated" page; it
+  // never undoes the change. (It never throws, so the change's own error handling isn't reached.)
+  const [emailState, setEmailState] = useState<'sending' | 'sent' | 'failed'>('sent');
+  async function sendModifiedEmail() {
+    setEmailState('sending');
+    const r = await fetch(`/api/manage/${bookingId}/send-modified-email`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    }).catch(() => null);
+    setEmailState(r && r.ok ? 'sent' : 'failed');
+  }
+
   async function handleSwapTime() {
     if (!selectedSlot) return;
     setSwapping(true); setSwapError('');
@@ -208,11 +232,11 @@ function ManagePageInner() {
       setModifyResult(data);
       if (info) setInfo({ ...info, time: data.time, greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount });
       setView('modified');
-      // Re-send confirmation email
-      fetch('/api/manage/' + bookingId + '/send-modified-email', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      }).catch(() => undefined);
+      // The change is saved; now the updated confirmation email, and say if it didn't go.
+      // The change is done: free the button before the email, which can be slow.
+      setSwapping(false);
+      await sendModifiedEmail();
+      return;
     } catch { setSwapError('Something went wrong. Please try again.'); }
     setSwapping(false);
   }
@@ -231,22 +255,25 @@ function ManagePageInner() {
       setModifyResult(updated);
       setInfo({ ...info, players: data.players, greenFeeTotal: data.greenFeeTotal, cartFeeTotal: data.cartFeeTotal, accessFeeTotal: data.accessFeeTotal, totalAmount: data.totalAmount });
       setView('modified');
-      fetch('/api/manage/' + bookingId + '/send-modified-email', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
-      }).catch(() => undefined);
+      setChangingPlayers(false);
+      await sendModifiedEmail();
+      return;
     } catch { setPlayersError('Something went wrong. Please try again.'); }
     setChangingPlayers(false);
   }
 
   if (loading) return <div className="min-h-screen bg-paper flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>;
 
-  const headerStyle = { backgroundColor: info?.brandColor || '#173B2A' };
+  // BOOKING-LOOK-1: this page wears the course look (visual only); without a picked look it is today's light page.
+  const lookCourse = { booking_look: info?.booking_look?.accent ? { look: info.booking_look.look, accent: info.booking_look.accent } : null, brand_color: info?.brandColor };
+  const lookVars = lookSiteVars(lookCourse);
+  const band = lookBandHex(lookCourse);
+  const headerStyle = { backgroundColor: band };
 
   if (expired) {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className={`${CARD} max-w-md w-full p-8 text-center`}>
+      <div style={lookVars} className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className={`${CARD_L} max-w-md w-full p-8 text-center`}>
           
           <h1 className="font-semibold text-ink mb-2">This link has expired</h1>
           <p className="text-ink-soft text-sm">Booking links expire 24 hours after your tee time. Contact the course directly for assistance.</p>
@@ -257,8 +284,8 @@ function ManagePageInner() {
 
   if (errorMsg) {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className={`${CARD} max-w-md w-full p-8 text-center`}>
+      <div style={lookVars} className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className={`${CARD_L} max-w-md w-full p-8 text-center`}>
           
           <h1 className="font-semibold text-ink mb-2">Link not recognized</h1>
           <p className="text-ink-soft text-sm">{errorMsg}</p>
@@ -272,9 +299,9 @@ function ManagePageInner() {
   // ── Cancelled ─────────────────────────────────────────────────────────────
   if (cancelled) {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
-          <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
+      <div style={lookVars} className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className={`${CARD_L} max-w-lg w-full overflow-hidden`}>
+          <CourseHeaderBar courseName={info.courseName} accent={band} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
           <div className="p-8 text-center">
             <h1 className="text-[30px] font-serif leading-none text-ink mb-3">Booking cancelled</h1>
             <p className="text-ink-soft text-sm mb-6">Your spot at {info.courseName} on {fmtDate(info.date)} has been cancelled.</p>
@@ -283,7 +310,7 @@ function ManagePageInner() {
               : <div className="bg-ok/5 border border-ok/20 rounded-md p-4 mb-4 text-left"><p className="text-ok text-sm font-medium">{info.hasCard ? 'No charge — your card has been released' : 'No charge'}</p></div>
             }
             <p className="text-xs text-ink mb-6">A confirmation email has been sent to you.</p>
-            <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} accent={info.brandColor} />
+            <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} />
           </div>
         </div>
       </div>
@@ -293,12 +320,14 @@ function ManagePageInner() {
   // ── Modified ──────────────────────────────────────────────────────────────
   if (view === 'modified' && modifyResult) {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-4">
-        <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
-          <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
+      <div style={lookVars} className="min-h-screen bg-paper flex items-center justify-center px-4">
+        <div className={`${CARD_L} max-w-lg w-full overflow-hidden`}>
+          <CourseHeaderBar courseName={info.courseName} accent={band} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
           <div className="p-8 text-center">
             <h1 className="text-[30px] font-serif leading-none text-ink mb-3">Booking updated</h1>
-            <p className="text-ink-soft text-sm mb-6">A confirmation email has been sent with your updated details.</p>
+            {emailState === 'failed'
+              ? <p className="text-bad text-sm mb-6" role="alert">We couldn&apos;t send the email. Your change is saved.</p>
+              : <p className="text-ink-soft text-sm mb-6" role="status">{emailState === 'sending' ? 'Sending your updated confirmation email…' : 'A confirmation email has been sent with your updated details.'}</p>}
             <div className="bg-paper/70 rounded-md p-4 mb-6 text-left space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-ink-muted">Date</span><span className="font-medium text-ink">{fmtDate(modifyResult.date)}</span></div>
               <div className="flex justify-between"><span className="text-ink-muted">Time</span><span className="font-medium text-ink">{fmtTime(modifyResult.time)}</span></div>
@@ -308,7 +337,7 @@ function ManagePageInner() {
               </div>
             </div>
             <button onClick={() => setView('main')} className="text-sm text-ink-soft hover:text-ink underline underline-offset-2 mb-5 block">Back to booking</button>
-            <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} accent={info.brandColor} />
+            <GolferExitLinks courseSlug={info.courseSlug} courseName={info.courseName} />
           </div>
         </div>
       </div>
@@ -343,8 +372,8 @@ function ManagePageInner() {
     // CART-2: a per-cart booking moves at a cart per two riders (the server re-prices the same way).
     const slotCarts = info.party?.cartUnitCents != null ? cartsFor(info.party.cartRiders ?? info.players) : info.players;
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
-        <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
+      <div style={lookVars} className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
+        <div className={`${CARD_L} max-w-lg w-full overflow-hidden`}>
           <div className="h-14 flex items-center px-6 gap-3" style={headerStyle}>
             <button onClick={() => { setView('main'); setSelectedSlot(null); }} aria-label="Back" className="text-white/70 hover:text-white transition-colors"><ArrowLeft size={18} /></button>
             <span className="text-white font-medium">Choose a new time</span>
@@ -365,14 +394,14 @@ function ManagePageInner() {
                       key={slot.id}
                       onClick={() => setSelectedSlot(isSelected ? null : slot)}
                       className={`w-full flex items-center justify-between px-4 py-3.5 rounded-md border text-sm transition-all ${isSelected ? '' : 'border-line hover:border-line-strong'}`}
-                      style={isSelected ? { borderColor: info.brandColor, backgroundColor: `${info.brandColor}0d` } : undefined}
+                      style={isSelected ? { borderColor: 'var(--g-acc)', backgroundColor: lookPicked(lookCourse) ? 'var(--g-acc-soft)' : `${band}0d` } : undefined}
                     >
                       <div className="text-left">
                         <span className="font-medium text-ink">{fmtTime(slot.time)}</span>
                         <span className="text-ink-muted ml-2">{slot.productLabel ? `${slot.productLabel} · ` : ''}{slot.holes} holes &middot; {slot.spotsLeft} spot{slot.spotsLeft !== 1 ? 's' : ''} left</span>
                       </div>
                       <div className="text-right">
-                        <span className="font-medium text-ink" style={isSelected ? { color: info.brandColor } : undefined}>{dollars(slot.greenFee * info.players)}</span>
+                        <span className="font-medium text-ink" style={isSelected ? { color: 'var(--g-acc)' } : undefined}>{dollars(slot.greenFee * info.players)}</span>
                         {slot.greenFee !== info.greenFeeTotal / info.players && (
                           <span className="block text-[11px] text-ink">vs {dollars(info.greenFeeTotal)}</span>
                         )}
@@ -398,14 +427,14 @@ function ManagePageInner() {
                 </div>
                 {swapError && <p className="text-bad text-xs">{swapError}</p>}
                 <label className="flex items-start gap-2.5 text-[13px] text-ink leading-snug cursor-pointer select-none">
-                  <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: info.brandColor }} />
+                  <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: 'var(--g-acc)' }} />
                   <span>I agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy Policy</a> and to this course&apos;s cancellation policy for the changed booking.</span>
                 </label>
                 <button
                   onClick={handleSwapTime}
                   disabled={swapping || !agreed}
-                  style={{ backgroundColor: info.brandColor }}
-                  className="w-full py-3 rounded-md text-white font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
+                  style={{ backgroundColor: 'var(--g-acc)', color: 'var(--g-on-acc)' }}
+                  className="w-full py-3 rounded-md font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {swapping ? <><Loader2 size={14} className="animate-spin" /> Changing…</> : 'Confirm new time'}
                 </button>
@@ -432,8 +461,8 @@ function ManagePageInner() {
     const maxPlayers = 4;
 
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
-        <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
+      <div style={lookVars} className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
+        <div className={`${CARD_L} max-w-lg w-full overflow-hidden`}>
           <div className="h-14 flex items-center px-6 gap-3" style={headerStyle}>
             <button onClick={() => { setView('main'); setSelectedPlayers(info.players); }} aria-label="Back" className="text-white/70 hover:text-white transition-colors"><ArrowLeft size={18} /></button>
             <span className="text-white font-medium">Change party size</span>
@@ -471,14 +500,14 @@ function ManagePageInner() {
             {playersError && <p className="text-bad text-sm mb-3">{playersError}</p>}
 
             <label className="flex items-start gap-2.5 text-[13px] text-ink leading-snug cursor-pointer select-none mb-3">
-              <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: info.brandColor }} />
+              <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" style={{ accentColor: 'var(--g-acc)' }} />
               <span>I agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy Policy</a> and to this course&apos;s cancellation policy for the changed booking.</span>
             </label>
             <button
               onClick={handleChangePlayers}
               disabled={changingPlayers || selectedPlayers === info.players || !agreed}
-              style={{ backgroundColor: info.brandColor }}
-              className="w-full py-3 rounded-md text-white font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+              style={{ backgroundColor: 'var(--g-acc)', color: 'var(--g-on-acc)' }}
+              className="w-full py-3 rounded-md font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {changingPlayers ? <><Loader2 size={14} className="animate-spin" /> Updating…</> : `Update to ${selectedPlayers} Player${selectedPlayers !== 1 ? 's' : ''}`}
             </button>
@@ -490,9 +519,9 @@ function ManagePageInner() {
 
   // ── Main view ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
-      <div className={`${CARD} max-w-lg w-full overflow-hidden`}>
-        <CourseHeaderBar courseName={info.courseName} accent={info.brandColor} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
+    <div style={lookVars} className="min-h-screen bg-paper flex items-center justify-center px-4 py-10">
+      <div className={`${CARD_L} max-w-lg w-full overflow-hidden`}>
+        <CourseHeaderBar courseName={info.courseName} accent={band} photoUrl={info.heroImageUrl} logoUrl={info.logoUrl} />
         <div className="p-8">
           <h1 className="text-[30px] font-serif leading-none text-ink mb-2">
             {alreadyCancelled ? 'Booking cancelled' : alreadyCompleted ? 'Round complete' : `Hi, ${info.golferName.split(' ')[0]}`}
@@ -563,7 +592,7 @@ function ManagePageInner() {
                 <button
                   onClick={handleCancel}
                   disabled={cancelling}
-                  className="flex-1 py-2.5 rounded-md bg-bad text-white font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 rounded-md bg-bad text-card font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {cancelling ? <><Loader2 size={14} className="animate-spin" /> Cancelling…</> : 'Yes, cancel'}
                 </button>
@@ -582,9 +611,14 @@ function ManagePageInner() {
 }
 
 export default function ManagePage() {
+  // BOOKING-LOOK-1: the footer wears the course look too (the site footer skips this page).
+  const [lookVars, setLookVars] = useState<CSSProperties | undefined>(undefined);
   return (
-    <Suspense fallback={<div className="min-h-screen bg-paper" />}>
-      <ManagePageInner />
-    </Suspense>
+    <>
+      <Suspense fallback={<div className="min-h-screen bg-paper" />}>
+        <ManagePageInner onLook={setLookVars} />
+      </Suspense>
+      <LookFooter vars={lookVars} />
+    </>
   );
 }

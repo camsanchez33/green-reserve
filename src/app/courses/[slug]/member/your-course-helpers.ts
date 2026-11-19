@@ -27,6 +27,13 @@ export type YourSession = {
   groups?: SessionGroup[];
   benefits?: string | null;
   renewsOn?: string | null;
+  /** #503: the last day of a membership that doesn't renew (YYYY-MM-DD). */
+  expiresOn?: string | null;
+  /** 2b: the membership renews itself (the course charges the saved card). */
+  autoRenew?: boolean;
+  /** 2b: the last renewal charge failed (autoRenewFailedAt is set). Past the date alone isn't a failure: the charge
+   *  runs after the date, can be held for notice, or skipped. */
+  renewalFailed?: boolean;
   upcoming?: Upcoming[];
 };
 
@@ -78,13 +85,30 @@ export function datedStatus(endsOn: string | null | undefined, today: string, re
 }
 
 /** The membership line, or null for a golfer who is only a resident here. */
-export function membershipLine(s: YourSession, today: string = localToday()): { group: string; dot: Dot; when: string | null } | null {
+/** Said, in red, when a membership set to renew itself is past its date (Build 2026-11-18). */
+export const RENEWAL_FAILED = 'Your renewal didn’t go through. Call the pro shop.';
+
+/** Said, with an amber dot, when a membership set to renew is past its date and no charge has failed yet: the charge
+ *  runs after the date and can wait for a notice period (Build 2026-11-18). */
+export const RENEWAL_PENDING = 'Your renewal is being processed.';
+
+export function membershipLine(s: YourSession, today: string = localToday()): { group: string; dot: Dot; when: string | null; problem?: string; note?: string } | null {
   const m = s.groups?.find(gr => gr.kind === 'member');
   if (!m && (s.groups?.length || s.membershipType === 'Resident')) return null;
   const group = m?.name ?? s.tier?.name ?? s.membershipType;
   // 2b says when a membership renews; until then (or if the date is unreadable) only the end date is known, so it
   // reads "expires".
-  const st = isDay(s.renewsOn) ? datedStatus(s.renewsOn, today, true) : datedStatus(s.expiresAt, today);
+  // An explicit autoRenew wins; without it, a renewsOn date means it renews.
+  const renews = s.autoRenew ?? isDay(s.renewsOn);
+  const day = isDay(s.renewsOn) ? s.renewsOn : isDay(s.expiresOn) ? s.expiresOn : s.expiresAt;
+  const st = datedStatus(day, today, renews);
+  // Only the server's own record of a failed charge says the renewal failed (Build 2026-11-18).
+  if (s.renewalFailed === true) return { group, dot: 'bad', when: null, problem: RENEWAL_FAILED };
+  // "Being processed" only while the server can say a charge failed (it sends renewalFailed), and only within the
+  // longest real wait: a 30-day notice plus a day of cron. Past that nothing is coming, so it reads "ended".
+  if (renews && st.dot === 'bad' && typeof s.renewalFailed === 'boolean' && isDay(day) && daysBetween(day, today) <= 31) {
+    return { group, dot: 'warn', when: null, note: RENEWAL_PENDING };
+  }
   return { group, ...st };
 }
 

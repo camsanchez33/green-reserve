@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { bookingLookOf } from '@/lib/booking-look';
 import { prisma } from '@/lib/prisma';
 import { paymentForPayPage, chargeEventPayment, holdProblem } from '@/lib/event-payments';
 import { sendSignupConfirmation } from '@/lib/event-signup';
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     status: p.status === 'paying' ? 'open' : p.status, eventCancelled: p.event.status !== 'planned',
     label: p.label, amountCents: p.amountCents, feeCents: p.feeCents,
     eventName: p.event.name, dateLabel: formatTeeDay(p.event.date),
-    courseName: c.name, brandColor: c.brandColor, logoUrl: c.logoUrl, photoUrl: c.heroImageUrl,
+    courseName: c.name, brandColor: c.brandColor, booking_look: bookingLookOf(c), logoUrl: c.logoUrl, photoUrl: c.heroImageUrl,
   });
 }
 

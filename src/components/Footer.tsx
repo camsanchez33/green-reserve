@@ -5,6 +5,32 @@ import { usePathname } from 'next/navigation';
 import { isBookingMode, isCourseWorld } from '@/lib/booking-mode';
 import { SUPPORT_EMAIL } from '@/lib/contact';
 
+/** BOOKING-LOOK-1: the golfer pages that wear the course look and carry their own footer in it (LookFooter). */
+function wearsCourseLook(pathname: string): boolean {
+  return /^\/(manage|checkin|receipt)\/[^/]+\/?$/.test(pathname) && pathname !== '/receipt/shop' && pathname !== '/receipt/shop/';
+}
+
+/** The booking-mode footer lockup (also LookFooter's, for a course that hasn't picked a look). */
+export function BookingModeFooter() {
+  return (
+    <footer className="bg-paper border-t border-line">
+      <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-ink-faint">
+        <span className="flex items-center gap-1.5">
+          Powered by
+          <Link href="/" className="inline-flex items-center hover:opacity-80 transition-opacity">
+            <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={120} height={22} loading="lazy" className="w-[120px] h-auto" />
+          </Link>
+        </span>
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-ink-soft transition-colors">{SUPPORT_EMAIL}</a>
+          <Link href="/privacy" className="hover:text-ink-soft transition-colors">Privacy</Link>
+          <Link href="/terms" className="hover:text-ink-soft transition-colors">Terms</Link>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
 export default function Footer() {
   const pathname = usePathname();
 
@@ -14,6 +40,8 @@ export default function Footer() {
   if (/^\/courses\/[^/]+(\/info|\/login|\/member)?\/?$/.test(pathname)) return null;
   // The Book page wears the course's look (Light or Dark) and carries its own footer in it (BookClient).
   if (pathname === '/book' || pathname === '/book/') return null;
+  // Manage, the tee-time pay page and the receipt wear the course look and carry their own footer (LookFooter).
+  if (wearsCourseLook(pathname)) return null;
 
   // Course-world pages (course page, member portal, golfer portal) get the
   // minimal text-only "Powered by GreenReserve" footer — no marketing links,
@@ -36,25 +64,7 @@ export default function Footer() {
   // Booking-mode pages (book/checkin/manage/receipt/membership) lost the
   // white GR nav bar — this small footer lockup is the only GreenReserve
   // presence left on the golfer's booking journey.
-  if (isBookingMode(pathname)) {
-    return (
-      <footer className="bg-paper border-t border-line">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-ink-faint">
-          <span className="flex items-center gap-1.5">
-            Powered by
-            <Link href="/" className="inline-flex items-center hover:opacity-80 transition-opacity">
-              <Image src="/brand/logo.svg" unoptimized alt="GreenReserve" width={120} height={22} loading="lazy" className="w-[120px] h-auto" />
-            </Link>
-          </span>
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-            <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-ink-soft transition-colors">{SUPPORT_EMAIL}</a>
-            <Link href="/privacy" className="hover:text-ink-soft transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-ink-soft transition-colors">Terms</Link>
-          </div>
-        </div>
-      </footer>
-    );
-  }
+  if (isBookingMode(pathname)) return <BookingModeFooter />;
 
   // H-1 (UI_REVISE_SPEC §5.10): the marketing footer from the approved
   // prototype — lockup, four links, the year. The fee lines that used to sit

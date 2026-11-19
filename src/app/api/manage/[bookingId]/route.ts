@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { bookingLookOf } from '@/lib/booking-look';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { teeToUtcMs } from '@/lib/tee-time-utils';
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
       course: {
         select: {
           name: true, number: true, slug: true, address: true, city: true, state: true, phone: true,
-          timezone: true, cancellationHours: true, brandColor: true, heroImageUrl: true, logoUrl: true,
+          timezone: true, cancellationHours: true, brandColor: true, bookingLook: true, bookingAccent: true, heroImageUrl: true, logoUrl: true,
         },
       },
     },
@@ -58,6 +59,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     // The course is who a golfer calls about their round (/contact sends them here).
     coursePhone: booking.course.phone || '',
     brandColor: booking.course.brandColor,
+    // Booking page look (BOOKING-LOOK-1): accent null until the course sets one; the page then uses brandColor.
+    booking_look: bookingLookOf(booking.course),
     heroImageUrl: booking.course.heroImageUrl || '',
     logoUrl: booking.course.logoUrl || '',
     date: booking.teeTime.date,

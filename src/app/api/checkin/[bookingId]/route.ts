@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { bookingLookOf } from '@/lib/booking-look';
 import { prisma } from '@/lib/prisma';
 import { performCheckIn, cartAddOnCentsFor } from '@/lib/checkin-booking';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
@@ -21,7 +22,7 @@ async function authorize(bookingId: string, token: string | null) {
     where: { id: bookingId },
     include: {
       teeTime: { select: { date: true, time: true, holes: true, cartFeeCents: true, productId: true, product: { select: { label: true } } } },
-      course: { select: { name: true, slug: true, address: true, city: true, state: true, brandColor: true, heroImageUrl: true, logoUrl: true, timezone: true } },
+      course: { select: { name: true, slug: true, address: true, city: true, state: true, brandColor: true, bookingLook: true, bookingAccent: true, heroImageUrl: true, logoUrl: true, timezone: true } },
     },
   });
   if (!booking || booking.checkInToken !== token) return null;
@@ -49,6 +50,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ book
     courseSlug: booking.course.slug,
     courseAddress: `${booking.course.address}, ${booking.course.city}, ${booking.course.state}`,
     brandColor: booking.course.brandColor,
+    // Booking page look (BOOKING-LOOK-1): accent null until the course sets one; the page then uses brandColor.
+    booking_look: bookingLookOf(booking.course),
     heroImageUrl: booking.course.heroImageUrl || '',
     logoUrl: booking.course.logoUrl || '',
     date: booking.teeTime.date,
