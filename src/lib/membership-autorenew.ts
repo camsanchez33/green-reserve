@@ -124,6 +124,32 @@ export async function remindersDue(now = new Date()) {
     && r.expiresAt.getTime() - now.getTime() <= reminderLeadDays(r.tier.termMonths) * DAY);
 }
 
+/**
+ * The member page's renewalPending (Build 2026-11-19): true only when an automatic renewal charge WILL be attempted
+ * for this term, by the same conditions remindersDue, chargesDue and chargeRenewal use. Auto-renew on, a saved card,
+ * the course's Stripe active, the tier active and still renewing automatically, dues to charge, no failure yet, and
+ * the renewal date inside its notice window (the reminder goes out then, the charge follows). Past the date it is
+ * charged only if this term's reminder went out for today's amount; without it the run never charges, so false.
+ */
+export function renewalWillCharge(
+  m: { status: string; autoRenew: boolean; savedCustomerId: string; savedPaymentMethodId: string; autoRenewFailedAt: Date | null; autoRenewRetryAt: Date | null;
+       autoRenewRemindedFor: Date | null; autoRenewRemindedCents: number | null; expiresAt: Date | null;
+       tier: { autoRenew: boolean; active: boolean; annualFeeCents: number; termMonths: number } | null },
+  course: { stripeAccountId: string | null; stripeAccountActive: boolean },
+  now = new Date(),
+): boolean {
+  const t = m.tier;
+  if (!t || m.status !== 'active' || !m.autoRenew || !t.autoRenew || !t.active) return false;
+  if (!m.savedCustomerId || !m.savedPaymentMethodId) return false;
+  if (!course.stripeAccountActive || !course.stripeAccountId) return false;
+  if (m.autoRenewFailedAt || m.autoRenewRetryAt || !m.expiresAt) return false;
+  const cents = renewalCents(t).totalCents;
+  if (cents <= 0) return false;
+  const left = m.expiresAt.getTime() - now.getTime();
+  if (left > 0) return left <= reminderLeadDays(t.termMonths) * DAY;
+  return !!m.autoRenewRemindedFor && m.autoRenewRemindedFor.getTime() === m.expiresAt.getTime() && m.autoRenewRemindedCents === cents;
+}
+
 /** Mark a term's reminder sent (after the email went). */
 export const markReminded = (id: string, expiresAt: Date, totalCents: number, now = new Date()) => prisma.courseMembership.update({ where: { id }, data: { autoRenewRemindedFor: expiresAt, renewalRemindedAt: now, autoRenewRemindedCents: totalCents } });
 
