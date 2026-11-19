@@ -476,6 +476,10 @@ async function main() {
   const hsFail = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
   check('…renewalFailed true after a declined renewal at the end of the term (the Golfer lane\'s "Your renewal didn\'t go through")', hsFail.body?.renewalFailed === true, hsFail.body);
   check('…inGrace true: the term ended yesterday and the course\'s 10 grace days still give member rates', hsFail.body?.inGrace === true, hsFail.body);
+  // The end date itself is still a member day, not grace.
+  await prisma.courseMembership.updateMany({ where: { courseId: home.id, inviteEmail: homeEmail }, data: { expiresAt: new Date(`${todayIn('UTC')}T00:00:00Z`) } });
+  check('…inGrace false on the end date itself', (await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail))).body?.inGrace === false);
+  await prisma.courseMembership.updateMany({ where: { courseId: home.id, inviteEmail: homeEmail }, data: { expiresAt: new Date(`${addDaysStr(todayIn('UTC'), -1)}T00:00:00Z`) } });
   // The member turns automatic renewal off from their emailed link: nothing is failing any more (Build 2026-11-18).
   const homeM = await prisma.courseMembership.findFirstOrThrow({ where: { courseId: home.id, inviteEmail: homeEmail }, select: { id: true } });
   const off = await fetch(`${BASE_URL}/api/membership/${homeM.id}/auto-renew`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: `${TAG}-home` }) });
@@ -501,8 +505,8 @@ async function main() {
   check('…Members pricing off: the line keeps the window and guest passes, not the rate', hsOff.body?.benefits === 'You can book 9 days out. 6 guest passes a year.', hsOff.body?.benefits);
   check('…and the session sends no member rate fields for a page to rebuild a price from', hsOff.body?.tier && hsOff.body.tier.discountPct === null && hsOff.body.tier.greenFeeWeekday === null && hsOff.body.tier.greenFeeWeekend === null && hsOff.body.tier.cartFeeWeekday === null && hsOff.body.tier.cartFeeWeekend === null, hsOff.body?.tier);
   check('(with it on, the tier\'s rate is sent)', hs.body?.tier?.discountPct === 20, hs.body?.tier);
-  // The invite says the same: no rate with Members pricing off (lib/member-welcome uses the same withoutRates).
-  check('invite benefits with Members pricing off keep the window and passes only', memberBenefitsLine(withoutRates({ discountPct: 20, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null, advanceBookingDays: 9, windowPublic: false, guestPassesPerYear: 6 }), {}) === 'book 9 days out · 6 guest passes a year');
+  // withoutRates drops the prices and keeps the window and passes (the invite itself sends no benefits with pricing off).
+  check('withoutRates keeps the window and passes only', memberBenefitsLine(withoutRates({ discountPct: 20, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null, advanceBookingDays: 9, windowPublic: false, guestPassesPerYear: 6 }), {}) === 'book 9 days out · 6 guest passes a year');
   const welcomeSrc = (await import('fs')).readFileSync('src/lib/member-welcome.ts', 'utf8');
   check('…and sendWelcome applies it from the course\'s switch', welcomeSrc.includes("benefits: memberPricingOn(m.course) ? memberBenefitsLine(m.tier, m.course) : ''") && welcomeSrc.includes('memberPricing: memberPricingOn(m.course)') && welcomeSrc.includes('hasMemberPricing: true'));
   const emailSrc = (await import('fs')).readFileSync('src/lib/email.ts', 'utf8');
