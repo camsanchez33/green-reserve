@@ -4,6 +4,7 @@
 // pay link and, when the tier says so, retries once. Needs a database (no Stripe — the charge is
 // injected). Run: npx tsx scripts/membership-autorenew-db-test.ts
 import { readFileSync } from 'fs';
+import { endDateToSend, shownDay } from '../src/lib/member-end-date';
 import { prisma } from '../src/lib/prisma';
 import { reminderLeadDays, renewalCents, autoRenewTermsText, remindersDue, markReminded, chargesDue, chargeRenewal, stopAutoRenew, RETRY_DAYS, setEndDateByStaff } from '../src/lib/membership-autorenew';
 
@@ -188,7 +189,18 @@ const declining = async () => { throw new Error('Your card was declined.'); };
   ok('the members route sets "Runs until" only through setEndDateByStaff, as the signed-in login, 409 when refused', memRoute.includes('await setEndDateByStaff(current, { was, next: expiresAt ? new Date(expiresAt) : null }, actor)') && memRoute.includes("const was = body.expiresAtWas;") && memRoute.includes('await settleStaleDuesReader(membership);') && !/^\s+expiresAt: expiresAt !== undefined/m.test(memRoute) && memRoute.includes("? { type: 'staff' as const, id: session.staffId ?? '', name: me?.name ?? '' }") && /if \(!set\.ok\) return NextResponse\.json\(\{ error: [^}]+\}, \{ status: 409 \}\)/.test(memRoute));
 
   const card = readFileSync('src/components/dashboard/members/MemberCard.tsx', 'utf8');
-  ok('the member card sends "Runs until" only when changed, with the day it showed', card.includes("const dates = edit.expiresAt !== was ? { expiresAt: edit.expiresAt || null, expiresAtWas: was } : {};") && card.includes('...dates,') && !card.includes('expiresAt: edit.expiresAt || null, name'));
+  ok('the member card holds the day shown when its form opened and sends the date only through endDateToSend', card.includes('const dates = endDateToSend(edit.expiresAtWas, edit.expiresAt);') && card.includes('expiresAt: shownDay(m.expiresAt), expiresAtWas: shownDay(m.expiresAt)') && card.includes('...dates,'));
+  // The form opened on 2026-12-10; a payment from the same card then moved the stored day: nothing typed, nothing sent.
+  ok('details saved after a payment from the same card send no date', JSON.stringify(endDateToSend('2026-12-10', '2026-12-10')) === '{}');
+  ok('…a changed date goes with the day the form opened on (the API then refuses it: the stored day moved)', JSON.stringify(endDateToSend('2026-12-10', '2027-01-15')) === JSON.stringify({ expiresAt: '2027-01-15', expiresAtWas: '2026-12-10' }) && JSON.stringify(endDateToSend('2026-12-10', '')) === JSON.stringify({ expiresAt: null, expiresAtWas: '2026-12-10' }) && shownDay('2026-12-10T15:30:00.000Z') === '2026-12-10' && shownDay(null) === '');
+  { // …and through the lib: the day the form opened on no longer matches the paid row, so the write is refused.
+    const p = await mk(yearly.id, new Date(`${day(new Date(now.getTime() + 5 * DAY))}T00:00:00Z`));
+    const opened = day(p.expiresAt);
+    await prisma.courseMembership.update({ where: { id: p.id }, data: { expiresAt: new Date(now.getTime() + 370 * DAY), lastPaidAt: now } });
+    const sent = endDateToSend(opened, day(new Date(now.getTime() + 60 * DAY))) as { expiresAt: string; expiresAtWas: string };
+    const r = await setEnd(p.id, new Date(sent.expiresAt), sent.expiresAtWas);
+    ok('…a date changed in a form opened before a payment is refused, the paid term stands', !r.ok && Math.abs((await fresh(p.id)).expiresAt!.getTime() - (now.getTime() + 370 * DAY)) < 1000, r);
+  }
   // Wiring.
   // Memberships item 1: the pay link's charge is lib/dues-payment (by 'golfer'); staff paying never turn renewal on.
   const pay = readFileSync('src/app/api/membership/[id]/route.ts', 'utf8') + readFileSync('src/lib/dues-payment.ts', 'utf8');

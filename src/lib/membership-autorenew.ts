@@ -80,7 +80,7 @@ export async function setEndDateByStaff(
 ): Promise<{ ok: true; cleared: boolean } | { ok: false }> {
   const { was, next } = change;
   if (ymdUtc(m.expiresAt) !== was) return { ok: false };
-  // The same day sent back (the member card sends "Runs until" with every edit): no change, the stored time kept.
+  // The same day sent back (an older card sent "Runs until" with every edit): no change, the stored time kept.
   if (ymdUtc(m.expiresAt) === ymdUtc(next)) return { ok: true, cleared: false };
   const cleared = clearsDeclinedRenewal(m, next, now);
   const done = await prisma.$transaction(async tx => {
