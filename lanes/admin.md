@@ -8,6 +8,9 @@ Read this and CLAUDE.md only. Approved decisions, word for word: `ADMIN_REDO_SPE
 Dark green glass only (no Light). Full width, frosted panels over the ribbon backdrop. One glass Filter button,
 search without words, colour only with meaning, one line per item, tap opens full page with "‹ back". White icon
 buttons with no box. The alert bell has no box. Admin never charges, retries, refunds or cancels a golfer's booking.
+Installable app (PWA-INSTALL, Cam 2026-11-24, `docs/DECISIONS.md`): the admin layout links `admin.webmanifest` and
+registers the service worker (scope /admin) through `PwaRegister`; My profile shows an App card with "Install app"
+only when the browser can install. /cam stays outside the app. On iPad, the owner signs in with Safari; verify once.
 
 ## Done (merged)
 Overview (problems now in Needs attention, no take/assign/snooze) · Golf courses · Onboarding (+ launch date) ·

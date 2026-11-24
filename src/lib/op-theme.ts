@@ -5,6 +5,8 @@
 // cookie, not a login setting, on purpose: it is a screen preference (a bright
 // pro shop vs a dark office), it must be known before the first paint, and it
 // needs no permission — every login, staff included, can flip it. Client-safe.
+import { PWA_THEME_COLOR } from './pwa';
+
 export const OP_THEME_COOKIE = 'gr_op_theme';
 export type OpTheme = 'light' | 'dark';
 
@@ -17,6 +19,8 @@ export function setOpTheme(theme: OpTheme): void {
   // Secure only over https, so a phone testing against a plain-http dev address keeps the choice too.
   document.cookie = `${OP_THEME_COOKIE}=${theme}; Path=/dashboard; Max-Age=31536000; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
   document.querySelectorAll<HTMLElement>('.op-look').forEach(el => { el.dataset.theme = theme; });
+  // PWA install (Cam 2026-11-24): the browser bar / installed app's title bar follows the look.
+  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach(m => { m.content = PWA_THEME_COLOR[theme]; });
 }
 
 /** The look now on screen (browser only). */

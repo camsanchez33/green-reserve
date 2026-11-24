@@ -44,7 +44,7 @@ jobs:
       # Links and redirects in emails and sign-in routes are built from this (as in production, .env.example).
       NEXT_PUBLIC_URL: http://localhost:3000
       TEST_URL: http://localhost:3000
-      SERVER_TESTS: "isolation-test.ts concurrency-test.ts load-test.ts member-portal-price-test.ts member-login-db-test.ts resident-window-db-test.ts book-viewer-window-db-test.ts"
+      SERVER_TESTS: "isolation-test.ts concurrency-test.ts load-test.ts member-portal-price-test.ts member-login-db-test.ts resident-window-db-test.ts book-viewer-window-db-test.ts pwa-e2e-test.ts pwa-install-test.ts"
 
     steps:
       - uses: actions/checkout@v7
@@ -102,6 +102,18 @@ jobs:
 
       - name: Book page opens the logged-in golfer's window
         run: npx tsx scripts/book-viewer-window-db-test.ts
+
+      # PWA install (Cam 2026-11-24): the service worker in the runner's Chrome (only /_next/static/* and the offline
+      # page may be cached), then the install criteria on pinned Lighthouse 11 (perf-audit.yml's gate is separate and
+      # unchanged). Last, because it seeds perf-seed's live course. playwright-core drives the runner's own Chrome.
+      - name: Installable app (service worker, install criteria)
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: |
+          npx tsx scripts/perf-seed.ts
+          npm install --no-save playwright-core@1.63.0
+          npx tsx scripts/pwa-e2e-test.ts
+          npx tsx scripts/pwa-install-test.ts
 
       - name: Server log
         if: failure()
