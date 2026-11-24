@@ -13,7 +13,17 @@ import { isProposalCard, type ProposalCard } from '@/lib/birdie/proposal-types';
 import { ASK_EVENT, markBirdieReady } from '@/lib/birdie/ask';
 
 type Turn = { role: 'user' | 'assistant'; content: string; pending?: boolean; error?: boolean; status?: string; cards?: ProposalCard[] };
-type Meta = { enabled: boolean; greeting: string; chips: string[]; helpsWith: string };
+type KnowsSection = { key: string; label: string; count: string };
+type Meta = { enabled: boolean; greeting: string; chips: string[]; helpsWith: string; knows?: { courseName: string; sections: KnowsSection[]; builtAt: string } | null };
+
+/** ASSIST-2 "What it knows": one line saying what the brief holds, and when it last changed. */
+function knowsLine(k: NonNullable<Meta['knows']>): string {
+  const notes = k.sections.find(s => s.key === 'notes')?.count ?? '0';
+  const n = Number(notes) || 0;
+  const at = new Date(k.builtAt);
+  const time = Number.isFinite(at.getTime()) ? at.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+  return `Knows ${k.courseName}'s settings, rates, policies, closures, events and your ${n} note${n === 1 ? '' : 's'}.${time ? ` Updated ${time}.` : ''}`;
+}
 
 const OPEN_KEY = 'birdie:open';
 // Cam 2026-10-19: Birdie can be tucked into a small tab on the screen's edge and
@@ -55,6 +65,7 @@ export default function BirdieWidget() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [showKnows, setShowKnows] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -197,8 +208,25 @@ export default function BirdieWidget() {
               <div className="text-[15px] font-semibold text-ink leading-tight">Assistant</div>
               <div className="text-[12px] text-ink-soft truncate">Your course&apos;s assistant. Ask in plain words.</div>
             </div>
-            <button type="button" onClick={close} aria-label="Close" className="ml-auto text-ink-muted hover:text-ink transition-colors"><X className="w-4 h-4" /></button>
+            <button type="button" onClick={() => { if (!busy) setTurns([]); }} disabled={busy} aria-label="New question" title="New question" className="ml-auto text-ink-muted hover:text-ink disabled:opacity-40 transition-colors text-[18px] leading-none w-5">+</button>
+            <button type="button" onClick={close} aria-label="Close" className="text-ink-muted hover:text-ink transition-colors"><X className="w-4 h-4" /></button>
           </div>
+          {meta.knows && (
+            <div className="px-4 py-2 border-b border-line text-[12px] text-ink-soft">
+              <div className="flex items-start gap-2">
+                <span className="min-w-0 flex-1">{knowsLine(meta.knows)}</span>
+                <button type="button" onClick={() => setShowKnows(v => !v)} aria-expanded={showKnows} className="shrink-0 font-medium text-pine hover:underline">What it knows</button>
+              </div>
+              {showKnows && (
+                <dl className="mt-2 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1">
+                  {meta.knows.sections.map(sec => (
+                    <div key={sec.key} className="contents"><dt className="text-ink">{sec.label}</dt><dd className="text-right tabular-nums">{sec.count}</dd></div>
+                  ))}
+                  <div className="contents"><dt className="text-ink">Live numbers</dt><dd className="text-right">read when asked</dd></div>
+                </dl>
+              )}
+            </div>
+          )}
           <div ref={listRef} aria-live="polite" aria-atomic="false" className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-[200px]">
             <div className="text-sm text-ink">{meta.greeting}</div>
             {turns.length === 0 && <div className="text-[12.5px] text-ink-soft">It reads your course&apos;s live numbers and can draft a change for you to confirm. It never changes anything by itself. Try one:</div>}

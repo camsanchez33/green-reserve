@@ -530,9 +530,9 @@ function SystemContent() {
                 : !b.flag ? <>Off — the key is set; flip <Mono>BIRDIE_ENABLED=true</Mono> in Vercel to switch it on.</> : 'Off.'}
             </Row>
             <Row st={capped ? 'warn' : ''}
-              fix={<Fix sev="warn" steps={['Nothing is broken: the platform-wide daily cap is reached, so the assistant stops replying until the count resets tomorrow.', 'Read today’s conversations in the Vercel logs to see where the replies went.', 'If the cap is too low, ask Build to raise it.']}>
+              fix={<Fix sev="warn" steps={['Nothing is broken: the platform-wide daily cap is reached, so the assistant stops replying until the count resets tomorrow.', 'Read today’s reply lines in the Vercel logs to see which persona and course used them.', 'If the cap is too low, ask Build to raise it.']}>
                 <ExtBtn href={links.vercelLogs} pri>Open Vercel logs</ExtBtn></Fix>}>
-              {b.todayReplies.toLocaleString()} of {b.dailyCap.toLocaleString()} replies today (the platform-wide daily cap; 20 per course per hour on top). Conversations are in the Vercel logs as <Mono>birdie.reply</Mono>.
+              {b.todayReplies.toLocaleString()} of {b.dailyCap.toLocaleString()} questions today (every assistant together; each has its own daily cap, plus 20 per course per hour for staff and 300 a day per course for golfers). Each reply is one <Mono>assistant.reply</Mono> line in the Vercel logs: tokens and how it ended, never the words.
             </Row>
           </div>
         );

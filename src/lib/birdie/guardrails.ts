@@ -2,13 +2,15 @@
 // controls as much as safety controls: the API key costs money.
 import { prisma } from '../prisma';
 import { rateLimit } from '../rate-limit';
+import { platformAllows, PLATFORM_PER_DAY as PERSONA_PER_DAY } from '../assistant/caps';
 
+/** The cheap model for small one-shot drafts (lib/notice-draft). The chat assistant runs on lib/assistant/prompt's ASSISTANT_MODEL. */
 export const BIRDIE_MODEL = 'claude-haiku-4-5';
-export const MAX_REPLY_TOKENS = 600;
 export const MAX_USER_CHARS = 1500;
 export const MAX_HISTORY_TURNS = 12;      // user+assistant messages kept from the client
 export const PER_SESSION_PER_HOUR = 20;
-export const PLATFORM_PER_DAY = 600;      // every persona, every course — the daily platform cap
+/** The operator persona's platform budget per day (lib/assistant/caps holds every persona's). */
+export const PLATFORM_PER_DAY = PERSONA_PER_DAY.operator;
 
 export function birdieEnabled(): boolean {
   return process.env.BIRDIE_ENABLED === 'true' && !!process.env.ANTHROPIC_API_KEY;
@@ -37,8 +39,6 @@ export function sanitizeHistory(raw: unknown): BirdieTurn[] {
   return turns.slice(-MAX_HISTORY_TURNS);
 }
 
-const dayKey = () => new Date().toISOString().slice(0, 10);
-
 /**
  * Both caps in one place. Returns the reason to refuse, or null.
  * `courseKey` is the COURSE, not the person: staff and owner share one hourly
@@ -48,26 +48,18 @@ export async function checkCaps(courseKey: string): Promise<string | null> {
   if (!(await rateLimit(`birdie:course:${courseKey}`, PER_SESSION_PER_HOUR, 3600))) {
     return 'The assistant has answered a lot in the last hour — give it a little while, or write to us on Support.';
   }
-  if (!(await rateLimit(`birdie:day:${dayKey()}`, PLATFORM_PER_DAY, 86_400))) {
+  if (!(await platformAllows('operator'))) {
     return "The assistant is resting for today. Everything it can help with is a page away in the sidebar, or write to us on Support.";
   }
   return null;
 }
 
-/** Today's platform-wide message count, for /admin/system. Reads the same counter the cap uses. */
+/** Today's platform-wide question count across every persona, for /admin/system. Reads the same counters the caps use. */
 export async function birdieUsageToday(): Promise<number> {
   try {
-    const rows = await prisma.$queryRaw<{ count: number }[]>`SELECT "count" FROM "RateLimit" WHERE "key" = ${`birdie:day:${dayKey()}`}`;
-    return Number(rows[0]?.count ?? 0);
+    const day = new Date().toISOString().slice(0, 10);
+    const keys = Object.keys(PERSONA_PER_DAY).map(p => `birdie:platform:${p}:${day}`);
+    const rows = await prisma.rateLimit.findMany({ where: { key: { in: keys } }, select: { count: true } });
+    return rows.reduce((n, r) => n + Number(r.count ?? 0), 0);
   } catch { return 0; }
-}
-
-/** Conversations are ours to review: one structured line per reply. */
-export function logConversation(entry: {
-  persona: string; courseId: string; sessionKey: string; question: string; reply: string;
-  inputTokens?: number; outputTokens?: number; cacheRead?: number; stopReason?: string | null; ms: number;
-}) {
-  // The spec logs the conversation, minus nothing: a question is already capped
-  // at MAX_USER_CHARS and a reply at MAX_REPLY_TOKENS, so neither is unbounded.
-  console.log(JSON.stringify({ ev: 'birdie.reply', ...entry }));
 }
