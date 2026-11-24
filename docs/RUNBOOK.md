@@ -117,6 +117,9 @@ committed after every Claude Code run. They are backed up with every `git push`.
 
 ---
 
+## Installed app (service worker) kill switch
+If the installed dashboard or admin misbehaves after a deploy (pages not loading, stale scripts): set `PWA_KILL=1` in Vercel's production environment and REDEPLOY (an env change reaches the app only with a new deploy), or set `PWA_KILL_SWITCH = true` in `src/lib/pwa.ts` and merge. Every browser then gets, on its next page load, a worker that deletes the `gr-pwa-*` caches and unregisters itself; the layouts stop registering. The app keeps working as a plain website meanwhile. To turn it back on, remove the variable (or the switch) and redeploy. Details: `docs/DECISIONS.md` → PWA-INSTALL.
+
 ## Structured Logs — Money Paths
 
 All money-path events emit structured JSON to stdout (visible in Vercel logs):

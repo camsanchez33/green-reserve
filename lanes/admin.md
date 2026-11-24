@@ -11,6 +11,8 @@ buttons with no box. The alert bell has no box. Admin never charges, retries, re
 Installable app (PWA-INSTALL, Cam 2026-11-24, `docs/DECISIONS.md`): the admin layout links `admin.webmanifest` and
 registers the service worker (scope /admin) through `PwaRegister`; My profile shows an App card with "Install app"
 only when the browser can install. /cam stays outside the app. On iPad, the owner signs in with Safari; verify once.
+(An installed iPad app keeps its own cookies, so also try the /cam device approval and the Stripe onboarding return
+from the installed app once.)
 
 ## Done (merged)
 Overview (problems now in Needs attention, no take/assign/snooze) · Golf courses · Onboarding (+ launch date) ·

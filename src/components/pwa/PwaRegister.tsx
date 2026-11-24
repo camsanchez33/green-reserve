@@ -2,7 +2,7 @@
 // PWA install (Cam 2026-11-24): registers /sw.js for one scope (/dashboard or /admin), from that area's layout only,
 // so golfer pages and the homepage never get a worker. With the kill switch on (the layout passes killed), it
 // unregisters this scope's worker and clears its caches instead. Production builds only: in `next dev` the chunk
-// URLs are not content-hashed, and a cache-first copy would go stale between edits.
+// URLs are not content-hashed, and a cache-first copy would go stale between edits, so dev unregisters as the kill does.
 //
 // It also catches beforeinstallprompt as early as the page allows (an inline listener, so an event that fires
 // before React hydrates is not lost) for the "Install app" button (useInstallApp).
@@ -21,9 +21,10 @@ const EARLY_LISTENER = `window.__grInstall=window.__grInstall||null;window.addEv
 export default function PwaRegister({ scope, killed, manifest, appTitle }: { scope: PwaScope; killed: boolean; manifest: string; appTitle: string }) {
   useEffect(() => {
     captureInstallPrompt();
-    if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator)) return;
+    if (!('serviceWorker' in navigator)) return;
     const sw = navigator.serviceWorker;
-    if (killed) {
+    // Dev builds unregister too: a worker left by a local `next start` would serve stale `next dev` chunks.
+    if (killed || process.env.NODE_ENV !== 'production') {
       (async () => {
         const regs = await sw.getRegistrations();
         await Promise.all(regs.filter(r => new URL(r.scope).pathname.startsWith(scope)).map(r => r.unregister()));

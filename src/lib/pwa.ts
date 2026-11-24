@@ -11,9 +11,11 @@
 //   - it never caches a page or an API response: only /_next/static/* (status 200, same origin) and gr-offline.html.
 //   - each deploy is a new version (the commit SHA): skipWaiting + clients.claim, and caches of other versions are
 //     deleted on activate.
-// Kill switch: PWA_KILL=1 in the environment, or PWA_KILL_SWITCH below set to true. Then /sw.js serves a worker that
-// deletes every GreenReserve cache and unregisters itself, and the layouts unregister instead of registering.
+// Kill switch: PWA_KILL=1 in the environment (Vercel applies it on the next deploy), or PWA_KILL_SWITCH below set to
+// true. Then /sw.js serves a worker that deletes every GreenReserve cache and unregisters itself, and the layouts
+// unregister instead of registering. docs/RUNBOOK.md → "Installed app (service worker) kill switch".
 // Client-safe: no server imports.
+import { liveCommit } from './build-info';
 
 /** In-code kill switch. Flip to true and deploy to remove the service worker from every installed browser. */
 export const PWA_KILL_SWITCH = false;
@@ -34,15 +36,14 @@ export const PWA_APPS = {
 /** theme-color per dashboard look (the page colour of each look in globals.css) and for the admin glass. */
 export const PWA_THEME_COLOR = { dark: '#1D1E1D', light: '#E9EAE6', admin: '#0C1C17' } as const;
 
-/** Server only: is the worker switched off? Reads the env at request time. */
+/** Server only: is the worker switched off? */
 export function pwaKilled(env: Record<string, string | undefined> = process.env): boolean {
   return PWA_KILL_SWITCH || env.PWA_KILL === '1';
 }
 
-/** The deploy's version: the commit SHA on Vercel, else 'dev'. Only [A-Za-z0-9._-] so it is safe inside the script. */
+/** The deploy's version: the seven-character commit SHA (liveCommit, as /api/health shows it), else 'dev'. */
 export function pwaVersion(env: Record<string, string | undefined> = process.env): string {
-  const raw = env.VERCEL_GIT_COMMIT_SHA || env.GIT_COMMIT_SHA || 'dev';
-  return raw.replace(/[^A-Za-z0-9._-]/g, '').slice(0, 64) || 'dev';
+  return liveCommit(env) ?? 'dev';
 }
 
 /** The service worker's source. `killed` returns the self-removing worker instead. */
@@ -60,9 +61,9 @@ self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
     await Promise.all(keys.filter((k) => k.startsWith(PREFIX)).map((k) => caches.delete(k)));
+    // No reload of open windows: this worker has no fetch handler, so they already go straight to the network, and
+    // a reload could drop a half-filled form.
     await self.registration.unregister();
-    const open = await self.clients.matchAll({ type: 'window' });
-    await Promise.all(open.map((c) => c.navigate(c.url).catch(() => undefined)));
   })());
 });
 `;
@@ -103,13 +104,20 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-async function cacheFirst(request) {
-  const cache = await caches.open(CACHE);
-  const hit = await cache.match(request);
-  if (hit) return hit;
+// The cache is optional: if storage is full or broken, the file still comes from the network (never a failed load).
+// The write is not awaited by the page: it rides event.waitUntil, so a first load never waits on the cache.
+async function cacheFirst(event, request) {
+  let cache = null;
+  try {
+    cache = await caches.open(CACHE);
+    const hit = await cache.match(request);
+    if (hit) return hit;
+  } catch (e) { cache = null; }
   const res = await fetch(request);
   // Only a whole, same-origin 200 is kept; anything else goes straight through.
-  if (res && res.status === 200 && res.type === 'basic') await cache.put(request, res.clone());
+  if (cache && res && res.status === 200 && res.type === 'basic') {
+    event.waitUntil(cache.put(request, res.clone()).catch(() => undefined));
+  }
   return res;
 }
 
@@ -117,8 +125,8 @@ async function networkOnly(request) {
   try {
     return await fetch(request);
   } catch (err) {
-    const cache = await caches.open(CACHE);
-    const page = await cache.match(OFFLINE_URL);
+    let page;
+    try { page = await (await caches.open(CACHE)).match(OFFLINE_URL); } catch (e) { page = undefined; }
     if (page) return page;
     throw err;
   }
@@ -127,7 +135,7 @@ async function networkOnly(request) {
 self.addEventListener('fetch', (event) => {
   const r = event.request;
   const route = routeRequest(r.method, r.url, r.mode, self.location.origin);
-  if (route === 'static') event.respondWith(cacheFirst(r));
+  if (route === 'static') event.respondWith(cacheFirst(event, r));
   else if (route === 'navigate') event.respondWith(networkOnly(r));
   // 'pass': no respondWith, so the browser fetches it as if there were no worker.
 });

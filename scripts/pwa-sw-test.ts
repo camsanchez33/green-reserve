@@ -71,9 +71,13 @@ async function lifecycle(world: ReturnType<typeof makeWorld>, type: 'install' | 
 /** Dispatches a fetch; returns null when the worker did not call respondWith (the browser handles it). */
 async function dispatch(world: ReturnType<typeof makeWorld>, url: string, opts: { method?: string; mode?: string } = {}) {
   let answer: Promise<Response> | null = null;
+  const extended: Promise<unknown>[] = [];
   const request = { url: abs(url), method: opts.method || 'GET', mode: opts.mode || 'cors' };
-  for (const fn of world.listeners.fetch || []) fn({ request, respondWith: (p: Promise<Response>) => { answer = p; } });
-  return answer === null ? null : await (answer as Promise<Response>);
+  for (const fn of world.listeners.fetch || []) fn({ request, respondWith: (p: Promise<Response>) => { answer = p; }, waitUntil: (p: Promise<unknown>) => { extended.push(p); } });
+  if (answer === null) return null;
+  const out = await (answer as Promise<Response>);
+  await Promise.all(extended); // the cache write rides waitUntil
+  return out;
 }
 
 const SHA = 'abc123def';
@@ -86,7 +90,7 @@ async function main() {
   new vm.Script(src); // parses
   check('script names its version (the commit SHA)', src.includes(`"${SHA}"`));
   check('version is sanitised into the script', !buildServiceWorker({ version: `x";alert(1);//`, killed: false }).includes('alert(1);//"'));
-  check('pwaVersion: Vercel SHA, else dev', pwaVersion({ VERCEL_GIT_COMMIT_SHA: 'f00d' }) === 'f00d' && pwaVersion({}) === 'dev');
+  check('pwaVersion: the 7-character Vercel SHA (as /api/health), else dev', pwaVersion({ VERCEL_GIT_COMMIT_SHA: 'ABCDEF1234567890' }) === 'abcdef1' && pwaVersion({}) === 'dev' && pwaVersion({ VERCEL_GIT_COMMIT_SHA: 'x";y' }) === 'dev');
   check('kill switch: in-code switch is off, env PWA_KILL=1 turns it on', PWA_KILL_SWITCH === false && pwaKilled({ PWA_KILL: '1' }) && !pwaKilled({}) && !pwaKilled({ PWA_KILL: '0' }));
 
   // ---- Routing ----
@@ -155,6 +159,28 @@ async function main() {
   try { await dispatch(offline, '/dashboard', { mode: 'navigate' }); } catch { threw = true; }
   check('offline navigation without the page: the network error', threw);
 
+  // ---- A full or broken cache never fails a load (final-reviewer 2026-11-24) ----
+  for (const [name, breakIt] of [
+    ['put rejects (quota)', (w: ReturnType<typeof makeWorld>) => { const open = w.caches.open; w.caches.open = async (n: string) => ({ ...(await open(n)), put: async () => { throw new Error('QuotaExceededError'); } }); }],
+    ['open rejects', (w: ReturnType<typeof makeWorld>) => { w.caches.open = async () => { throw new Error('UnknownError'); }; }],
+    ['match rejects', (w: ReturnType<typeof makeWorld>) => { const open = w.caches.open; w.caches.open = async (n: string) => ({ ...(await open(n)), match: async () => { throw new Error('UnknownError'); } }); }],
+  ] as const) {
+    const w = makeWorld((url) => res('net:' + new URL(url).pathname));
+    breakIt(w);
+    load(src, w);
+    let body = '';
+    try { body = await (await dispatch(w, '/_next/static/chunks/b.js'))!.text(); } catch { body = 'REJECTED'; }
+    check(`broken cache, ${name}: the file still comes from the network`, body === 'net:/_next/static/chunks/b.js', body);
+  }
+  {
+    const w = makeWorld(() => { throw new TypeError('Failed to fetch'); });
+    w.caches.open = async () => { throw new Error('UnknownError'); };
+    load(src, w);
+    let threw = false;
+    try { await dispatch(w, '/dashboard', { mode: 'navigate' }); } catch (e) { threw = e instanceof TypeError; }
+    check('broken cache, offline navigation: the network error, not a storage error', threw);
+  }
+
   // ---- Killed worker: no fetch handler; clears our caches, unregisters, reloads open windows ----
   const killedSrc = buildServiceWorker({ version: SHA, killed: true });
   new vm.Script(killedSrc);
@@ -165,16 +191,16 @@ async function main() {
   await lifecycle(k, 'install');
   await lifecycle(k, 'activate');
   check('killed: every gr-pwa cache deleted, foreign kept', [...k.stores.keys()].join() === 'someone-else', [...k.stores.keys()]);
-  check('killed: unregisters and reloads open windows', k.log.unregister === 1 && k.log.navigated.length === 1);
+  check('killed: unregisters, reloads nothing (a half-filled form survives)', k.log.unregister === 1 && k.log.navigated.length === 0);
 
   // ---- The /sw.js route ----
   const prev = { kill: process.env.PWA_KILL, sha: process.env.VERCEL_GIT_COMMIT_SHA };
-  process.env.VERCEL_GIT_COMMIT_SHA = 'deadbeef';
+  process.env.VERCEL_GIT_COMMIT_SHA = 'deadbeef00';
   delete process.env.PWA_KILL;
   const r1 = await swRoute();
   const body1 = await r1.text();
   check('/sw.js: JavaScript, never cached', /javascript/.test(r1.headers.get('content-type') || '') && /no-cache/.test(r1.headers.get('cache-control') || '') && /no-store/.test(r1.headers.get('cache-control') || ''));
-  check('/sw.js: carries the commit SHA and the fetch handler', body1.includes('"deadbeef"') && body1.includes("addEventListener('fetch'"));
+  check('/sw.js: carries the commit SHA and the fetch handler', body1.includes('"deadbee"') && body1.includes("addEventListener('fetch'"));
   process.env.PWA_KILL = '1';
   const body2 = await (await swRoute()).text();
   check('/sw.js with PWA_KILL=1: the self-removing worker', body2.includes('unregister()') && !body2.includes("addEventListener('fetch'"));
