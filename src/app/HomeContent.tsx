@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import HomeCloser from '@/components/home/HomeCloser';
+import HomeAsk from '@/components/home/HomeAsk';
 import ScoreCard from '@/components/home/ScoreCard';
 import { FEATURE_GROUPS, featureHref } from '@/components/home/features';
 import s from './home.module.css';
@@ -62,6 +63,7 @@ export default function HomeContent() {
       </section>
 
       <HomeCloser />
+      <HomeAsk />
     </div>
   );
 }
