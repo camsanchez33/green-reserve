@@ -156,6 +156,18 @@ model Course {
   brandColor                 String                @default("#24513B")
   /// Booking page look (Cam 2026-11-18): the golfer booking pages are 'light' or 'dark'.
   bookingLook                String                @default("light")
+  /// ASSIST-1 (Cam 2026-11-24): Settings → Assistant. The staff assistant is on unless the course turns it off; the
+  /// golfer question bot is OFF until the course turns it on. Tone and topics shape the golfer bot only.
+  assistantStaffOn           Boolean               @default(true)
+  assistantGolferOn          Boolean               @default(false)
+  /// 'friendly' | 'brief' | 'formal' (lib/assistant/settings)
+  assistantTone              String                @default("friendly")
+  /// What golfers may ask about (lib/assistant/settings GOLFER_TOPICS keys). Empty = every topic.
+  assistantGolferTopics      String[]              @default([])
+  /// The "when it doesn't know" line, shown to golfers word for word. Empty = "call the pro shop at <phone>".
+  assistantUnknownLine       String                @default("")
+  /// Golfer questions per course-local day; never above 300 (Cam 2026-11-24).
+  assistantGolferDailyLimit  Int                   @default(300)
   /// Booking page look: one preset accent by NAME ('black' | 'green' | 'blue' | 'yellow';
   /// never red, which means a problem). Each preset has its own light and dark values on the
   /// golfer pages (lib/booking-look). Null until the course first saves one: until then the
@@ -2719,4 +2731,34 @@ model ShortLink {
   createdAt DateTime  @default(now())
 
   @@index([kind, target])
+}
+
+/// ASSIST-1: the course's own notes for its assistant ("Do you rent clubs?"). Course-written text: the assistant reads it
+/// as DATA, never instructions. audience 'golfers' = staff and golfer bots; 'staff' = the staff assistant only.
+model CourseAssistantNote {
+  id        String   @id @default(cuid())
+  courseId  String
+  question  String
+  answer    String
+  audience  String   @default("golfers")
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courseId, position])
+}
+
+/// ASSIST-1: the last brief built for a course, per audience ('staff' | 'golfer'). The brief is rebuilt from the
+/// course's own data on every question; this row only remembers when its text last changed (the "Updated" time on
+/// "What it knows") and the section counts. hash = sha256 of text.
+model CourseBrief {
+  id       String   @id @default(cuid())
+  courseId String
+  audience String
+  hash     String
+  text     String
+  sections Json     @default("[]")
+  builtAt  DateTime @default(now())
+
+  @@unique([courseId, audience])
 }
