@@ -181,7 +181,7 @@ async function main() {
     check('broken cache, offline navigation: the network error, not a storage error', threw);
   }
 
-  // ---- Killed worker: no fetch handler; clears our caches, unregisters, reloads open windows ----
+  // ---- Killed worker: no fetch handler; clears our caches, unregisters, reloads nothing ----
   const killedSrc = buildServiceWorker({ version: SHA, killed: true });
   new vm.Script(killedSrc);
   const k = makeWorld(() => res('x'));
