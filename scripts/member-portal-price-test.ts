@@ -98,13 +98,14 @@ async function main() {
   await prisma.courseResident.create({ data: { courseId: course.id, name: 'Old', email: oldEmail, expiresOn: addDaysStr(date, -1) } });
   const oldRow = await portal(await memberCookie(oldM.id, oldEmail));
   check('…but not with a card that expired before the date', !!oldRow && oldRow.resident_green_fee == null, oldRow);
-  // A resident whose membership has its own price: the member price wins, never both.
+  // TWO-GROUPS-PRICE (Cam 2026-11-24): a resident whose membership has its own price gets the LOWER own seat, never
+  // both — here the $30 resident rate beats the $80 member price, so the member price doesn't apply.
   const tierEmail = `tier@${TAG}.test`;
   const pctTier = await prisma.membershipTier.create({ data: { courseId: course.id, name: 'ResTier', discountPct: 20 } });
   const tierM = await prisma.courseMembership.create({ data: { courseId: course.id, tierId: pctTier.id, membershipType: 'ResTier', status: 'active', inviteEmail: tierEmail, inviteName: 'Tier', payToken: `${TAG}-tier` } });
   await prisma.courseResident.create({ data: { courseId: course.id, name: 'Tier', email: tierEmail, expiresOn: '' } });
   const tierRow = await portal(await memberCookie(tierM.id, tierEmail));
-  check('…and never on top of a membership price', !!tierRow && tierRow.resident_green_fee == null && Math.round(tierRow.member_green_fee * 100) === 8000, tierRow);
+  check('…the lower of the two, never on top of a membership price', !!tierRow && tierRow.resident_green_fee === 30 && tierRow.own_rate === 'resident' && tierRow.has_member_rate === false && tierRow.member_green_fee === tierRow.green_fee, tierRow);
 
   // Tenant check (Cam 2026-11-18): the online resident rate comes from the member signed in to THIS course. A member
   // of this course who is also on another course's resident list never gets that course's resident rate there —

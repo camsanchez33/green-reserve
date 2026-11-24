@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { residentPricingOn } from '@/lib/pricing-switch';
+import type { MembershipTier } from '@prisma/client';
+import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { termsVersionNow } from '@/lib/terms';
 import { canManageBooking } from '@/lib/manage-access';
 import { moveBooking } from '@/lib/move-booking';
-import { residentOn, loggedInResident } from '@/lib/member-session';
+import { residentOn, loggedInAt, liveMembershipFor } from '@/lib/member-session';
 
 // The golfer's own "change my time". ACT-1: the move itself — claim, release,
 // price, event — is lib/move-booking.ts, shared with staff moves. The golfer
@@ -43,21 +44,26 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   // with a card good on the new date: an older booking's linked account, or (Cam 2026-11-18, no golfer accounts)
   // the golfer logged in to this course (a member or a resident), which is how an online resident booking gets the rate now. Never the
   // booking's typed golferEmail. Residents staff set at the counter are set again at the counter.
+  // TWO-GROUPS-PRICE (Cam 2026-11-24, lib/two-groups): the same proven email's groups at the new time's date — a live
+  // membership here and a resident card — go to the swap, which prices the golfer's own seat at the lower of the two
+  // (the member rate on a tie), never both. No proven email: the booking keeps its own pricing, as before.
   let residentPlayers = 0;
-  const switches = await prisma.course.findUnique({ where: { id: booking.courseId }, select: { hasResidentPricing: true } });
-  if (booking.residentPlayers > 0 && residentPricingOn(switches)) {
+  let ownSeatGroups: { memberTier: MembershipTier | null; resident: boolean } | undefined;
+  const course = await prisma.course.findUnique({ where: { id: booking.courseId }, select: { id: true, timezone: true, memberGraceDays: true, hasMemberPricing: true, hasResidentPricing: true } });
+  const provenEmail = booking.golferAccount?.email || (await loggedInAt(booking.courseId))?.email || '';
+  if (course && provenEmail) {
     const slot = await prisma.teeTime.findUnique({ where: { id: String(newTeeTimeId) }, select: { date: true } });
     if (slot) {
-      const card = booking.golferAccount?.email
-        ? await residentOn(booking.courseId, booking.golferAccount.email, slot.date)
-        : await loggedInResident(booking.courseId, slot.date);
-      if (card) residentPlayers = 1;
+      const card = residentPricingOn(course) ? await residentOn(booking.courseId, provenEmail, slot.date) : null;
+      if (card && booking.residentPlayers > 0) residentPlayers = 1;
+      const memberTier = memberPricingOn(course) ? (await liveMembershipFor(course, provenEmail))?.tier ?? null : null;
+      ownSeatGroups = { memberTier, resident: !!card };
     }
   }
 
   try {
     const r = await moveBooking({
-      bookingId, newTeeTimeId, courseId: booking.courseId, pricing: 'new_slot', residentPlayers,
+      bookingId, newTeeTimeId, courseId: booking.courseId, pricing: 'new_slot', residentPlayers, ownSeatGroups,
       actor: { type: 'golfer', id: null }, terms: { version: await termsVersionNow() },
     });
     if (!r.ok) return NextResponse.json({ error: COPY[r.code] ?? r.message }, { status: STATUS[r.code] ?? 409 });
