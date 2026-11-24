@@ -17,7 +17,7 @@ async function hasValidToken(
   const token = req.cookies.get(cookieName)?.value;
   if (!token) return false;
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
     // All token kinds (operator, staff, golfer, pending_2fa, member_invite)
     // share one signing secret — the type check stops cross-cookie reuse.
     return typeof payload.type === 'string' && allowedTypes.includes(payload.type);

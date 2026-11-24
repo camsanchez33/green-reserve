@@ -31,8 +31,10 @@ function lockoutResponse(lockoutUntil: Date) {
 }
 
 export async function POST(req: NextRequest) {
-  const { email: rawEmail, password } = await req.json();
-  if (!rawEmail || !password) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  const { email: rawEmail, password } = (await req.json().catch(() => ({}))) as { email?: unknown; password?: unknown };
+  // Strings only, before any lookup (audit 2026-11-24 M14): a number reached bcrypt for a real
+  // account and threw (500) while an unknown email answered 401, which told them apart.
+  if (typeof rawEmail !== 'string' || typeof password !== 'string' || !rawEmail || !password) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   const email = String(rawEmail).trim().toLowerCase();
 
   // Per-IP limit (credential stuffing) — per-account lockout below handles
