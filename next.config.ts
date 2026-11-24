@@ -68,7 +68,12 @@ const nextConfig: NextConfig = {
   },
   // AG-1: the agreement Markdown is read from disk at request time by the
   // acceptance route and the page; make sure the deployment bundles it.
-  outputFileTracingIncludes: { '/**': ['./legal/documents/**/*'] },
+  // ASSIST-4: the owner assistant reads the docs Cam marked (lib/assistant/admin ADMIN_DOCS) from disk; bundle
+  // exactly those files with its route, nothing else.
+  outputFileTracingIncludes: {
+    '/**': ['./legal/documents/**/*'],
+    '/api/admin/assistant': ['./docs/RUNBOOK.md', './docs/RESTORE.md', './docs/SHIPPING.md', './docs/SMS_OPT_IN.md', './company/ORGANIZATION.md', './legal/LQ-2_FEE_COPY.md'],
+  },
   // AG-2: the PDF renderer is a Node package with its own font/asset loading;
   // bundling it breaks it, so it stays external.
   serverExternalPackages: ['@react-pdf/renderer'],
