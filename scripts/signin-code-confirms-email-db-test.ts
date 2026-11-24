@@ -62,7 +62,7 @@ async function signIn(n: string, prefix: string, extra: Record<string, unknown> 
   ok('a code stored before this change still works, and changes nothing about the email', legacy.res.status === 200 && legacy.body.redirect === '/dashboard/verify' && !legacy.row.emailVerified, legacy.body);
 
   const linkOp = await prisma.courseOperator.create({ data: { name: 'Jordan Tester', email: `${TAG}+link@t.local`, password: 'x', emailVerified: false, onboardingStep: 2, verificationToken: LINK_TOKEN } });
-  await verifyLink(new NextRequest('http://localhost/api/auth/verify', { method: 'POST', body: JSON.stringify({ token: LINK_TOKEN }), headers: { 'content-type': 'application/json' } }));
+  await verifyLink(new NextRequest('http://localhost/api/auth/verify', { method: 'POST', body: JSON.stringify({ token: LINK_TOKEN }), headers: { 'content-type': 'application/json', 'x-forwarded-for': '198.51.100.7' } }));
   const linkRow = await prisma.courseOperator.findUniqueOrThrow({ where: { id: linkOp.id } });
   ok('the confirm-email link confirms without moving an owner back in onboarding', linkRow.emailVerified && linkRow.onboardingStep === 2);
 

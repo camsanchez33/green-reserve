@@ -7,6 +7,8 @@ import { join } from 'path';
 import { randomBytes } from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { NextRequest } from 'next/server';
+import { SignJWT } from 'jose';
+import { verifyToken, signToken } from '../src/lib/auth';
 import { secretEquals } from '../src/lib/secret-compare';
 import { cronAuthFailure } from '../src/lib/cron-auth';
 import { POST as verifyPOST } from '../src/app/api/auth/verify/route';
@@ -48,6 +50,10 @@ async function main() {
   const walk = (d: string, out: string[] = []): string[] => { for (const n of readdirSync(d)) { const p = join(d, n); if (statSync(p).isDirectory()) walk(p, out); else if (/\.tsx?$/.test(n)) out.push(p); } return out; };
   const unpinned = walk('src').flatMap(f => src(f).split('\n').map((l, i) => ({ f, i: i + 1, l })).filter(x => /jwtVerify\(/.test(x.l) && !/import/.test(x.l) && !/algorithms: \['HS256'\]/.test(x.l)).map(x => `${x.f}:${x.i}`));
   check('every jwtVerify pins HS256', unpinned.length === 0, unpinned);
+  // Behaviour, not only source: a token signed with the right secret but another algorithm is refused.
+  const key = new TextEncoder().encode(process.env.JWT_SECRET!);
+  const hs384 = await new SignJWT({ type: 'operator', operatorId: 'x' }).setProtectedHeader({ alg: 'HS384' }).setExpirationTime('1h').sign(key);
+  check('a right-secret HS384 token is refused; HS256 is accepted', (await verifyToken(hs384)) === null && !!(await verifyToken(await signToken({ operatorId: 'x', email: 'x@test.local', sv: 0 }))));
 
   // M2: a filter object never reaches the query.
   const token = randomBytes(32).toString('hex');
@@ -56,7 +62,7 @@ async function main() {
     const r = await verifyPOST(post('/api/auth/verify', { token: bad }));
     check(`verify: token ${JSON.stringify(bad).slice(0, 20)} is refused with 400`, r.status === 400, r.status);
   }
-  check('verify: a body that is not JSON is 400, not 500', (await verifyPOST(post('/api/auth/verify', '{nope'))).status === 400);
+  check('verify: a body that is not JSON, or is null, is 400, not 500', (await verifyPOST(post('/api/auth/verify', '{nope'))).status === 400 && (await verifyPOST(post('/api/auth/verify', 'null'))).status === 400);
   check('verify: after all that, the operator is still unverified', (await prisma.courseOperator.findUnique({ where: { id: op.id } }))?.emailVerified === false);
   const ok = await verifyPOST(post('/api/auth/verify', { token }));
   const after = await prisma.courseOperator.findUnique({ where: { id: op.id } });
@@ -79,12 +85,13 @@ async function main() {
     }
     const r = await fn(post('/api/auth/login', { email: { not: '' }, password: 'x' }));
     check(`${label} login: an object email is 400`, r.status === 400, r.status);
+    check(`${label} login: a null body is 400`, (await fn(post('/api/auth/login', 'null'))).status === 400);
   }
   const op2 = await prisma.courseOperator.findUnique({ where: { email: real } });
   check('login: none of those counted as a failed try', op2?.failedLoginAttempts === 0, op2?.failedLoginAttempts);
 
   await cleanup();
-  await prisma.rateLimit.deleteMany({ where: { key: { startsWith: 'login:' } } });
+  await prisma.rateLimit.deleteMany({ where: { key: { in: [...Array(201).keys()].flatMap(i => [`login:op:203.0.113.${i}`, `login:admin:203.0.113.${i}`]) } } });
 }
 
 main()

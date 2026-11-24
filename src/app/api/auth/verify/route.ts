@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   if (!(await rateLimit(`verify-email:${clientIp(req)}`, 20, 3600))) {
     return NextResponse.json({ error: 'Too many attempts, try again later' }, { status: 429 });
   }
-  const { token } = (await req.json().catch(() => ({}))) as { token?: unknown };
+  const { token } = ((await req.json().catch(() => null)) ?? {}) as { token?: unknown };
   if (typeof token !== 'string' || !token) return NextResponse.json({ error: 'No token' }, { status: 400 });
   if (!VERIFY_TOKEN_RE.test(token)) return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
 

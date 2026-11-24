@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Too many attempts from your network, try again in a few minutes.' }, { status: 429 });
   }
 
-  const { email: rawEmail, password } = (await req.json().catch(() => ({}))) as { email?: unknown; password?: unknown };
+  const { email: rawEmail, password } = ((await req.json().catch(() => null)) ?? {}) as { email?: unknown; password?: unknown };
   // Strings only, before any lookup (audit 2026-11-24 M14): see /api/auth/login.
   if (typeof rawEmail !== 'string' || typeof password !== 'string' || !rawEmail || !password)
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
