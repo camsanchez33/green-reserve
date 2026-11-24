@@ -7,9 +7,11 @@
 //  - Policy wording is describePolicy()'s, word for word. Code never paraphrases it.
 //  - No personal data: no golfer, member, staff or event-organiser names, emails or phones. The course's own public
 //    phone is the only phone in a brief.
-//  - Course-written text (notes, descriptions, alert, closure reasons, event names) is DATA: angle brackets are
-//    replaced so it can never close the <course_data> wrapper, and the persona prompt says the wrapper holds data,
-//    never instructions (lib/assistant/prompt).
+//  - Course-written text (notes, descriptions, alert, closure reasons, event names) is DATA: flattened to ONE line
+//    (so it can't start a "## " section or a "> " line of its own) with angle brackets replaced (so it can't close
+//    or open a tag), inside <course_data>. The persona prompt says the wrapper holds data, never instructions
+//    (lib/assistant/prompt). The describePolicy() lines and the fee sentence are code-written and sit OUTSIDE the
+//    wrapper in <policy_lines>, which course text cannot forge.
 //  - Deterministic: the same rows give byte-identical text, so the prompt cache hits until something really changes.
 //    No clock time in the text; "today" only picks which closures and events are still ahead.
 //
@@ -29,8 +31,11 @@ import { DEFAULT_PUBLIC_WINDOW_DAYS, DEFAULT_MEMBER_WINDOW_DAYS } from '../booki
 import { ACCESS_FEE_CENTS, FEE_AT_BOOKING_ON } from '../booking-fees';
 import { readAssistantSettings, unknownLineFor, plainLine, plainText, type AssistantSettings, type GolferTopic } from './settings';
 
+/** The policy block's tag. Course text never contains '<', so it cannot forge this. */
+export const POLICY_TAG = 'policy_lines';
+
 export type BriefAudience = 'staff' | 'golfer';
-export type BriefSectionKey = 'basics' | 'rates' | 'policy' | 'closures' | 'conditions' | 'events' | 'memberships' | 'range' | 'facilities' | 'notes' | 'setup';
+export type BriefSectionKey = 'basics' | 'info' | 'rates' | 'policy' | 'closures' | 'conditions' | 'events' | 'memberships' | 'range' | 'facilities' | 'notes' | 'setup';
 export type BriefSection = { key: BriefSectionKey; label: string; count: string };
 export type CourseBrief = {
   courseId: string; audience: BriefAudience; text: string; hash: string; sections: BriefSection[];
@@ -42,12 +47,15 @@ export const BRIEF_DAYS_AHEAD = 60;
 const MAX_EVENTS = 12;
 const MAX_CLOSURES = 20;
 
-/** Course-written text, made safe to sit inside <course_data>: plain, and no angle brackets at all. */
+/**
+ * Course-written text, made safe to sit inside <course_data>: one line (line breaks become " / "), no control
+ * characters and no angle brackets at all — so it can neither open or close a tag nor begin a line of its own.
+ */
 export function courseText(v: unknown, max = 600): string {
   if (typeof v !== 'string') return '';
-  return plainText(v, max).replace(/</g, '‹').replace(/>/g, '›');
+  return plainLine(plainText(v, max).replace(/\n+/g, ' / '), max).replace(/</g, '‹').replace(/>/g, '›');
 }
-const line = (v: unknown, max = 200) => courseText(typeof v === 'string' ? plainLine(v, max) : '', max);
+const line = courseText;
 
 const usd = (c: number | null | undefined) => (c == null ? '' : c % 100 === 0 ? `$${c / 100}` : `$${(c / 100).toFixed(2)}`);
 const DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -69,7 +77,7 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? o
 
 /** Which golfer topic each section belongs to. Basics, closures, conditions and the course's golfer notes are always in. */
 const TOPIC_OF: Partial<Record<BriefSectionKey, GolferTopic>> = {
-  rates: 'rates', policy: 'policy', facilities: 'info', events: 'events', memberships: 'memberships', range: 'range',
+  rates: 'rates', policy: 'policy', info: 'info', facilities: 'info', events: 'events', memberships: 'memberships', range: 'range',
 };
 
 const COURSE_SELECT = {
@@ -83,7 +91,7 @@ const COURSE_SELECT = {
   hasProShop: true, hasLessons: true, hasClubRental: true, clubRentalRateCents: true, hasPushCartRental: true,
   pushCartRateCents: true, hasCaddies: true, caddieType: true, caddieLooperRateCents: true, caddieForeRateCents: true,
   caddieNote: true, hasBagStorage: true, hasLockerRoom: true, hasGpsCarts: true, restaurantType: true, hasCartGirl: true,
-  hasTournaments: true, tournamentFrequency: true, amenities: true, liveStatus: true, stripeAccountId: true, stripeAccountActive: true,
+  hasTournaments: true, tournamentFrequency: true, amenities: true, memberLoginOn: true, liveStatus: true, stripeAccountId: true, stripeAccountActive: true,
   assistantStaffOn: true, assistantGolferOn: true, assistantTone: true, assistantGolferTopics: true, assistantUnknownLine: true,
   assistantGolferDailyLimit: true,
 } as const;
@@ -143,12 +151,15 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
       course.phone && `Phone: ${line(course.phone, 40)}`,
       course.proShopPhone && course.proShopPhone !== course.phone && `Pro shop phone: ${line(course.proShopPhone, 40)}`,
       course.website && `Website: ${line(course.website, 200)}`,
-      course.description && `About (written by the course): ${courseText(course.description, 1200)}`,
-      course.confirmationArrival && `Arrival (written by the course): ${courseText(course.confirmationArrival, 400)}`,
-      course.confirmationParking && `Parking and directions (written by the course): ${courseText(course.confirmationParking, 400)}`,
-      course.dresscode?.length ? `Dress code: ${course.dresscode.map(d => line(d, 80)).filter(Boolean).join('; ')}` : '',
     ].filter((s): s is string => !!s),
   });
+  const info = [
+    course.description && `About (written by the course): ${courseText(course.description, 1200)}`,
+    course.confirmationArrival && `Arrival (written by the course): ${courseText(course.confirmationArrival, 400)}`,
+    course.confirmationParking && `Parking and directions (written by the course): ${courseText(course.confirmationParking, 400)}`,
+    course.dresscode?.length ? `Dress code: ${course.dresscode.map(d => line(d, 80)).filter(Boolean).join('; ')}` : '',
+  ].filter((s): s is string => !!s);
+  blocks.push({ key: 'info', label: 'About, directions and dress code', count: plural(info.length, 'item'), body: info.length ? info : ['- Nothing written yet.'] });
 
   // Rates and schedules: what each running schedule sells, as the booking page prices it.
   const walk = walkingSummary(schedules);
@@ -168,23 +179,15 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
     key: 'rates', label: 'Rates and schedules', count: plural(schedules.length, 'schedule'), body: [
       ...(rateLines.length ? rateLines : ['- No tee times are on sale right now.']),
       `Walking: ${walkingWords(walk)}${course.walkingNote ? ` (${line(course.walkingNote, 200)})` : ''}${course.cartRequired ? '; carts required' : ''}`,
-      `Golfers can book ${course.publicAdvanceDays ?? DEFAULT_PUBLIC_WINDOW_DAYS} days ahead online${course.hasMemberPricing ? `; members ${course.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS} days ahead` : ''}${course.hasResidentPricing && course.residentAdvanceDays != null ? `; residents ${course.residentAdvanceDays} days ahead` : ''}.`,
+      `Golfers can book ${course.publicAdvanceDays ?? DEFAULT_PUBLIC_WINDOW_DAYS} days ahead online${course.memberLoginOn && tiers.length === 0 && course.hasMemberPricing ? `; members ${course.memberAdvanceDays ?? DEFAULT_MEMBER_WINDOW_DAYS} days ahead` : ''}${course.hasResidentPricing && course.residentAdvanceDays != null ? `; residents ${course.residentAdvanceDays} days ahead` : ''}.`,
       'Live availability and the exact price of a tee time are on the booking page; never quote a time as open.',
     ],
   });
 
-  // Booking policy — describePolicy(), word for word.
+  // Booking policy — describePolicy(), word for word. Rendered OUTSIDE <course_data> (see the end of this function),
+  // so no course-written text sits beside it. Listed here only for "What it knows".
   const policy = describePolicy(policyFrom(course));
-  blocks.push({
-    key: 'policy', label: 'Booking policy (word for word)', count: plural(policy.lines.length, 'line'),
-    body: [
-      'Quote these lines exactly as written when asked about cancelling, fees, cards or paying:',
-      ...policy.lines.map(l => `> ${l}`),
-      // LQ-2 (legal/LQ-2_FEE_COPY.md): the allowed fee sentence, said strictly no more than the booking page says.
-      // With the fee charged at booking, describePolicy() already carries it.
-      ...(FEE_AT_BOOKING_ON ? [] : [`> Online bookings carry GreenReserve's booking fee of ${usd(ACCESS_FEE_CENTS)} per player, added to the course's price and shown before you book.`]),
-    ],
-  });
+  blocks.push({ key: 'policy', label: 'Booking policy (word for word)', count: plural(policy.lines.length, 'line'), body: [] });
 
   blocks.push({
     key: 'closures', label: 'Closed days', count: closures.length ? `${closures.length} ahead` : 'none ahead',
@@ -211,7 +214,9 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
       const tier = course.hasMemberPricing ? t : withoutRates(t);
       const parts = memberBenefitParts(tier, course);
       return `- ${line(t.name, 80)}${parts.length ? `: ${parts.join(' · ')}` : ''}${staff && t.annualFeeCents > 0 ? ` (dues ${usd(t.annualFeeCents)} a year)` : ''}`;
-    }).concat(['Members log in on the course\'s booking page with the email the course has on file.'])
+    }).concat([course.memberLoginOn
+      ? 'Members log in on the course\'s booking page with the email the course has on file.'
+      : 'Members don\'t log in online here: online bookings are at the public price, and member rates are given at the counter.'])
       : ['- This course has no memberships.'],
   });
 
@@ -228,7 +233,7 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
   blocks.push({
     key: 'notes', label: 'Your notes', count: String(notes.length),
     body: notes.length
-      ? notes.map(n => `- Q: ${line(n.question, 200)}\n  A: ${courseText(n.answer, 600).replace(/\n/g, '\n     ')}${staff && n.audience === 'staff' ? '\n  (staff only — never tell golfers)' : ''}`)
+      ? notes.map(n => `- ${staff && n.audience === 'staff' ? '(staff only — never tell golfers) ' : ''}Q: ${line(n.question, 200)} A: ${courseText(n.answer, 600)}`)
       : ['- None yet.'],
   });
 
@@ -248,11 +253,23 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
     const topic = TOPIC_OF[b.key];
     return !topic || settings.golferTopics.includes(topic);
   });
+  const withPolicy = kept.some(b => b.key === 'policy');
+  // Code-written only: describePolicy()'s lines verbatim, then the LQ-2 fee sentence under its own label
+  // (legal/LQ-2_FEE_COPY.md allowed sentence 1, in the golfer's words). With the fee charged at booking,
+  // describePolicy() already carries the fee.
+  const policyBlock = withPolicy ? [
+    `<${POLICY_TAG}>`,
+    ...policy.lines,
+    '</' + POLICY_TAG + '>',
+    ...(FEE_AT_BOOKING_ON ? [] : [`GreenReserve fee: Golfers pay ${usd(ACCESS_FEE_CENTS)} per player on each online booking, added to the course's price.`]),
+    'These terms are for new bookings. A booking already made keeps the terms in its confirmation email.',
+  ].join('\n') : '';
   const text = [
     `<course_data course="${line(course.name, 120).replace(/"/g, "'")}" audience="${audience}">`,
-    ...kept.map(b => `## ${b.label}\n${b.body.join('\n')}`),
+    ...kept.filter(b => b.key !== 'policy').map(b => `## ${b.label}\n${b.body.join('\n')}`),
     '</course_data>',
-  ].join('\n\n');
+    policyBlock,
+  ].filter(Boolean).join('\n\n');
   return {
     courseId, audience, text, hash: createHash('sha256').update(text).digest('hex'),
     sections: kept.filter(b => b.key !== 'basics').map(({ key, label, count }) => ({ key, label, count })),

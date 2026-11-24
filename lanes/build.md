@@ -81,7 +81,7 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
 - AI assistant overhaul — PLAN, mockup waiting for Cam (Cam 2026-11-18: "setting parameters, having it have
   GreenReserve personalized information, a cache it can access specific to each course and the admin's own, as well
   as maybe a little question bot on the homepage and the golfer facing"; "everything has to be done before launch").
-  Mockup: `lanes/build/ai-assistant-mockup.html` (https://claude.ai/artifact/E2uiLWJ2YfBCX7LJmXxUCR). Nothing is built until Cam approves it.
+  Mockup: `lanes/build/ai-assistant-mockup.html` (https://claude.ai/artifact/E2uiLWJ2YfBCX7LJmXxUCR). Cam's decisions 2026-11-24 (golfer bot off by default, current model with caching, 300 golfer questions per course per day) started the build: docs/DECISIONS.md ASSIST-1.
   Today: the dashboard assistant (operator persona, `src/app/api/birdie/chat/route.ts`, `src/lib/birdie/*`) answers
   how-to questions on `claude-haiku-4-5` and runs tool turns on `claude-opus-5-5` (effort low), reads live data
   through `tools.ts`, drafts changes as confirm cards (`proposals.ts`, never writes on its own), with caps and the

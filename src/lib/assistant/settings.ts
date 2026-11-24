@@ -44,6 +44,9 @@ export type AssistantSettings = {
 const isTone = (v: unknown): v is AssistantTone => ASSISTANT_TONES.some(t => t.key === v);
 const isTopic = (v: unknown): v is GolferTopic => GOLFER_TOPICS.some(t => t.key === v);
 
+/** Course-written text that sits next to the brief: one line, no angle brackets (it can never close a tag). */
+export const safeLine = (v: string, max: number) => plainLine(v, max).replace(/</g, '‹').replace(/>/g, '›');
+
 /** One line of plain text: no control characters, no line breaks, spaces collapsed. */
 export function plainLine(v: string, max: number): string {
   // eslint-disable-next-line no-control-regex
@@ -67,7 +70,7 @@ export function readAssistantSettings(c: {
     golferOn: c.assistantGolferOn === true,
     tone: isTone(c.assistantTone) ? c.assistantTone : 'friendly',
     golferTopics: topics.length ? ALL_GOLFER_TOPICS.filter(t => topics.includes(t)) : [...ALL_GOLFER_TOPICS],
-    unknownLine: plainLine(c.assistantUnknownLine ?? '', UNKNOWN_LINE_CHARS),
+    unknownLine: safeLine(c.assistantUnknownLine ?? '', UNKNOWN_LINE_CHARS),
     golferDailyLimit: clampLimit(c.assistantGolferDailyLimit),
   };
 }
@@ -79,8 +82,8 @@ export function clampLimit(n: unknown): number {
 /** "I'm not sure. Please call the pro shop at <phone>." — the course's own line wins when it wrote one. */
 export function unknownLineFor(s: Pick<AssistantSettings, 'unknownLine'>, course: { name: string; phone: string; proShopPhone: string }): string {
   if (s.unknownLine) return s.unknownLine;
-  const phone = plainLine(course.proShopPhone || course.phone || '', 40);
-  return phone ? `I'm not sure. Please call the pro shop at ${phone}.` : `I'm not sure. Please call the pro shop at ${plainLine(course.name, 120)}.`;
+  const phone = safeLine(course.proShopPhone || course.phone || '', 40);
+  return phone ? `I'm not sure. Please call the pro shop at ${phone}.` : "I'm not sure. Please ask at the pro shop.";
 }
 
 export type SettingsPatch = Partial<{
@@ -104,7 +107,7 @@ export function readSettingsPatch(body: unknown): { ok: true; data: SettingsPatc
   }
   if ('unknownLine' in b) {
     if (typeof b.unknownLine !== 'string') return { ok: false, error: 'The "when it doesn\'t know" line must be text.' };
-    data.assistantUnknownLine = plainLine(b.unknownLine, UNKNOWN_LINE_CHARS);
+    data.assistantUnknownLine = safeLine(b.unknownLine, UNKNOWN_LINE_CHARS);
   }
   if ('golferDailyLimit' in b) {
     const n = b.golferDailyLimit;

@@ -72,5 +72,17 @@ for (const f of ['src/lib/assistant/prompt.ts', 'src/lib/assistant/brief.ts', 's
   ok(`${f}: no NEXT_PUBLIC key`, !/NEXT_PUBLIC_ANTHROPIC/.test(readFileSync(new URL(`../${f}`, import.meta.url), 'utf8')));
 }
 
+// 7. every Settings → Assistant route: signed in, settings.edit, the session's course only
+for (const f of ['route.ts', 'notes/route.ts', 'notes/[id]/route.ts', 'refresh/route.ts']) {
+  const r = readFileSync(new URL(`../src/app/api/operator/assistant/${f}`, import.meta.url), 'utf8');
+  const handlers = (r.match(/export async function (GET|POST|PATCH|DELETE)/g) || []).length;
+  ok(`${f}: every handler needs a session and settings.edit`, handlers > 0 && (r.match(/resolveDashboardSession\(\)/g) || []).length >= Math.min(handlers, 1) && (r.match(/requirePermission\(/g) || []).length > 0 && (r.match(/requirePermission\(/g) || []).length === (r.match(/requirePermission\(session, 'settings\.edit'\)/g) || []).length);
+  ok(`${f}: the course is only ever the session's`, !/body[?]?\.courseId|input\.data\.courseId|searchParams\.get\('course/.test(r) && /session\.courseId/.test(r));
+}
+const notesId = readFileSync(new URL('../src/app/api/operator/assistant/notes/[id]/route.ts', import.meta.url), 'utf8');
+ok('notes/[id]: both handlers go through the gate', (notesId.match(/const g = await gate\(\)/g) || []).length === 2);
+const save = readFileSync(new URL('../src/lib/assistant/save.ts', import.meta.url), 'utf8');
+ok('save: note reads and deletes are scoped by courseId', [...save.matchAll(/courseAssistantNote\.(findFirst|deleteMany|findMany|count)\(\{ where: \{([^}]*)\}/g)].every(m => /courseId/.test(m[2])));
+
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

@@ -4,6 +4,7 @@ import { prisma } from '../prisma';
 import { rateLimit } from '../rate-limit';
 import { todayIn } from '../course-time';
 import type { AssistantPersona } from './prompt';
+import { clampLimit } from './settings';
 
 /**
  * Platform-wide questions per UTC day, per persona, so a busy golfer day can't starve the course staff's assistant.
@@ -23,7 +24,7 @@ export function platformAllows(persona: AssistantPersona, now = new Date()): Pro
 
 /** Counts one golfer question against the course's own day (course-local). False = the course's limit is reached. */
 export function golferDayAllows(courseId: string, timezone: string | null | undefined, limit: number, now = new Date()): Promise<boolean> {
-  return rateLimit(golferDayKey(courseId, timezone, now), limit, 86_400);
+  return rateLimit(golferDayKey(courseId, timezone, now), clampLimit(limit), 86_400);
 }
 
 /** How many golfer questions the course has had today, for Settings → Assistant ("37 of 300"). Reads only. */
