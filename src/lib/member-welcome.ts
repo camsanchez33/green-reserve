@@ -17,7 +17,7 @@ export async function sendWelcome(membershipId: string): Promise<void> {
     select: {
       status: true, courseId: true, inviteEmail: true, inviteName: true, membershipType: true,
       golfer: { select: { firstName: true, lastName: true, email: true } },
-      tier: { select: { name: true, discountPct: true, greenFeeWeekdayCents: true, greenFeeWeekendCents: true, lineRates: true, advanceBookingDays: true, windowPublic: true, guestPassesPerYear: true } },
+      tier: { select: { name: true, discountPct: true, greenFeeWeekdayCents: true, greenFeeWeekendCents: true, lineRates: true, advanceBookingDays: true, windowPublic: true } },
       course: { select: { name: true, slug: true, publicAdvanceDays: true, memberAdvanceDays: true, hasMemberPricing: true } },
     },
   });
@@ -32,7 +32,7 @@ export async function sendWelcome(membershipId: string): Promise<void> {
     courseId: m.courseId,
     groupName: m.tier?.name ?? m.membershipType ?? 'Member',
     coursePageUrl: `${process.env.NEXT_PUBLIC_URL}/courses/${m.course.slug}`,
-    // Members pricing off (Build 2026-11-19): no rate is promised, but the window and guest passes still hold.
+    // Members pricing off (Build 2026-11-19): no rate is promised, but the window still holds.
     benefits: memberBenefitsLine(m.tier && !memberPricingOn(m.course) ? withoutRates(m.tier) : m.tier, m.course),
     memberPricing: memberPricingOn(m.course),
   });

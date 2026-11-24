@@ -14,8 +14,8 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
   member whose log-in email is on that course's resident list (signedInResident(), after the golfer-sign-in
   retirement). Money and auth: Opus, final-reviewer.
 - Golfer log-in data (`lanes/golfer.md` items 2–4): record the first-log-in terms tick per golfer per course with its
-  version; the two-groups rule (lower price, longer window); guest pass use at checkout (a tick per guest, counted
-  against `guestPassesPerYear`); the header group label; and the group list for the log-in line. Also, after #477:
+  version; the two-groups rule (lower price, longer window); the header group label; and the group list for the log-in line.
+  Guest passes are gone (GUEST-PASS-OFF, Cam 2026-11-24; `docs/DECISIONS.md`). Also, after #477:
   - Rewrite the member emails and pages to "Log in" wording.
   - The member invite goes out only once the membership is active (Build 2026-11-18: no email before the dues are paid). Done in 2c.
   - /api/operator/members allows contact edits on golfer-linked members, since no golfer account signs in now.
