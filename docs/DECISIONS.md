@@ -52,6 +52,7 @@ completed → (staff moves a checked-in group, Cam 2026-10-08) → still complet
 ```
 
 - SMS-1 (Cam 2026-11-02, Twilio A2P 10DLC — `docs/SMS_OPT_IN.md`): a text goes ONLY to a number that agreed — an unticked box on the booking form / event sign-up, or a spoken yes staff record with "They said yes to texts" after reading the script (`SmsConsentAsk`). `sendSms()` refuses anyone else (`SmsNoConsentError`); every opt-in/opt-out is an append-only `SmsConsent` row (`src/lib/sms-consent.ts`); the wording lives only in `src/lib/sms-consent-copy.ts`; STOP/START/HELP replies come in on the Twilio-signed `/api/twilio/inbound`. A new place that collects a phone we text must ask the same way.
+- SMS-BRAND (Cam 2026-11-24): the Twilio A2P brand is GreenReserve, but texts open with the course name (#525). So the consent wording (booking, event, verbal, alert) says texts come "from <Course> via GreenReserve" (versions 2026-11-24 / alerts-2026-11-24; older agreements stay valid, their text kept in `PAST_SMS_CONSENT_WORDING`), and the two opt-in confirmations and the HELP reply open "<Course> via GreenReserve: …" in one segment, where only the course name gives way. Everyday texts are unchanged: course name first, ending "Reply STOP to opt out."
 
 ### Check-in
 - Staff check-in: tee sheet on `/dashboard` → `PATCH /api/operator/bookings` with `action: 'checkin'`
