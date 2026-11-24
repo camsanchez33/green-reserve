@@ -22,7 +22,7 @@ import type { EventData } from './EventDetail';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';
 import { addDaysStr } from '@/lib/course-time';
-import { DEFAULT_TASKS, HEADCOUNT_TASK, shotgunWindow } from '@/lib/course-events';
+import { DEFAULT_TASKS, HEADCOUNT_TASK, shotgunWindow } from '@/lib/event-shared';
 
 export type EventForm = {
   name: string; kind: string; date: string; format: 'shotgun' | 'tee_times'; startTime: string; holes: number;

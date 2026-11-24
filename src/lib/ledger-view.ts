@@ -15,6 +15,10 @@ import { prisma } from './prisma';
 import { stripe } from './stripe';
 import { teeTimeInstant } from './booking-events';
 import { addDaysStr, todayIn } from './course-time';
+// The labels live in a pure file so the browser can import them without this file's
+// database and Stripe imports (security audit 2026-11-24).
+import { moveLabel, methodLabel } from './ledger-labels';
+export { moveLabel, methodLabel };
 
 /** A season fits (the date picker's "This season" preset). */
 export const LEDGER_MAX_DAYS = 366;
@@ -45,13 +49,6 @@ export function dayStart(tz: string, day: string): Date {
 /** The course-local day of an instant. */
 export const dayOf = (tz: string, at: Date) => todayIn(tz, at);
 
-const LABEL: Record<string, string> = {
-  round: 'Round', hold: 'Cancellation hold', late_fee: 'Late-cancel fee', no_show_fee: 'No-show fee',
-  booking_fee: 'GreenReserve booking fee', shop: 'Pro shop', dues: 'Membership dues', event: 'Event', account: 'Member account',
-};
-const METHOD: Record<string, string> = { card: 'Card', card_present: 'Card reader', cash: 'Cash', other: 'Check or other' };
-export const moveLabel = (what: string) => LABEL[what] ?? what;
-export const methodLabel = (m: string) => METHOD[m] ?? m;
 
 type Row = { id: string; at: Date; what: string; direction: string; method: string; account: string; amountCents: number; platformFeeCents: number; stripeId: string | null; bookingId: string | null; saleId: string | null; membershipId: string | null; eventPaymentId: string | null; actor: string; note: string };
 
