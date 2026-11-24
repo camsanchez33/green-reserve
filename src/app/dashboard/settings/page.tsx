@@ -24,8 +24,9 @@ import { CourseArea } from '@/components/dashboard/settings/CourseArea';
 import { BookingArea } from '@/components/dashboard/settings/BookingArea';
 import { PaymentsArea } from '@/components/dashboard/settings/PaymentsArea';
 import { AccountArea } from '@/components/dashboard/settings/AccountArea';
+import { AssistantArea } from '@/components/dashboard/settings/AssistantArea';
 
-type Area = 'course' | 'booking' | 'payments' | 'account';
+type Area = 'course' | 'booking' | 'payments' | 'assistant' | 'account';
 type View = 'home' | Area | 'staff';
 const AREAS: { key: Area; title: string; sub: string; intro: string; sections: [string, string][] }[] = [
   { key: 'course', title: 'Your course', sub: 'Name and location, your booking page, facilities',
@@ -37,6 +38,9 @@ const AREAS: { key: Area; title: string; sub: string; intro: string; sections: [
   { key: 'payments', title: 'Payments', sub: 'Cancellations, sales tax, the register and card readers',
     intro: 'What golfers are charged when plans change, and how you take payment at the counter. New policies apply to new bookings only.',
     sections: [['cancel', 'Cancellations'], ['tax', 'Sales tax'], ['register', 'Register']] },
+  { key: 'assistant', title: 'Assistant', sub: 'Staff assistant, golfer questions, notes',
+    intro: 'Who can ask your assistant, and what it knows.',
+    sections: [['staffbot', 'Staff'], ['golferbot', 'Golfers'], ['notes', 'Notes'], ['knows', 'What it knows']] },
   { key: 'account', title: 'Your account', sub: 'Your sign-in and two-step sign-in',
     intro: 'Only you see this. How you sign in to this dashboard.',
     sections: [['signin', 'Your sign-in']] },
@@ -63,10 +67,11 @@ const INDEX: [string, Area | 'staff', string, string?][] = [
   ['No-show', 'payments', 'g-cancel', 'fee'], ['Mark no-shows automatically', 'payments', 'r-cancel-auto'], ['Repeat no-shows', 'payments', 'r-cancel-repeat', 'phone only block'],
   ['Check-in reminder', 'payments', 'r-cancel-checkin', 'pay link'], ['Rain checks', 'payments', 'r-cancel-rain', 'weather'], ['Sales tax', 'payments', 'g-tax'],
   ['Takes cash', 'payments', 'r-register-cash', 'register drawer'], ['Card readers', 'payments', 'r-register-readers', 'terminal'],
+  ['Assistant', 'assistant', 'g-staffbot', 'ai'], ['Golfer questions', 'assistant', 'g-golferbot'], ['Assistant notes', 'assistant', 'g-notes'],
   ['Email', 'account', 'r-signin-email'], ['Password', 'account', 'r-signin-pw'], ['Two-step sign-in', 'account', 'r-signin-2fa', 'code 2fa'],
   ['Team: staff, roles and permissions', 'staff', '', 'team logins invite'],
 ];
-const AREA_NAME: Record<Area | 'staff', string> = { course: 'Your course', booking: 'Booking', payments: 'Payments', account: 'Your account', staff: 'Team' };
+const AREA_NAME: Record<Area | 'staff', string> = { course: 'Your course', booking: 'Booking', payments: 'Payments', assistant: 'Assistant', account: 'Your account', staff: 'Team' };
 
 const SearchIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m20 20-4-4" /></svg>;
 const BackIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>;
@@ -158,7 +163,7 @@ function SettingsInner() {
 
   const legacy = SECTION_TO_AREA[params.get('section') ?? ''];
   const areaParam = params.get('area') ?? '';
-  const view: View = (['course', 'booking', 'payments', 'account', 'staff'] as string[]).includes(areaParam) ? areaParam as View : legacy?.area ?? 'home';
+  const view: View = (['course', 'booking', 'payments', 'assistant', 'account', 'staff'] as string[]).includes(areaParam) ? areaParam as View : legacy?.area ?? 'home';
   const [target, setTarget] = useState(() => params.get('focus') ? `focus:${params.get('focus')}` : legacy?.target ?? '');
 
   const [form, setForm] = useState<Course>({});
@@ -265,6 +270,7 @@ function SettingsInner() {
                     {view === 'course' && <CourseArea ctx={ctx} />}
                     {view === 'booking' && <BookingArea ctx={ctx} />}
                     {view === 'payments' && <PaymentsArea ctx={ctx} />}
+                    {view === 'assistant' && <AssistantArea ctx={ctx} />}
                     {view === 'account' && <AccountArea ctx={ctx} />}
                   </div>
                 </div>
