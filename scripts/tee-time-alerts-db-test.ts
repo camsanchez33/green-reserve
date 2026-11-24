@@ -15,6 +15,7 @@ import { recordSmsConsent, hasSmsConsent, consentedPhones, optInByReply } from '
 import { createAlert, alertRateKeys, confirmAlert, stopAlertByToken, notifyAlertsFor, sweepTeeTimeAlerts, alertMatches, partOf, endsAtFor, memberAlerts, stopMemberAlert } from '../src/lib/tee-time-alerts';
 import { addDaysStr, todayIn } from '../src/lib/course-time';
 import { WIPED_TABLES } from '../src/lib/data-reset';
+import { ALERT_SMS_CONSENT_VERSION } from '../src/lib/sms-consent-copy';
 
 const TAG = 'ttalertdbtest';
 let failed = 0;
@@ -70,7 +71,7 @@ async function main() {
   ok('an alerts-only number replying YES gets no booking texts', yes.length === 0 && !(await hasSmsConsent(P5)) && !(await consentedPhones([P5])).has(P5), yes);
   await recordSmsConsent(P5, 'opt_out', { method: 'sms_reply' });
   const back = await optInByReply(P5);
-  ok('…stored with the alert wording version', (await prisma.smsConsent.findFirst({ where: { phone: P5, scope: 'alerts', method: 'sms_reply' }, orderBy: { createdAt: 'desc' } }))?.wording === 'alerts-2026-11-18');
+  ok('…stored with the alert wording version', (await prisma.smsConsent.findFirst({ where: { phone: P5, scope: 'alerts', method: 'sms_reply' }, orderBy: { createdAt: 'desc' } }))?.wording === ALERT_SMS_CONSENT_VERSION);
   ok('…STOP then START brings back alert texts only', JSON.stringify(back) === '["alerts"]' && (await hasSmsConsent(P5, 'alerts')) && !(await hasSmsConsent(P5)), back);
   ok('a number with no record replying START gets booking texts, as before', JSON.stringify(await optInByReply(P6)) === '["bookings"]' && (await hasSmsConsent(P6)) && !(await hasSmsConsent(P6, 'alerts')));
   ok('the reply webhook uses optInByReply and answers with the matching confirmation', /optInByReply\(from\)/.test(read('src/app/api/twilio/inbound/route.ts')) && /alertOptInText\(course\?\.name\)/.test(read('src/app/api/twilio/inbound/route.ts')));

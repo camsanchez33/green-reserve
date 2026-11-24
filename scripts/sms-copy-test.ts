@@ -46,16 +46,21 @@ for (const [label, course] of [['usual name', C], ['47-character name', LONG]] a
 }
 
 // The exact samples Cam approved (mockup), character for character.
-check('opt-in wording as the mockup (139 characters)', T.optInText(C) === "Maple Run Golf Course: You're set for booking texts, up to 4 per booking. Msg & data rates may apply. Reply HELP for help, STOP to opt out." && T.optInText(C).length === 139, T.optInText(C).length);
-check('HELP wording as the mockup (119 characters)', T.helpText(C, '(555) 010-2000') === 'Maple Run Golf Course booking texts. Questions? Call (555) 010-2000. Msg & data rates may apply. Reply STOP to opt out.' && T.helpText(C, '(555) 010-2000').length === 119, T.helpText(C, '(555) 010-2000').length);
+// A2P brand (Cam 2026-11-24): the two confirmations and HELP say "<Course> via GreenReserve: …".
+check('opt-in wording, course via GreenReserve (156 characters)', T.optInText(C) === "Maple Run Golf Course via GreenReserve: You're set for booking texts, up to 4 per booking. Msg & data rates may apply. Reply HELP for help, STOP to opt out." && T.optInText(C).length === 156, T.optInText(C).length);
+check('alert opt-in wording, course via GreenReserve (156 characters)', T.alertOptInText(C) === "Maple Run Golf Course via GreenReserve: You're set for alert texts, 1 per date you picked. Msg & data rates may apply. Reply HELP for help, STOP to opt out." && T.alertOptInText(C).length === 156, T.alertOptInText(C).length);
+check('HELP wording, course via GreenReserve (137 characters)', T.helpText(C, '(555) 010-2000') === 'Maple Run Golf Course via GreenReserve: Booking texts. Questions? Call (555) 010-2000. Msg & data rates may apply. Reply STOP to opt out.' && T.helpText(C, '(555) 010-2000').length === 137, T.helpText(C, '(555) 010-2000').length);
+for (const [nm, t] of [['opt-in', T.optInText(LONG)], ['alert opt-in', T.alertOptInText(LONG)], ['HELP', T.helpText(LONG, '(555) 010-2000')]] as const)
+  check(`47-character name: ${nm} keeps "via GreenReserve:" whole and only the course name gives way (${t.length} chars)`, t.length <= 160 && t.includes(' via GreenReserve: ') && LONG.startsWith(t.slice(0, t.indexOf(' via GreenReserve: '))), t);
+check('everyday texts are unchanged: no "via GreenReserve"', samples(C).filter(s => s.stop !== false && s.name !== 'HELP reply').every(s => !s.text.includes('via GreenReserve')));
 check('pay link as the mockup', T.payLinkText(C, '11:40 AM', link('p'), 27000) === `Maple Run Golf Course pay link: $270.00 for your 11:40 AM tee time. Pay: ${link('p')} Reply STOP to opt out.`);
 check('alert as the mockup', T.alertText(C, 'Sat Nov 21', '2:40 PM', 4, link('a')) === `Maple Run Golf Course alert: a tee time opened Sat Nov 21 at 2:40 PM, room for 4. Book: ${link('a')} Reply STOP to opt out.`);
 check('event: the built-in label drops the player name and keeps case (mockup "Turkey Shoot Scramble entry, $45.00")', T.eventPayText(C, 'Turkey Shoot Scramble', 'John Smith — entry', 4500, link('p')) === `Maple Run Golf Course event: Turkey Shoot Scramble entry, $45.00. Pay: ${link('p')} Reply STOP to opt out.`);
 check('event: a label staff typed keeps its case', T.eventPayText(C, 'Turkey Shoot', 'Balance for 144 players', 648000, link('p')).includes('Turkey Shoot Balance for 144 players, $6,480.00.'));
 check('event: a long label gives way before the course name', T.eventPayText(C, 'Member-Guest Invitational', 'x'.repeat(80), 50000, link('p')).startsWith(`${C} event: Member-Guest Invitational`));
-check('alert opt-in keeps a 40-character course name whole', T.alertOptInText('The Old Course at Whispering Pines Club X').startsWith('The Old Course at Whispering Pines Club X: '));
+check('opt-ins keep a 25-character course name whole', T.alertOptInText('Whispering Pines Golf Clb').startsWith('Whispering Pines Golf Clb via GreenReserve: ') && T.optInText('Whispering Pines Golf Clb').startsWith('Whispering Pines Golf Clb via GreenReserve: '));
 check('staff code as the mockup', T.staffCodeText('482915') === "GreenReserve code: 482915. It expires in 10 minutes. Don't share it." && T.smsSegments(T.staffCodeText('482915')).segments === 1);
-check('no course to name: GreenReserve and the support address', T.helpText(null, null).startsWith('GreenReserve booking texts. Questions? support@greenreserve.app.') && T.optInText(null).startsWith("GreenReserve: You're set"));
+check('no course to name: GreenReserve and the support address', T.helpText(null, null).startsWith('GreenReserve booking texts. Questions? support@greenreserve.app.') && T.optInText(null).startsWith("GreenReserve: You're set") && !T.optInText(null).includes('via') && !T.helpText(null, null).includes('via'));
 
 // GSM-7: one curly quote would make the whole text UCS-2 (70 a segment).
 const curly = T.payLinkText('O’Brien’s Links – North', '9:00 AM', link('p'), 5000);
