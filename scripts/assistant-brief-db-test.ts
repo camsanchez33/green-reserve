@@ -62,8 +62,8 @@ async function cleanup() {
   ok('B staff: its own range bucket (and A never sees it)', sb.text.includes('BravoBucket') && !sa.text.includes('BravoBucket'));
   ok('A staff: its own schedule, closure, events, tier and notes', ['AlphaTwilight', 'AlphaAeration', 'AlphaOpenScramble', 'AlphaPrivateOuting', 'AlphaGold', 'AlphaBarn', 'Do you rent clubs?'].every(w => sa.text.includes(w)));
   const la = (await buildCourseBrief(a.id, 'staff-limited'))!;
-  ok('staff without schedule.view: no rates, closed days or dues', !/AlphaTwilight|AlphaAeration|\$52|dues/.test(la.text), la.text.match(/AlphaTwilight|AlphaAeration|dues.*/g));
-  ok('staff without schedule.view: still the notes, events and policy', la.text.includes('AlphaBarn') && la.text.includes('AlphaPrivateOuting') && la.text.includes('<policy_lines>'));
+  ok('limited staff brief: no rates, closed days, dues or private events', !/AlphaTwilight|AlphaAeration|\$52|dues|AlphaPrivateOuting/.test(la.text), la.text.match(/AlphaTwilight|AlphaAeration|dues.*/g));
+  ok('limited staff brief: still staff notes, public events and policy', la.text.includes('AlphaBarn') && la.text.includes('AlphaOpenScramble') && la.text.includes('<policy_lines>'));
   ok('unknown course → null', (await buildCourseBrief('nope', 'staff')) === null && (await buildCourseBrief('', 'golfer')) === null);
 
   // golfer brief: only what golfers may hear

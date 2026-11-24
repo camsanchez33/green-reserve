@@ -70,11 +70,15 @@ Hard rules:
 
 ${OPERATOR_KNOWLEDGE}`;
 
+/** The full staff brief needs every permission that guards a part of it on its own page: Schedule (rates, closed
+ *  days), Events (private events) and Members (dues). Anyone else gets 'staff-limited'. */
+const fullBrief = (session: Parameters<typeof can>[0]) => can(session, 'schedule.view') && can(session, 'events.manage') && can(session, 'members.view');
+
 export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ enabled: false }, { status: 401 });
   // The brief is built here too, so "What it knows" says exactly what the next answer reads.
-  const brief = birdieEnabled() ? await getCourseBrief(session.courseId, can(session, 'schedule.view') ? 'staff' : 'staff-limited') : null;
+  const brief = birdieEnabled() ? await getCourseBrief(session.courseId, fullBrief(session) ? 'staff' : 'staff-limited') : null;
   const enabled = !!brief && brief.settings.staffOn;
   return NextResponse.json({
     enabled,
@@ -103,7 +107,7 @@ export async function POST(req: NextRequest) {
 
   // The course is the session's, always. The brief is rebuilt from its rows now.
   // A login without schedule.view gets the brief without rates, closed days and dues (what Schedule guards).
-  const brief = await getCourseBrief(session.courseId, can(session, 'schedule.view') ? 'staff' : 'staff-limited');
+  const brief = await getCourseBrief(session.courseId, fullBrief(session) ? 'staff' : 'staff-limited');
   if (!brief) return NextResponse.json({ error: 'Course not found.' }, { status: 404 });
   if (!brief.settings.staffOn) return NextResponse.json({ error: 'Your course has the assistant switched off (Settings → Assistant).' }, { status: 503 });
   const toolCtx: ToolContext = { courseId: session.courseId, timezone: brief.timezone ?? null, can: key => can(session, key) };
@@ -226,7 +230,8 @@ export async function PUT(req: NextRequest) {
     // No card title: it can name a golfer. The route, the method and whether it worked are enough.
     ev: 'birdie.applied', courseId: session.courseId, actor: session.isStaff ? `staff:${session.staffId ?? ''}` : `op:${session.operatorId ?? ''}`,
     // No error text either: a route's error can echo an upstream body (an address); the status is enough.
-    method: str(a.method, 10), path: str(a.path, 100), ok: a.ok === true, status: typeof a.status === 'number' ? Math.trunc(a.status) : null,
+    method: str(a.method, 10), path: str(a.path, 100).startsWith('/api/operator/') ? str(a.path, 100) : 'other', ok: a.ok === true,
+    status: typeof a.status === 'number' && a.status >= 100 && a.status <= 599 ? Math.trunc(a.status) : null,
   }));
   return NextResponse.json({ ok: true });
 }

@@ -23,7 +23,9 @@ function knowsLine(k: NonNullable<Meta['knows']>): string {
   const at = new Date(k.builtAt);
   const sameDay = Number.isFinite(at.getTime()) && at.toDateString() === new Date().toDateString();
   const time = !Number.isFinite(at.getTime()) ? '' : sameDay ? at.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : at.toLocaleDateString([], { month: 'short', day: 'numeric' });
-  return `Knows ${k.courseName}'s settings, rates, policies, closures, events and your ${n} note${n === 1 ? '' : 's'}.${time ? ` Updated ${time}.` : ''}`;
+  const has = (key: string) => k.sections.some(s => s.key === key);
+  const what = ['settings', has('rates') && 'rates', 'policies', has('closures') && 'closures', 'events'].filter(Boolean).join(', ');
+  return `Knows ${k.courseName}'s ${what} and your ${n} note${n === 1 ? '' : 's'}.${time ? ` Updated ${time}.` : ''}`;
 }
 
 const OPEN_KEY = 'birdie:open';
