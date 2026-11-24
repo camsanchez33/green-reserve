@@ -1,7 +1,8 @@
 // TWO-GROUPS-PRICE (Cam 2026-11-24), end to end: a golfer logged in to the course who is a member AND a resident is
 // shown and charged the LOWER own seat, the member rate on a tie, never both — by POST /api/bookings, the member
 // tee-times list, the booking-page preview (/api/bookings/resident-rate) and their own swap (swap-time). Member-only
-// and resident-only golfers keep their one rate.
+// and resident-only golfers keep their one rate. A membership that gives more than its seat (guests at the member rate,
+// a cheaper cart) keeps the member rate; a swap reprices only a booking that already had a group rate, by its own email.
 // Needs the app running (TEST_URL) and its database (a local Postgres). Run: npx tsx scripts/two-groups-db-test.ts
 import { PrismaClient } from '@prisma/client';
 import { signMemberSessionToken } from '../src/lib/member-session';
@@ -57,10 +58,10 @@ async function main() {
   const get = async (path: string, ck: string) => { const r = await fetch(`${BASE_URL}${path}`, { headers: { cookie: ck } }); return r.json().catch(() => null); };
   const row = async (ck: string, id: string) => ((await get(`/api/member/${c.slug}/tee-times?date=${date}`, ck)) as { id: string }[]).find(x => x.id === id) as Record<string, unknown> | undefined;
   const preview = async (ck: string, id: string) => (await get(`/api/bookings/resident-rate?teeTimeId=${id}`, ck)) as { residentGreenFee: number | null; member: { greenFee: number } | null };
-  const book = async (ck: string, email: string, id: string) => {
-    const r = await fetch(`${BASE_URL}/api/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json', cookie: ck }, body: JSON.stringify({ teeTimeId: id, golferName: 'Golfer Two', golferEmail: email, golferPhone: '', players: 2, termsAccepted: true, cartSelected: false }) });
+  const book = async (ck: string, email: string, id: string, players = 2, cartSelected = false) => {
+    const r = await fetch(`${BASE_URL}/api/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(ck ? { cookie: ck } : {}) }, body: JSON.stringify({ teeTimeId: id, golferName: 'Golfer Two', golferEmail: email, golferPhone: '', players, termsAccepted: true, cartSelected }) });
     const body = await r.json().catch(() => null);
-    const saved = body?.bookingId ? await prisma.booking.findUnique({ where: { id: body.bookingId }, select: { id: true, appliedRate: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, greenFeeTotal: true, checkInToken: true } }) : null;
+    const saved = body?.bookingId ? await prisma.booking.findUnique({ where: { id: body.bookingId }, select: { id: true, appliedRate: true, residentPlayers: true, residentRateCents: true, memberRateCents: true, greenFeeTotal: true, cartFeeTotal: true, checkInToken: true } }) : null;
     return { status: r.status, body, saved };
   };
   const bothCk = await cookie(both);
@@ -111,6 +112,45 @@ async function main() {
   check('resident only: charged the resident seat ($50 + $100)', bResOnly.saved?.appliedRate === 'resident' && bResOnly.saved.residentPlayers === 1 && bResOnly.saved.greenFeeTotal === 15000, bResOnly);
   const bMemOnly = await book(memCk, memOnly, resCheaper2.id);
   check('member only: charged the member seat ($40 + $100)', bMemOnly.saved?.appliedRate === 'Gold' && bMemOnly.saved.residentPlayers === 0 && bMemOnly.saved.greenFeeTotal === 14000, bMemOnly);
+
+  // ── A membership that gives more than its seat: never worse off for holding a card ──
+  const c2 = await prisma.course.create({ data: { name: 'Two Groups 2', slug: `${TAG}-d`, hasMemberPricing: true, hasResidentPricing: true, publicAdvanceDays: 10, operatorId: op.id, address: '1 Test Dr', city: 'T', state: 'NY', zipCode: '10001', holes: 18, liveStatus: 'live', active: true, timezone: 'UTC', cancellationHours: 24, lateCancellationFeeCents: 0, noShowFeeCents: 0 } });
+  const fam = await prisma.membershipTier.create({ data: { courseId: c2.id, name: 'Family', greenFeeWeekdayCents: 4000, greenFeeWeekendCents: 4000, cartFeeWeekdayCents: 0, cartFeeWeekendCents: 0, guestsPayMemberRate: true, advanceBookingDays: 10 } });
+  const famEmail = `fam@${TAG}.test`;
+  await prisma.courseMembership.create({ data: { courseId: c2.id, tierId: fam.id, membershipType: 'Family', status: 'active', inviteEmail: famEmail, inviteName: 'F', payToken: `${TAG}-fam` } });
+  await prisma.courseResident.create({ data: { courseId: c2.id, name: 'F', email: famEmail, cardNumber: 'F', expiresOn: '' } });
+  const famTt = await prisma.teeTime.create({ data: { courseId: c2.id, date, time: '09:00', holes: 18, greenFeeCents: 10000, cartFeeCents: 2000, residentRateCents: 3900, playersAvailable: 4, playersBooked: 0 } });
+  const famCk = `gr_member=${await signMemberSessionToken({ courseId: c2.id, email: famEmail })}`;
+  const famRow = ((await get(`/api/member/${c2.slug}/tee-times?date=${date}`, famCk)) as { id: string }[]).find(x => x.id === famTt.id) as Record<string, unknown> | undefined;
+  check('guests at the member rate and a free member cart: the list keeps the member rate over a $1-lower resident seat', famRow?.own_rate === 'member' && famRow?.member_green_fee === 40 && famRow?.resident_green_fee === null, famRow);
+  const famPrev = await preview(famCk, famTt.id);
+  check('…and the preview', famPrev.member?.greenFee === 40 && famPrev.residentGreenFee === null, famPrev);
+  const fam4 = await book(famCk, famEmail, famTt.id, 4, true);
+  check('…and the foursome with carts is charged as a member ($40 × 4, carts $0), not as a resident', fam4.saved?.appliedRate === 'Family' && fam4.saved.residentPlayers === 0 && fam4.saved.greenFeeTotal === 16000 && fam4.saved.cartFeeTotal === 0, fam4);
+
+  // ── The swap reprices only a booking that already had a group rate, by the booking's own email ──
+  const swapAs = async (bookingId: string, token: string | null, to: string, ck?: string) => {
+    const s = await fetch(`${BASE_URL}/api/manage/${bookingId}/swap-time`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(ck ? { cookie: ck } : {}) }, body: JSON.stringify({ token, newTeeTimeId: to, termsAccepted: true }) });
+    return { status: s.status, after: await prisma.booking.findUnique({ where: { id: bookingId }, select: { appliedRate: true, residentPlayers: true, greenFeeTotal: true } }) };
+  };
+  const pubA = await tt('13:00', 3000), pubB = await tt('14:00', 3000);
+  const guest = await book('', `guest@${TAG}.test`, pubA.id);
+  if (guest.saved) {
+    const s = await swapAs(guest.saved.id, guest.saved.checkInToken, pubB.id, bothCk);
+    check('a public booking swapped by a browser logged in as a member and resident stays public ($200)', s.status === 200 && s.after?.appliedRate === 'standard' && s.after.residentPlayers === 0 && s.after.greenFeeTotal === 20000, s);
+  }
+  const memA = await tt('15:00', 3000), memB = await tt('16:00', 3000);
+  const memBk = await book(memCk, memOnly, memA.id);
+  if (memBk.saved) {
+    const s = await swapAs(memBk.saved.id, memBk.saved.checkInToken, memB.id, resCk);
+    check('a member\'s booking swapped under someone else\'s resident log-in stays the member\'s ($40 + $100)', s.status === 200 && s.after?.appliedRate === 'Gold' && s.after.residentPlayers === 0 && s.after.greenFeeTotal === 14000, s);
+  }
+  const resA = await tt('17:00', 3000), resB = await tt('17:10', 3000);
+  const bothRes = await book(bothCk, both, resA.id);
+  if (bothRes.saved) {
+    const s = await swapAs(bothRes.saved.id, bothRes.saved.checkInToken, resB.id);
+    check('a member-and-resident\'s resident booking swapped from the link with no log-in keeps the member rate ($40 + $100), not public', bothRes.saved.appliedRate === 'resident' && s.status === 200 && s.after?.appliedRate === 'Gold' && s.after.residentPlayers === 0 && s.after.greenFeeTotal === 14000, { bothRes, s });
+  }
 
   await cleanup();
   console.log(failed ? `\n${failed} FAILED` : '\nall passed');

@@ -42,7 +42,7 @@ import { bookingWindowHours, holdsAtCutoff } from './cancel-policy';
 import { todayIn } from './course-time';
 import { promoFits, seatAfter } from './promo-codes';
 import { dealPct, dealRateSeat } from './last-minute';
-import { pickOwnSeat } from './two-groups';
+import { pickOwnSeat, memberGivesMore } from './two-groups';
 import { demandPctFor, onlinePublicSeat, dealWins } from './demand-pricing';
 import { packPrice } from './round-packs';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
@@ -117,10 +117,11 @@ export async function moveBooking(opts: {
   /** RES-1: residents to price at the new slot (default: the booking's own).
    *  The golfer's swap re-checks the card for the new slot's date. */
   residentPlayers?: number;
-  /** TWO-GROUPS-PRICE (Cam 2026-11-24, lib/two-groups): the golfer's own swap only — the groups their PROVEN email
-   *  holds at the new time's date: a live membership's tier (null = none, or none live) and a resident card good on
-   *  that date. A golfer in both gets the lower own seat at the new time, the member rate on a tie, never both; in one,
-   *  that one. Not given (staff moves, frost delay): the booking's own member or resident pricing, as before. */
+  /** TWO-GROUPS-PRICE (Cam 2026-11-24, lib/two-groups): the golfer's own swap of a booking that already carries a
+   *  member or resident rate — the groups of the BOOKING's own email at the new time's date: its live membership's
+   *  tier (null = none live) and a resident card good on that date (only when that email is proven: the linked account
+   *  or this course's log-in). Both: the lower own seat at the new time, the member rate on a tie, never both; one:
+   *  that one. Not given (staff moves, frost delay, a public booking): the booking's own pricing, as before. */
   ownSeatGroups?: { memberTier: MembershipTier | null; resident: boolean };
   /** ALERTS-2: tell tee time alerts the old time has room. Off for a frost delay, which
    *  blocks the times it moves groups off right after (lib/frost-delay). Default on. */
@@ -232,7 +233,8 @@ export async function moveBooking(opts: {
         const memberRates = memberTier ? applyTierRates(slot, memberTier) : null;
         const residentOk = g.resident && residentPricingOn(b.course) && slot.residentRateCents != null;
         const pick = pickOwnSeat(memberRates ? memberRates.greenFeeCents : null, residentOk ? slot.residentRateCents : null,
-          { pubSeat, dealPct: lmPct, publicCents: slot.greenFeeCents, stack });
+          { pubSeat, dealPct: lmPct, publicCents: slot.greenFeeCents, stack },
+          !!memberTier && !!memberRates && memberGivesMore(memberTier, memberRates.cartFeeCents, slot.cartFeeCents));
         if (pick.group === 'member' && memberTier && memberRates) {
           rate = memberRates; memberN = memberPlayers(b.players, memberTier); spot = memberSpot(memberTier, rate);
           residentN = 0; groupRate = memberTier.name;

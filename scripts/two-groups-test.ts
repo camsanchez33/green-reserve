@@ -2,7 +2,7 @@
 // deals, the member rate on a tie, never both (lib/two-groups pickOwnSeat). Pure. Run: npx tsx scripts/two-groups-test.ts
 // The routes that use it (/api/bookings, member tee-times, resident-rate, swap-time) are pinned in two-groups-db-test.ts.
 import { readFileSync } from 'fs';
-import { pickOwnSeat, ratedSeat } from '../src/lib/two-groups';
+import { pickOwnSeat, ratedSeat, memberGivesMore } from '../src/lib/two-groups';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -39,6 +39,10 @@ check('a stacking deal: compared after the deal, resident cheaper', r.group === 
 const demand = { pubSeat: 2000, dealPct: 0, publicCents: 10000, stack: false };
 r = pickOwnSeat(4000, 3000, demand);
 check('never above the public seat; both capped there is a tie, member', r.group === 'member' && r.seat === 2000, r);
+// The membership gives more than its seat (guests at the member rate, a cheaper cart): the member rate stays.
+r = pickOwnSeat(4000, 3900, none, true);
+check('the member gives more here: member, even with a lower resident seat', r.group === 'member' && r.seat === 4000, r);
+check('memberGivesMore: guests at the member rate, or a cheaper member cart', memberGivesMore({ guestsPayMemberRate: true }, 2000, 2000) && memberGivesMore({ guestsPayMemberRate: false }, 0, 2000) && !memberGivesMore({ guestsPayMemberRate: false }, 2000, 2000));
 check('ratedSeat matches the deal rule', ratedSeat(6000, deal) === 5000 && ratedSeat(6000, stacked) === 3000 && ratedSeat(4000, none) === 4000);
 
 // One function, every path: the four callers import it and none keeps its own member-vs-resident choice.

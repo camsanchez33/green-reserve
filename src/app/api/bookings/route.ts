@@ -8,7 +8,7 @@ import { cartCharge, cartRuleOf } from '@/lib/cart-pricing';
 import { groupGreenFee } from '@/lib/residents';
 import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, PROMO_USED, type PromoRow } from '@/lib/promo-codes';
 import { dealPct } from '@/lib/last-minute';
-import { pickOwnSeat, ratedSeat } from '@/lib/two-groups';
+import { pickOwnSeat, ratedSeat, memberGivesMore } from '@/lib/two-groups';
 import { demandPctFor, onlinePublicSeat, dealWins } from '@/lib/demand-pricing';
 import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE, ROUND_PACKS_ON, PACKS_OFF } from '@/lib/round-packs';
 import { isPastIn, payLinkOpensOn } from '@/lib/course-time';
@@ -195,7 +195,8 @@ export async function POST(req: NextRequest) {
   // member with a member price here gets the LOWER own seat after deals, the member rate on a tie; never both.
   const residentCard = teeTimeFull.residentRateCents != null && residentPricingOn(teeTimeFull.course)
     ? await loggedInResident(teeTimeFull.courseId, teeTimeFull.date) : null;
-  const pick = pickOwnSeat(appliedTier ? resolvedGreenFeeOverride : null, residentCard ? teeTimeFull.residentRateCents : null, seatDeals);
+  const pick = pickOwnSeat(appliedTier ? resolvedGreenFeeOverride : null, residentCard ? teeTimeFull.residentRateCents : null, seatDeals,
+    !!appliedTier && memberGivesMore(appliedTier, resolvedCartFeeOverride ?? teeTimeFull.cartFeeCents, teeTimeFull.cartFeeCents));
   if (pick.group === 'resident' && appliedTier) {
     // The resident rate is lower: this is a resident booking, and the member's prices (cart too) don't apply.
     appliedTier = null; appliedTierName = 'standard'; appliedRate = 'standard';

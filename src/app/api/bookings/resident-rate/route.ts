@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { loggedInAt, liveMembershipFor, residentOn } from '@/lib/member-session';
 import { applyTierRates } from '@/lib/tier-rates';
 import { dealPct } from '@/lib/last-minute';
-import { pickOwnSeat } from '@/lib/two-groups';
+import { pickOwnSeat, memberGivesMore } from '@/lib/two-groups';
 import { demandPctFor, onlinePublicSeat } from '@/lib/demand-pricing';
 import { holdingsFor, ROUND_PACKS_ON } from '@/lib/round-packs';
 
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
   if (!memberPricingOn(tt.course)) tier = null;
   const rates = tier ? applyTierRates(tt, tier) : null;
   const card = tt.residentRateCents != null && residentPricingOn(tt.course) && signedIn ? await residentOn(tt.courseId, signedIn.email, tt.date) : null;
-  const pick = pickOwnSeat(rates ? rates.greenFeeCents : null, card ? tt.residentRateCents : null, deals);
+  const pick = pickOwnSeat(rates ? rates.greenFeeCents : null, card ? tt.residentRateCents : null, deals, !!tier && !!rates && memberGivesMore(tier, rates.cartFeeCents, tt.cartFeeCents));
   if (tier && rates && pick.group === 'member' && pick.seat != null) {
     return NextResponse.json({
       residentGreenFee: null,

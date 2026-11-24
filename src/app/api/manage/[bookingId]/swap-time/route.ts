@@ -37,27 +37,32 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
     return NextResponse.json({ error: 'You must agree to the Terms of Service to change this booking.' }, { status: 400 });
   }
 
-  const booking = await prisma.booking.findUnique({ where: { id: bookingId }, select: { checkInToken: true, golferAccountId: true, courseId: true, residentPlayers: true, golferAccount: { select: { email: true } } } });
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId }, select: { checkInToken: true, golferAccountId: true, courseId: true, residentPlayers: true, appliedRate: true, golferEmail: true, golferAccount: { select: { email: true } } } });
   if (!booking || !canManageBooking(booking, token)) return NextResponse.json({ error: 'Invalid link' }, { status: 404 });
 
   // RES-1: the resident rate follows the golfer's own swap only while a PROVEN email is still on the resident list
   // with a card good on the new date: an older booking's linked account, or (Cam 2026-11-18, no golfer accounts)
   // the golfer logged in to this course (a member or a resident), which is how an online resident booking gets the rate now. Never the
   // booking's typed golferEmail. Residents staff set at the counter are set again at the counter.
-  // TWO-GROUPS-PRICE (Cam 2026-11-24, lib/two-groups): the same proven email's groups at the new time's date — a live
-  // membership here and a resident card — go to the swap, which prices the golfer's own seat at the lower of the two
-  // (the member rate on a tie), never both. No proven email: the booking keeps its own pricing, as before.
+  // TWO-GROUPS-PRICE (Cam 2026-11-24, lib/two-groups): a booking that already carries a member or resident rate is
+  // repriced by the groups of the BOOKING's own email at the new date — its live membership (the tier path in
+  // lib/move-booking ties a member booking by that email the same way), and a resident card only when that email is
+  // the proven one. The lower own seat wins, the member rate on a tie, never both. A public booking, or a browser
+  // logged in as someone else, gains nothing here: that keeps the booking's own pricing, as before.
   let residentPlayers = 0;
   let ownSeatGroups: { memberTier: MembershipTier | null; resident: boolean } | undefined;
   const course = await prisma.course.findUnique({ where: { id: booking.courseId }, select: { id: true, timezone: true, memberGraceDays: true, hasMemberPricing: true, hasResidentPricing: true } });
   const provenEmail = booking.golferAccount?.email || (await loggedInAt(booking.courseId))?.email || '';
-  if (course && provenEmail) {
-    const slot = await prisma.teeTime.findUnique({ where: { id: String(newTeeTimeId) }, select: { date: true } });
-    if (slot) {
-      const card = residentPricingOn(course) ? await residentOn(booking.courseId, provenEmail, slot.date) : null;
-      if (card && booking.residentPlayers > 0) residentPlayers = 1;
-      const memberTier = memberPricingOn(course) ? (await liveMembershipFor(course, provenEmail))?.tier ?? null : null;
-      ownSeatGroups = { memberTier, resident: !!card };
+  const bookingEmail = (booking.golferAccount?.email || booking.golferEmail || '').trim();
+  const slot = course ? await prisma.teeTime.findUnique({ where: { id: String(newTeeTimeId) }, select: { date: true } }) : null;
+  if (course && slot) {
+    const card = provenEmail && residentPricingOn(course) ? await residentOn(booking.courseId, provenEmail, slot.date) : null;
+    if (card && booking.residentPlayers > 0) residentPlayers = 1;
+    const grouped = booking.residentPlayers > 0 || !['standard', 'pack'].includes(booking.appliedRate);
+    if (grouped && bookingEmail) {
+      const own = !!provenEmail && provenEmail.trim().toLowerCase() === bookingEmail.toLowerCase();
+      const memberTier = memberPricingOn(course) ? (await liveMembershipFor(course, bookingEmail))?.tier ?? null : null;
+      ownSeatGroups = { memberTier, resident: own && !!card };
     }
   }
 
