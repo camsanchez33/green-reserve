@@ -49,7 +49,6 @@ export function dayStart(tz: string, day: string): Date {
 /** The course-local day of an instant. */
 export const dayOf = (tz: string, at: Date) => todayIn(tz, at);
 
-
 type Row = { id: string; at: Date; what: string; direction: string; method: string; account: string; amountCents: number; platformFeeCents: number; stripeId: string | null; bookingId: string | null; saleId: string | null; membershipId: string | null; eventPaymentId: string | null; actor: string; note: string };
 
 export class TooManyRows extends Error {}

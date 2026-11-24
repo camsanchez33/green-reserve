@@ -30,7 +30,6 @@ export const KIND_LABEL: Record<EventKind, string> = { outing: 'Outing', tournam
 export const isTime = (t: unknown): t is string => typeof t === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(t);
 export const isDate = (d: unknown): d is string => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d + 'T12:00:00Z'));
 
-
 /** The day the organizer's guaranteed headcount is due; null = the course doesn't ask for one. */
 export const guaranteeDue = (e: { date: string; guaranteeDaysBefore: number | null }) =>
   e.guaranteeDaysBefore != null ? addDaysStr(e.date, -e.guaranteeDaysBefore) : null;
@@ -334,7 +333,6 @@ export async function cancelEvent(courseId: string, id: string) {
   if (existing.date >= todayIn((await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } }))?.timezone)) await generateTeeTimes(courseId, existing.date);
   return { released };
 }
-
 
 /** Pure: put players into groups of `size` in list order, numbering groups from 1. Shotgun groups start on holes 1, 2, … (then 1B, 2B, …) */
 export function autoPairings<P extends { id: string; groupKey?: string }>(players: P[], size: number, shotgun: boolean, holes: number): { id: string; groupNo: number; startHole: number | null }[] {

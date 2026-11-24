@@ -1,13 +1,14 @@
-// Security audit 2026-11-24: nothing secret or server-only reaches the browser bundle.
+// Security audit 2026-11-24 (M12): nothing secret or server-only reaches the browser bundle.
 // A build of main put lib/stripe.ts and lib/prisma.ts into the /dashboard/money and
 // /dashboard/events browser chunks, because two client components imported a pure helper
 // from a file that also imported the database and Stripe. No key value leaked (Next.js only
 // inlines NEXT_PUBLIC_ variables), but one NEXT_PUBLIC_ slip or one helper that reads a key
-// at import time would have. This walks the import graph from every 'use client' file and
-// fails when it reaches server-only code.
+// at import time would have. This walks the import graph of every 'use client' file, parsed
+// with the TypeScript compiler (not a regex), and fails when it reaches server-only code.
 // Run: npx tsx scripts/client-bundle-test.ts
 import { readFileSync, readdirSync, statSync, existsSync } from 'fs';
 import { join, dirname, normalize } from 'path';
+import ts from 'typescript';
 
 let failed = 0;
 const check = (label: string, ok: boolean, detail?: unknown) => {
@@ -15,12 +16,57 @@ const check = (label: string, ok: boolean, detail?: unknown) => {
   if (!ok) failed++;
 };
 
-/** Packages that only run on the server, or hold a secret when they do. */
-const SERVER_PACKAGES = ['@prisma/client', 'stripe', 'resend', 'twilio', 'bcryptjs', 'bcrypt', '@vercel/blob', '@anthropic-ai/sdk', 'next/headers', 'jose', 'crypto', 'node:crypto', 'fs', 'node:fs'];
+/** Packages that only run on the server, or hold a secret when they do. A subpath counts too. */
+const SERVER_PACKAGES = ['@prisma/client', 'stripe', 'resend', 'twilio', 'bcryptjs', 'bcrypt', '@vercel/blob', '@anthropic-ai/sdk', 'next/headers', 'jose', 'crypto', 'fs', 'path', 'child_process', 'os', 'net', 'tls', 'http', 'https', 'zlib'];
+/** Subpaths of those that are made for the browser. */
+const BROWSER_OK = ['@vercel/blob/client'];
 /** Our own files that are server-only by definition. */
-const SERVER_FILES = ['src/lib/prisma.ts', 'src/lib/stripe.ts', 'src/lib/session.ts', 'src/lib/admin-session.ts', 'src/lib/auth.ts'];
+const SERVER_FILES = ['src/lib/prisma.ts', 'src/lib/stripe.ts', 'src/lib/session.ts', 'src/lib/admin-session.ts', 'src/lib/auth.ts'].map(normalize);
 /** Environment variables the browser may see. Anything else read by a client-reached file is a finding. */
 const PUBLIC_ENV = /^(NEXT_PUBLIC_[A-Z0-9_]+|NODE_ENV|NEXT_RUNTIME)$/;
+
+export function isServerPackage(spec: string): boolean {
+  const s = spec.replace(/^node:/, '');
+  if (BROWSER_OK.some(b => s === b || s.startsWith(b + '/'))) return false;
+  return spec.startsWith('node:') || SERVER_PACKAGES.some(p => s === p || s.startsWith(p + '/'));
+}
+
+type Parsed = { client: boolean; imports: string[]; env: string[] };
+
+/** What a file imports at runtime (type-only imports and re-exports skipped), and which env vars it reads. */
+export function parse(src: string, name = 'x.tsx'): Parsed {
+  const sf = ts.createSourceFile(name, src, ts.ScriptTarget.Latest, true, name.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+  const imports: string[] = [];
+  const env: string[] = [];
+  let client = false;
+  for (const st of sf.statements) {
+    if (ts.isExpressionStatement(st) && ts.isStringLiteral(st.expression)) { if (st.expression.text === 'use client') client = true; continue; }
+    break; // directives come first
+  }
+  const isProcessEnv = (e: ts.Expression) => ts.isPropertyAccessExpression(e) && e.name.text === 'env' && ts.isIdentifier(e.expression) && e.expression.text === 'process';
+  const visit = (n: ts.Node) => {
+    if (ts.isImportDeclaration(n) && ts.isStringLiteral(n.moduleSpecifier)) {
+      const c = n.importClause;
+      const typeOnly = !!c && (c.isTypeOnly || (!c.name && !!c.namedBindings && ts.isNamedImports(c.namedBindings) && c.namedBindings.elements.length > 0 && c.namedBindings.elements.every(e => e.isTypeOnly)));
+      if (!typeOnly) imports.push(n.moduleSpecifier.text);
+    } else if (ts.isExportDeclaration(n) && n.moduleSpecifier && ts.isStringLiteral(n.moduleSpecifier)) {
+      const typeOnly = n.isTypeOnly || (!!n.exportClause && ts.isNamedExports(n.exportClause) && n.exportClause.elements.length > 0 && n.exportClause.elements.every(e => e.isTypeOnly));
+      if (!typeOnly) imports.push(n.moduleSpecifier.text);
+    } else if (ts.isCallExpression(n) && n.arguments.length && ts.isStringLiteralLike(n.arguments[0])
+      && (n.expression.kind === ts.SyntaxKind.ImportKeyword || (ts.isIdentifier(n.expression) && n.expression.text === 'require'))) {
+      imports.push(n.arguments[0].text); // import('…') and require('…')
+    } else if (ts.isPropertyAccessExpression(n) && isProcessEnv(n.expression)) {
+      env.push(n.name.text);
+    } else if (ts.isElementAccessExpression(n) && isProcessEnv(n.expression)) {
+      env.push(ts.isStringLiteralLike(n.argumentExpression) ? n.argumentExpression.text : '<computed key>');
+    } else if (ts.isVariableDeclaration(n) && n.initializer && isProcessEnv(n.initializer) && ts.isObjectBindingPattern(n.name)) {
+      for (const el of n.name.elements) env.push(el.propertyName && ts.isIdentifier(el.propertyName) ? el.propertyName.text : ts.isIdentifier(el.name) ? el.name.text : '<destructured>');
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+  return { client, imports, env };
+}
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const name of readdirSync(dir)) {
@@ -31,8 +77,7 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-const files = new Map(walk('src').map(f => [normalize(f), readFileSync(f, 'utf8')]));
-const isClient = (src: string) => /^\s*(\/\/[^\n]*\n|\/\*[\s\S]*?\*\/\s*)*['"]use client['"]/.test(src);
+const parsed = new Map(walk('src').map(f => [normalize(f), parse(readFileSync(f, 'utf8'), f)]));
 
 function resolve(spec: string, from: string): string | null {
   let base: string;
@@ -41,44 +86,49 @@ function resolve(spec: string, from: string): string | null {
   else return null;
   for (const c of [base + '.ts', base + '.tsx', join(base, 'index.ts'), join(base, 'index.tsx'), base]) {
     const n = normalize(c);
-    if (files.has(n)) return n;
+    if (parsed.has(n)) return n;
   }
   return null;
 }
 
-/** The value (not type-only) module specifiers a file imports or re-exports. */
-export function valueImports(src: string): string[] {
-  const out: string[] = [];
-  const re = /^\s*(import|export)\s+([\s\S]*?)\s+from\s+['"]([^'"]+)['"]|^\s*import\s+['"]([^'"]+)['"]/gm;
-  for (let m; (m = re.exec(src));) {
-    if (m[4]) { out.push(m[4]); continue; }
-    const clause = m[2].trim();
-    if (/^type\b/.test(clause)) continue; // import type … / export type …
-    const named = clause.match(/^\{([\s\S]*)\}$/);
-    if (named && named[1].split(',').map(s => s.trim()).filter(Boolean).every(s => /^type\s/.test(s))) continue;
-    if (m[1] === 'export' && !/^\{|^\*/.test(clause)) continue;
-    out.push(m[3]);
-  }
-  return out;
-}
-
-function problems(file: string): string[] {
-  const src = files.get(file)!;
+function problems(file: string, p: Parsed): string[] {
   const out: string[] = [];
   if (SERVER_FILES.includes(file)) out.push('server-only file');
-  for (const spec of valueImports(src)) if (SERVER_PACKAGES.includes(spec)) out.push(`imports ${spec}`);
-  for (const m of src.matchAll(/process\.env\.([A-Z0-9_]+)/g)) if (!PUBLIC_ENV.test(m[1])) out.push(`reads process.env.${m[1]}`);
+  for (const spec of p.imports) if (isServerPackage(spec)) out.push(`imports ${spec}`);
+  for (const v of p.env) if (!PUBLIC_ENV.test(v)) out.push(`reads process.env.${v}`);
   return [...new Set(out)];
 }
 
-// The parser itself, so a regex change can't quietly make the walk see nothing.
-check('a type-only import is not followed', valueImports(`import type { A } from './a';\nimport { type B } from './b';`).length === 0);
-check('a value import and a re-export are followed', JSON.stringify(valueImports(`import { a, type B } from './a';\nexport { c } from './c';\nimport './d';`)) === JSON.stringify(['./a', './c', './d']));
+// The parser itself, on every shape a regex got wrong, so a change can't quietly make the walk see nothing.
+const shapes = parse([
+  `'use client';`,
+  `import type { A } from './type-only';`,
+  `import { type B } from './all-type-named';`,
+  `export const before = 1;`,
+  `import { a, type C } from './mixed';`,
+  `import './side-effect';`,
+  `import d from './default';`,
+  `export { e } from './re-export';`,
+  `export * from './star';`,
+  `export type { F } from './type-re-export';`,
+  `const m = await import('./dynamic');`,
+  `const r = require('./required');`,
+  `const k = process.env.SECRET_A + process.env['SECRET_B'];`,
+  `const { SECRET_C, NEXT_PUBLIC_OK } = process.env;`,
+  `// process.env.IN_A_COMMENT`,
+].join('\n'));
+check('parser: sees the directive', shapes.client);
+check('parser: follows every runtime import shape and skips type-only ones',
+  JSON.stringify([...shapes.imports].sort()) === JSON.stringify(['./default', './dynamic', './mixed', './re-export', './required', './side-effect', './star']), shapes.imports);
+check('parser: reads env by dot, bracket and destructuring, not in comments',
+  JSON.stringify([...shapes.env].sort()) === JSON.stringify(['NEXT_PUBLIC_OK', 'SECRET_A', 'SECRET_B', 'SECRET_C']), shapes.env);
+check('parser: package subpaths count, the browser blob client does not',
+  isServerPackage('@prisma/client/runtime/library') && isServerPackage('fs/promises') && isServerPackage('node:path') && !isServerPackage('@vercel/blob/client') && !isServerPackage('react'));
 
-const findings: { client: string; reaches: string; via: string[]; why: string[] }[] = [];
+const findings: { client: string; reaches: string; via: string; why: string[] }[] = [];
 let clients = 0;
-for (const [file, src] of files) {
-  if (!isClient(src)) continue;
+for (const [file, p] of parsed) {
+  if (!p.client) continue;
   clients++;
   const seen = new Set<string>();
   const stack: { f: string; path: string[] }[] = [{ f: file, path: [file] }];
@@ -86,14 +136,12 @@ for (const [file, src] of files) {
     const { f, path } = stack.pop()!;
     if (seen.has(f)) continue;
     seen.add(f);
-    const body = files.get(f)!;
+    const q = parsed.get(f)!;
     // A 'use client' file further down is its own root: checked on its own turn.
-    if (f !== file && isClient(body)) continue;
-    if (f !== file) {
-      const why = problems(f);
-      if (why.length) { findings.push({ client: file, reaches: f, via: path, why }); continue; }
-    }
-    for (const spec of valueImports(body)) {
+    if (f !== file && q.client) continue;
+    const why = problems(f, q); // the root itself too
+    if (why.length) { findings.push({ client: file, reaches: f, via: path.join(' -> '), why }); continue; }
+    for (const spec of q.imports) {
       const r = resolve(spec, f);
       if (r) stack.push({ f: r, path: [...path, r] });
     }
@@ -101,12 +149,12 @@ for (const [file, src] of files) {
 }
 
 check(`found the client components (${clients})`, clients > 50, clients);
-check('no client component reaches prisma, Stripe, a server-only package or a secret env var',
-  findings.length === 0, findings.slice(0, 10).map(x => ({ ...x, via: x.via.join(' -> ') })));
+check('no client component reaches prisma, Stripe, a server-only package or a secret env var', findings.length === 0, findings.slice(0, 10));
 
-// The pure files split out by this fix stay pure.
+// The pure files split out by this fix stay pure: no imports at all.
 for (const f of ['src/lib/ledger-labels.ts', 'src/lib/event-shared.ts', 'src/lib/blob-url.ts', 'src/lib/demand-pricing-shared.ts']) {
-  check(`${f} exists and imports nothing server-side`, existsSync(f) && problems(normalize(f)).length === 0 && valueImports(readFileSync(f, 'utf8')).length === 0, f);
+  const p = existsSync(f) ? parsed.get(normalize(f)) : undefined;
+  check(`${f} exists and imports nothing`, !!p && p.imports.length === 0 && p.env.length === 0, p);
 }
 
 if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1); }
