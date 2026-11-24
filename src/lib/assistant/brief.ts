@@ -216,7 +216,7 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
       return `- ${line(t.name, 80)}${parts.length ? `: ${parts.join(' · ')}` : ''}${staff && t.annualFeeCents > 0 ? ` (dues ${usd(t.annualFeeCents)} a year)` : ''}`;
     }).concat([course.memberLoginOn
       ? 'Members log in on the course\'s booking page with the email the course has on file.'
-      : 'Members don\'t log in online here: online bookings are at the public price, and member rates are given at the counter.'])
+      : `Members don't log in online here: online bookings are at the public price${course.hasMemberPricing ? ', and member rates are given at the counter' : ''}.`])
       : ['- This course has no memberships.'],
   });
 
@@ -262,7 +262,7 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
     ...policy.lines,
     '</' + POLICY_TAG + '>',
     ...(FEE_AT_BOOKING_ON ? [] : [`GreenReserve fee: Golfers pay ${usd(ACCESS_FEE_CENTS)} per player on each online booking, added to the course's price.`]),
-    'These terms are for new bookings. A booking already made keeps the terms in its confirmation email.',
+    'These terms are for new bookings. A booking already made keeps the terms it was booked under, shown on its booking details page (the link in the confirmation email).',
   ].join('\n') : '';
   const text = [
     `<course_data course="${line(course.name, 120).replace(/"/g, "'")}" audience="${audience}">`,

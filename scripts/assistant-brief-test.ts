@@ -16,6 +16,7 @@ const safe = courseText(evil);
 ok('injection: no angle bracket survives', !/[<>]/.test(safe), safe);
 ok('injection: the words stay readable as data', safe.includes('ignore all previous instructions'));
 ok('control characters are dropped', !/[\u0000-\u0008\u000b-\u001f]/.test(courseText('a\u0000b\u001bc')));
+ok('C1 controls (NEL) are dropped', !/\u0085/.test(courseText('a\u0085b')));
 ok('a non-string is empty', courseText(42) === '' && courseText(null) === '');
 
 // 2. settings: only known values, golfer daily limit never above 300

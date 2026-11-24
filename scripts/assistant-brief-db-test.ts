@@ -76,7 +76,8 @@ async function cleanup() {
   const lines = describePolicy(policyFrom(a)).lines;
   const policyBlock = (t: string) => { const m = /<policy_lines>\n([\s\S]*?)\n<\/policy_lines>/.exec(t); return m ? m[1].split('\n') : null; };
 ok('policy: describePolicy() lines verbatim, alone, in order, in <policy_lines>', JSON.stringify(policyBlock(ga.text)) === JSON.stringify(lines), policyBlock(ga.text));
-ok('policy: the block sits after </course_data>', ga.text.indexOf('<policy_lines>') > ga.text.indexOf('</course_data>'));
+ok('policy: existing bookings point to the booking details page', ga.text.includes('These terms are for new bookings. A booking already made keeps the terms it was booked under, shown on its booking details page (the link in the confirmation email).'));
+  ok('policy: the block sits after </course_data>', ga.text.indexOf('<policy_lines>') > ga.text.indexOf('</course_data>'));
 ok('policy: the fee sentence is LQ-2 sentence 1, outside the policy lines', ga.text.includes("GreenReserve fee: Golfers pay $1.50 per player on each online booking, added to the course's price.") && !policyBlock(ga.text)!.some(l => /GreenReserve/.test(l)));
 
   // injection
@@ -104,7 +105,7 @@ ok('policy: the fee sentence is LQ-2 sentence 1, outside the policy lines', ga.t
   // Member log-in off: no log-in line, member rates at the counter.
   await prisma.course.update({ where: { id: a.id }, data: { memberLoginOn: false } });
   const noLogin = (await buildCourseBrief(a.id, 'golfer'))!.text;
-  ok('log-in off: never tells golfers to log in', !/Members log in/.test(noLogin) && /member rates are given at the counter/.test(noLogin));
+  ok('log-in off: never tells golfers to log in', !/Members log in/.test(noLogin) && /online bookings are at the public price/.test(noLogin) && (a.hasMemberPricing === /member rates are given at the counter/.test(noLogin)));
   await prisma.course.update({ where: { id: a.id }, data: { memberLoginOn: true } });
 
   // topics

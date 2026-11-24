@@ -50,12 +50,12 @@ export const safeLine = (v: string, max: number) => plainLine(v, max).replace(/<
 /** One line of plain text: no control characters, no line breaks, spaces collapsed. */
 export function plainLine(v: string, max: number): string {
   // eslint-disable-next-line no-control-regex
-  return v.replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
+  return v.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 /** Plain text that may keep single line breaks (a note's answer). */
 export function plainText(v: string, max: number): string {
   // eslint-disable-next-line no-control-regex
-  return v.replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f\u007f\u2028\u2029]+/g, ' ')
+  return v.replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f\u007f-\u009f\u2028\u2029]+/g, ' ')
     .split('\n').map(l => l.replace(/\s+/g, ' ').trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, max);
 }
 
