@@ -21,7 +21,8 @@ function knowsLine(k: NonNullable<Meta['knows']>): string {
   const notes = k.sections.find(s => s.key === 'notes')?.count ?? '0';
   const n = Number(notes) || 0;
   const at = new Date(k.builtAt);
-  const time = Number.isFinite(at.getTime()) ? at.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+  const sameDay = Number.isFinite(at.getTime()) && at.toDateString() === new Date().toDateString();
+  const time = !Number.isFinite(at.getTime()) ? '' : sameDay ? at.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : at.toLocaleDateString([], { month: 'short', day: 'numeric' });
   return `Knows ${k.courseName}'s settings, rates, policies, closures, events and your ${n} note${n === 1 ? '' : 's'}.${time ? ` Updated ${time}.` : ''}`;
 }
 

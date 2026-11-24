@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
   // pretending the generic dashboard is a deep link.
   const vercelProjectUrl = env.ADMIN_VERCEL_PROJECT_URL || '';
 
-  const birdie = { enabled: birdieEnabled(), keySet: !!process.env.ANTHROPIC_API_KEY, flag: process.env.BIRDIE_ENABLED === 'true', todayReplies: await birdieUsageToday(), dailyCap: Object.values(PLATFORM_PER_DAY).reduce((a, b) => a + b, 0), model: ASSISTANT_MODEL };
+  const birdie = { enabled: birdieEnabled(), keySet: !!process.env.ANTHROPIC_API_KEY, flag: process.env.BIRDIE_ENABLED === 'true', todayReplies: await birdieUsageToday('operator'), dailyCap: PLATFORM_PER_DAY.operator, model: ASSISTANT_MODEL };
   const calcom = calcomStatus();
   const twilio = twilioStatus(env);
   const commitSha = (env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7);

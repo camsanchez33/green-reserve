@@ -532,7 +532,7 @@ function SystemContent() {
             <Row st={capped ? 'warn' : ''}
               fix={<Fix sev="warn" steps={['Nothing is broken: the platform-wide daily cap is reached, so the assistant stops replying until the count resets tomorrow.', 'The Vercel logs show which assistant and course used them.', 'If the cap is too low, ask Build to raise it.']}>
                 <ExtBtn href={links.vercelLogs} pri>Open Vercel logs</ExtBtn></Fix>}>
-              {b.todayReplies.toLocaleString()} of {b.dailyCap.toLocaleString()} questions today, every assistant together. Vercel logs hold one <Mono>assistant.reply</Mono> line each, never the words.
+              {b.todayReplies.toLocaleString()} of {b.dailyCap.toLocaleString()} staff questions today. Vercel logs hold one <Mono>assistant.reply</Mono> line each, never the words.
             </Row>
           </div>
         );

@@ -6,7 +6,7 @@
 // POST → streams NDJSON events, one per line — {"t":"text","d":"…"} reply text,
 //        {"t":"status","d":"…"} while a lookup runs, {"t":"card","d":ProposalCard}
 //        for a drafted change (B4b) — or a JSON error.
-// PUT  → { applied: { title, path, method, ok, error? } } — the widget reports a
+// PUT  → { applied: { path, method, ok, status? } } — the widget reports a
 //        confirm card's outcome so every Birdie-drafted change is logged.
 //
 // B4a (Cam 2026-10-05): live-data READ tools (lib/birdie/tools.ts); tool calls are
@@ -74,7 +74,7 @@ export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ enabled: false }, { status: 401 });
   // The brief is built here too, so "What it knows" says exactly what the next answer reads.
-  const brief = birdieEnabled() ? await getCourseBrief(session.courseId, 'staff') : null;
+  const brief = birdieEnabled() ? await getCourseBrief(session.courseId, can(session, 'schedule.view') ? 'staff' : 'staff-limited') : null;
   const enabled = !!brief && brief.settings.staffOn;
   return NextResponse.json({
     enabled,
@@ -102,7 +102,8 @@ export async function POST(req: NextRequest) {
   if (!history.length) return NextResponse.json({ error: 'Ask something first.' }, { status: 400 });
 
   // The course is the session's, always. The brief is rebuilt from its rows now.
-  const brief = await getCourseBrief(session.courseId, 'staff');
+  // A login without schedule.view gets the brief without rates, closed days and dues (what Schedule guards).
+  const brief = await getCourseBrief(session.courseId, can(session, 'schedule.view') ? 'staff' : 'staff-limited');
   if (!brief) return NextResponse.json({ error: 'Course not found.' }, { status: 404 });
   if (!brief.settings.staffOn) return NextResponse.json({ error: 'Your course has the assistant switched off (Settings → Assistant).' }, { status: 503 });
   const toolCtx: ToolContext = { courseId: session.courseId, timezone: brief.timezone ?? null, can: key => can(session, key) };
@@ -154,7 +155,9 @@ This login: ${session.isStaff ? 'staff' : 'course owner'} — can see analytics:
           usage.cacheRead += msg.usage.cache_read_input_tokens ?? 0; usage.cacheWrite += msg.usage.cache_creation_input_tokens ?? 0;
           stopReason = msg.stop_reason;
 
-          const fallback = stopFallback(msg.stop_reason, reply, "I can't help with that one — but ask me anything about running your course on GreenReserve.");
+          const fallback = stopFallback(msg.stop_reason, reply, msg.stop_reason === 'max_tokens'
+            ? 'That one needed more room than I have — ask a narrower question.'
+            : "I can't help with that one — but ask me anything about running your course on GreenReserve.");
           if (fallback !== null) { say(fallback); break; }
           if (msg.stop_reason === 'refusal' || msg.stop_reason === 'max_tokens') break;
           const toolUses = msg.content.filter((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === 'tool_use');
@@ -175,7 +178,7 @@ This login: ${session.isStaff ? 'staff' : 'course owner'} — can see analytics:
                 }
               } else out = await runReadTool(tu.name, tu.input, toolCtx);
             }
-            catch (e) { console.error('[assistant] tool failed', tu.name, e instanceof Error ? e.message : 'error'); out = { content: 'That lookup failed on our side — try again in a moment.', isError: true }; }
+            catch (e) { console.error('[assistant] tool failed', tu.name, e instanceof Error ? e.name : 'error'); out = { content: 'That lookup failed on our side — try again in a moment.', isError: true }; }
             calls.push({ name: tu.name, error: out.isError, bytes: out.content.length });
             // The model gets the text; the card itself already went to the widget.
             out = { content: out.content, isError: out.isError };
@@ -222,7 +225,8 @@ export async function PUT(req: NextRequest) {
   console.log(JSON.stringify({
     // No card title: it can name a golfer. The route, the method and whether it worked are enough.
     ev: 'birdie.applied', courseId: session.courseId, actor: session.isStaff ? `staff:${session.staffId ?? ''}` : `op:${session.operatorId ?? ''}`,
-    method: str(a.method, 10), path: str(a.path, 100), ok: a.ok === true, error: str(a.error, 120),
+    // No error text either: a route's error can echo an upstream body (an address); the status is enough.
+    method: str(a.method, 10), path: str(a.path, 100), ok: a.ok === true, status: typeof a.status === 'number' ? Math.trunc(a.status) : null,
   }));
   return NextResponse.json({ ok: true });
 }

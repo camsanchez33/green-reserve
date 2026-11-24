@@ -17,7 +17,7 @@ const persona = route.slice(route.indexOf('const OPERATOR_SYSTEM = `'), route.in
 const interps = [...persona.matchAll(/\$\{([^}]*)\}/g)].map(m => m[1].trim());
 ok('cache: the frozen persona only interpolates constants', persona.length > 500 && interps.every(i => /^(DASHBOARD_PAGES\.map\(p => `- \[Open \$\{p\.label|p\.href|p\.does|DATA_RULE|OPERATOR_KNOWLEDGE)/.test(i)), interps);
 ok('cache: today\'s date is only in the volatile facts', (route.match(/todayIn\(/g) || []).length === 1 && /const facts = `Today/.test(route));
-ok('brief: the session\'s course, staff audience', /getCourseBrief\(session\.courseId, 'staff'\)/.test(route));
+ok('brief: the session\'s course, a staff audience', /getCourseBrief\(session\.courseId, can\(session, 'schedule\.view'\)/.test(route));
 ok('switch: the course\'s staff switch is checked before any call', route.indexOf('brief.settings.staffOn') > 0 && route.indexOf('brief.settings.staffOn', route.indexOf('export async function POST')) < route.indexOf('assistantClient()'));
 ok('switch: GET reports off when the course turned it off', /enabled = !!brief && brief\.settings\.staffOn/.test(route));
 ok('key: fails closed through assistantClient()', /const client = assistantClient\(\);\s*if \(!client\) return/.test(route) && !/new Anthropic\(/.test(route));
@@ -27,7 +27,9 @@ const logCall = route.slice(route.indexOf('logAssistant({'), route.indexOf('});'
 ok('log: logAssistant only, no question or reply text', logCall.length > 0 && !/logConversation/.test(route) && !/\b(question|reply|history|messages)\b/.test(logCall), logCall);
 ok('log: tool inputs never logged', !/input: tu\.input/.test(route));
 ok('log: applied card titles never logged', !/title: str\(a\.title/.test(route));
-ok('log: errors logged by name, not body', !/console\.error\([^)]*err\.message/.test(route));
+ok('log: errors logged by name, not body', !/\.message\b/.test(route.slice(route.indexOf('export async function POST'))));
+ok('log: applied cards log the status, never error text', /status: typeof a\.status === 'number'/.test(route) && !/error: str\(a\.error/.test(route));
+ok('access: no schedule.view → the limited brief', /can\(session, 'schedule\.view'\) \? 'staff' : 'staff-limited'/.test(route) && (route.match(/'staff-limited'/g) || []).length === 2);
 ok('widget: "What it knows" from the GET, with Live numbers', /What it knows/.test(widget) && /meta\.knows\.sections\.map/.test(widget) && /Live numbers/.test(widget));
 ok('widget: it never saves on its own — cards still need Confirm', /ConfirmCard/.test(widget));
 

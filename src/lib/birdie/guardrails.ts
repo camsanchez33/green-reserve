@@ -54,12 +54,10 @@ export async function checkCaps(courseKey: string): Promise<string | null> {
   return null;
 }
 
-/** Today's platform-wide question count across every persona, for /admin/system. Reads the same counters the caps use. */
-export async function birdieUsageToday(): Promise<number> {
+/** Today's question count for one persona's platform cap, for /admin/system. Reads the same counter the cap uses. */
+export async function birdieUsageToday(persona: keyof typeof PERSONA_PER_DAY = 'operator'): Promise<number> {
   try {
-    const day = new Date().toISOString().slice(0, 10);
-    const keys = Object.keys(PERSONA_PER_DAY).map(p => `birdie:platform:${p}:${day}`);
-    const rows = await prisma.rateLimit.findMany({ where: { key: { in: keys } }, select: { count: true } });
-    return rows.reduce((n, r) => n + Number(r.count ?? 0), 0);
+    const row = await prisma.rateLimit.findUnique({ where: { key: `birdie:platform:${persona}:${new Date().toISOString().slice(0, 10)}` }, select: { count: true } });
+    return Number(row?.count ?? 0);
   } catch { return 0; }
 }
