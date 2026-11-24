@@ -63,3 +63,22 @@ export function alertSmsConsentText(courseName: string): string {
 
 /** The alert enrollment confirmation with no course to name (the course's own is alertOptInText(name)). */
 export const ALERT_SMS_CONFIRMATION = alertOptInText(null);
+
+// ---------- Past wordings ----------
+// A SmsConsent row stores only the version key, so every version anyone agreed to stays readable here
+// (Privacy §3: "we keep … the wording you agreed to"). Add the outgoing wording when you bump a version.
+export const PAST_SMS_CONSENT_WORDING: Record<string, (courseName: string) => string> = {
+  '2026-11-05': c => `I agree to receive text messages (SMS) from GreenReserve about my booking at ${c || 'the course'}: a pay link, a day-of notice and a receipt. ` +
+    `Up to 4 messages per booking. Msg & data rates may apply. Reply STOP to cancel, HELP for help.`,
+  'alerts-2026-11-18': c => `Text me when it opens. I agree to receive text messages (SMS) from GreenReserve about this tee time alert at ${c || 'the course'}, ` +
+    `up to 1 message per date I picked, only for this alert and separate from booking texts. Msg & data rates may apply. Reply STOP to cancel, HELP for help.`,
+};
+
+/**
+ * The alert version a stored alert box text was agreed under. A guest's alert keeps the exact text it
+ * ticked and is confirmed later from the email, so the version comes from that text, not from today's.
+ */
+export function alertConsentVersionOf(wording: string | null | undefined): string {
+  if (wording && !wording.includes(' via GreenReserve about this tee time alert')) return 'alerts-2026-11-18';
+  return ALERT_SMS_CONSENT_VERSION;
+}

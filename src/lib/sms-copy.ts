@@ -146,7 +146,8 @@ export function alertOptInText(courseName: string | null | undefined): string {
 
 /** The reply to HELP. With the course the number last agreed for: its phone. 137 characters with a 21-character name. */
 export function helpText(courseName: string | null | undefined, coursePhone: string | null | undefined): string {
-  if (courseName && coursePhone) return viaBrand(courseName, `: Booking texts. Questions? Call ${coursePhone}. Msg & data rates may apply. ${STOP_LINE}`);
+  if (courseName && coursePhone?.trim()) return viaBrand(courseName, `: Booking texts. Questions? Call ${coursePhone.trim()}. Msg & data rates may apply. ${STOP_LINE}`);
+  if (courseName?.trim()) return viaBrand(courseName, `: Booking texts. Questions? ${SUPPORT_EMAIL}. Msg & data rates may apply. ${STOP_LINE}`);
   return toGsm(`GreenReserve booking texts. Questions? ${SUPPORT_EMAIL}. Msg & data rates may apply. ${STOP_LINE}`);
 }
 
