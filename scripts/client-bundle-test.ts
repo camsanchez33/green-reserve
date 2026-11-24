@@ -17,7 +17,7 @@ const check = (label: string, ok: boolean, detail?: unknown) => {
 };
 
 /** Packages that only run on the server, or hold a secret when they do. A subpath counts too. */
-const SERVER_PACKAGES = ['@prisma/client', 'stripe', 'resend', 'twilio', 'bcryptjs', 'bcrypt', '@vercel/blob', '@anthropic-ai/sdk', 'next/headers', 'jose', 'crypto', 'fs', 'path', 'child_process', 'os', 'net', 'tls', 'http', 'https', 'zlib'];
+const SERVER_PACKAGES = ['@prisma/client', 'stripe', 'resend', 'twilio', 'bcryptjs', 'bcrypt', '@vercel/blob', '@anthropic-ai/sdk', 'next/headers', 'next/server', 'next/cache', 'server-only', 'otplib', '@simplewebauthn/server', 'jose', 'crypto', 'fs', 'path', 'child_process', 'os', 'net', 'tls', 'http', 'https', 'zlib'];
 /** Subpaths of those that are made for the browser. */
 const BROWSER_OK = ['@vercel/blob/client'];
 /** Our own files that are server-only by definition. */
@@ -45,6 +45,14 @@ export function parse(src: string, name = 'x.tsx'): Parsed {
   }
   const isProcessEnv = (e: ts.Expression) => ts.isPropertyAccessExpression(e) && e.name.text === 'env' && ts.isIdentifier(e.expression) && e.expression.text === 'process';
   const visit = (n: ts.Node) => {
+    // process.env used as a whole (env = process.env, passed on, cast): what it reads can't be
+    // named, so it counts as reading a secret. Only the named forms below may be public.
+    if (isProcessEnv(n as ts.Expression)) {
+      const p = n.parent;
+      const named = (ts.isPropertyAccessExpression(p) && p.expression === n) || (ts.isElementAccessExpression(p) && p.expression === n)
+        || (ts.isVariableDeclaration(p) && p.initializer === n && ts.isObjectBindingPattern(p.name));
+      if (!named) env.push('<whole object>');
+    }
     if (ts.isImportDeclaration(n) && ts.isStringLiteral(n.moduleSpecifier)) {
       const c = n.importClause;
       const typeOnly = !!c && (c.isTypeOnly || (!c.name && !!c.namedBindings && ts.isNamedImports(c.namedBindings) && c.namedBindings.elements.length > 0 && c.namedBindings.elements.every(e => e.isTypeOnly)));
@@ -117,14 +125,17 @@ const shapes = parse([
   `const { SECRET_C, NEXT_PUBLIC_OK } = process.env;`,
   `// process.env.IN_A_COMMENT`,
 ].join('\n'));
+const whole = parse([`function f(env = process.env) { return env.SECRET_D; }`, `const e = (process.env as any).SECRET_E;`].join('\n'));
 check('parser: sees the directive', shapes.client);
 check('parser: follows every runtime import shape and skips type-only ones',
   JSON.stringify([...shapes.imports].sort()) === JSON.stringify(['./default', './dynamic', './mixed', './re-export', './required', './side-effect', './star']), shapes.imports);
 check('parser: reads env by dot, bracket and destructuring, not in comments',
   JSON.stringify([...shapes.env].sort()) === JSON.stringify(['NEXT_PUBLIC_OK', 'SECRET_A', 'SECRET_B', 'SECRET_C']), shapes.env);
+check('parser: process.env used whole (a default parameter, a cast) counts as a secret read', whole.env.filter(v => v === '<whole object>').length === 2, whole.env);
 check('parser: package subpaths count, the browser blob client does not',
   isServerPackage('@prisma/client/runtime/library') && isServerPackage('fs/promises') && isServerPackage('node:path') && !isServerPackage('@vercel/blob/client') && !isServerPackage('react'));
 
+const unresolved: string[] = [];
 const findings: { client: string; reaches: string; via: string; why: string[] }[] = [];
 let clients = 0;
 for (const [file, p] of parsed) {
@@ -144,11 +155,14 @@ for (const [file, p] of parsed) {
     for (const spec of q.imports) {
       const r = resolve(spec, f);
       if (r) stack.push({ f: r, path: [...path, r] });
+      // A local import the walk can't follow would hide whatever is behind it (styles and assets excepted).
+      else if ((spec.startsWith('.') || spec.startsWith('@/')) && !/\.(css|scss|svg|png|jpe?g|webp|gif|ico|json|md)$/i.test(spec)) unresolved.push(`${f}: ${spec}`);
     }
   }
 }
 
 check(`found the client components (${clients})`, clients > 50, clients);
+check('every local import in the client graph resolves to a file the walk can read', unresolved.length === 0, [...new Set(unresolved)].slice(0, 10));
 check('no client component reaches prisma, Stripe, a server-only package or a secret env var', findings.length === 0, findings.slice(0, 10));
 
 // The pure files split out by this fix stay pure: no imports at all.
