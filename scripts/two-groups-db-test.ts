@@ -128,6 +128,21 @@ async function main() {
   const fam4 = await book(famCk, famEmail, famTt.id, 4, true);
   check('…and the foursome with carts is charged as a member ($40 × 4, carts $0), not as a resident', fam4.saved?.appliedRate === 'Family' && fam4.saved.residentPlayers === 0 && fam4.saved.greenFeeTotal === 16000 && fam4.saved.cartFeeTotal === 0, fam4);
 
+  // ── A per-cart course charges members the public cart, so a % off membership gives only its seat there ──
+  const c3 = await prisma.course.create({ data: { name: 'Two Groups 3', slug: `${TAG}-e`, cartPricing: 'per_cart', hasMemberPricing: true, hasResidentPricing: true, publicAdvanceDays: 10, operatorId: op.id, address: '1 Test Dr', city: 'T', state: 'NY', zipCode: '10001', holes: 18, liveStatus: 'live', active: true, timezone: 'UTC', cancellationHours: 24, lateCancellationFeeCents: 0, noShowFeeCents: 0 } });
+  const pct = await prisma.membershipTier.create({ data: { courseId: c3.id, name: 'Pct', discountPct: 20, advanceBookingDays: 10 } });
+  const pctEmail = `pct@${TAG}.test`;
+  await prisma.courseMembership.create({ data: { courseId: c3.id, tierId: pct.id, membershipType: 'Pct', status: 'active', inviteEmail: pctEmail, inviteName: 'P', payToken: `${TAG}-pct` } });
+  await prisma.courseResident.create({ data: { courseId: c3.id, name: 'P', email: pctEmail, cardNumber: 'P', expiresOn: '' } });
+  const pctTt = await prisma.teeTime.create({ data: { courseId: c3.id, date, time: '09:00', holes: 18, greenFeeCents: 10000, cartFeeCents: 2000, residentRateCents: 3000, playersAvailable: 4, playersBooked: 0 } });
+  const pctCk = `gr_member=${await signMemberSessionToken({ courseId: c3.id, email: pctEmail })}`;
+  const pctRow = ((await get(`/api/member/${c3.slug}/tee-times?date=${date}`, pctCk)) as { id: string }[]).find(x => x.id === pctTt.id) as Record<string, unknown> | undefined;
+  check('per-cart course, 20% off membership: the lower resident seat wins in the list', pctRow?.own_rate === 'resident' && pctRow?.resident_green_fee === 30, pctRow);
+  const pctPrev = await preview(pctCk, pctTt.id);
+  check('…and the preview', pctPrev.residentGreenFee === 30 && pctPrev.member === null, pctPrev);
+  const pct1 = await book(pctCk, pctEmail, pctTt.id, 1, true);
+  check('…and the booking: $30 seat + the $20 cart', pct1.saved?.appliedRate === 'resident' && pct1.saved.residentPlayers === 1 && pct1.saved.greenFeeTotal === 3000 && pct1.saved.cartFeeTotal === 2000, pct1);
+
   // ── The swap reprices only a booking that already had a group rate, by the booking's own email ──
   const swapAs = async (bookingId: string, token: string | null, to: string, ck?: string) => {
     const s = await fetch(`${BASE_URL}/api/manage/${bookingId}/swap-time`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(ck ? { cookie: ck } : {}) }, body: JSON.stringify({ token, newTeeTimeId: to, termsAccepted: true }) });

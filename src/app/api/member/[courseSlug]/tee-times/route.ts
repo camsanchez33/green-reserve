@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
 import { dealPct } from '@/lib/last-minute';
 import { pickOwnSeat, memberGivesMore } from '@/lib/two-groups';
+import { cartRuleOf } from '@/lib/cart-pricing';
 import { demandPctAt, onlinePublicSeat, dealWins, loadDemand } from '@/lib/demand-pricing';
 import { todayIn, clockIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
@@ -102,7 +103,7 @@ export async function GET(
       const dealShown = dealWins(t.greenFeeCents, pct, dem);
       const pick = pickOwnSeat(tierRates ? tierRates.greenFeeCents : null, residentCard && t.residentRateCents != null ? t.residentRateCents : null,
         { pubSeat: pub, dealPct: pct, publicCents: t.greenFeeCents, stack: course.lastMinuteStack },
-        !!pricingTier && !!tierRates && memberGivesMore(pricingTier, tierRates.cartFeeCents, t.cartFeeCents));
+        !!pricingTier && !!tierRates && memberGivesMore(pricingTier, tierRates.cartFeeCents, t.cartFeeCents, cartRuleOf(course.cartPricing) === 'per_cart'));
       // The member's prices hold at this time only when the member seat won; a resident seat leaves the rest public.
       const rates = pick.group === 'member' ? tierRates : null;
 

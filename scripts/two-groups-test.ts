@@ -42,7 +42,8 @@ check('never above the public seat; both capped there is a tie, member', r.group
 // The membership gives more than its seat (guests at the member rate, a cheaper cart): the member rate stays.
 r = pickOwnSeat(4000, 3900, none, true);
 check('the member gives more here: member, even with a lower resident seat', r.group === 'member' && r.seat === 4000, r);
-check('memberGivesMore: guests at the member rate, or a cheaper member cart', memberGivesMore({ guestsPayMemberRate: true }, 2000, 2000) && memberGivesMore({ guestsPayMemberRate: false }, 0, 2000) && !memberGivesMore({ guestsPayMemberRate: false }, 2000, 2000));
+check('memberGivesMore: guests at the member rate, or a cheaper member cart', memberGivesMore({ guestsPayMemberRate: true }, 2000, 2000, false) && memberGivesMore({ guestsPayMemberRate: false }, 0, 2000, false) && !memberGivesMore({ guestsPayMemberRate: false }, 2000, 2000, false));
+check('…a per-cart course charges members the public cart, so a member cart price is no saving there', !memberGivesMore({ guestsPayMemberRate: false }, 0, 2000, true) && memberGivesMore({ guestsPayMemberRate: true }, 0, 2000, true));
 check('ratedSeat matches the deal rule', ratedSeat(6000, deal) === 5000 && ratedSeat(6000, stacked) === 3000 && ratedSeat(4000, none) === 4000);
 
 // One function, every path: the four callers import it and none keeps its own member-vs-resident choice.

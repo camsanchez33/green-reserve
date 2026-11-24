@@ -24,9 +24,11 @@ export const ratedSeat = (rateCents: number, d: SeatDeals) =>
 
 export type OwnSeat = { group: OwnSeatGroup | null; memberSeat: number | null; residentSeat: number | null; seat: number | null };
 
-/** Whether the member's tier gives more than the own seat at this time (lib/tier-rates applyTierRates' cart). */
-export const memberGivesMore = (tier: { guestsPayMemberRate: boolean }, memberCartCents: number, publicCartCents: number) =>
-  tier.guestsPayMemberRate || memberCartCents < publicCartCents;
+/** Whether the member's tier gives more than the own seat at this time (lib/tier-rates applyTierRates' cart). A course
+ *  that prices carts per cart charges members the time's cart price too (lib/cart-pricing), so its member cart is no
+ *  saving there: `perCart` true leaves only the guests' rate. */
+export const memberGivesMore = (tier: { guestsPayMemberRate: boolean }, memberCartCents: number, publicCartCents: number, perCart: boolean) =>
+  tier.guestsPayMemberRate || (!perCart && memberCartCents < publicCartCents);
 
 /**
  * The golfer's own seat. `memberCents`: the member green fee at this time (applyTierRates), null when no member price

@@ -196,7 +196,7 @@ export async function POST(req: NextRequest) {
   const residentCard = teeTimeFull.residentRateCents != null && residentPricingOn(teeTimeFull.course)
     ? await loggedInResident(teeTimeFull.courseId, teeTimeFull.date) : null;
   const pick = pickOwnSeat(appliedTier ? resolvedGreenFeeOverride : null, residentCard ? teeTimeFull.residentRateCents : null, seatDeals,
-    !!appliedTier && memberGivesMore(appliedTier, resolvedCartFeeOverride ?? teeTimeFull.cartFeeCents, teeTimeFull.cartFeeCents));
+    !!appliedTier && memberGivesMore(appliedTier, resolvedCartFeeOverride ?? teeTimeFull.cartFeeCents, teeTimeFull.cartFeeCents, cartRuleOf(teeTimeFull.course.cartPricing) === 'per_cart'));
   if (pick.group === 'resident' && appliedTier) {
     // The resident rate is lower: this is a resident booking, and the member's prices (cart too) don't apply.
     appliedTier = null; appliedTierName = 'standard'; appliedRate = 'standard';
