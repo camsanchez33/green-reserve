@@ -13,6 +13,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { golferLookVars, type CourseLook } from '@/components/golfer/look';
 import { LookBackground } from '@/components/golfer/useLookBackground';
 import { CourseFooter } from '@/components/golfer/CourseFrame';
+import { GolferAsk } from '@/components/golfer/GolferAsk';
 import { loginOffered } from './login/login-helpers';
 import AlertSheet, { alertPartOf, type AlertSheetOpen } from '@/components/golfer/AlertSheet';
 import g from '@/components/golfer/golfer.module.css';
@@ -1124,6 +1125,8 @@ export default function CourseDetailPage({
         </div>
       </div>
       <CourseFooter course={course} accent={course.brand_color || '#173B2A'} />
+      {/* ASSIST-6: golfer questions, only when the course turned them on. */}
+      <GolferAsk slug={slug} />
 
       {/* Item 7: tee time alerts, over the booking page; focus returns to whatever opened it. */}
       {alertSheet && (
