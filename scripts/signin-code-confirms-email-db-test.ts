@@ -21,6 +21,7 @@ let failed = 0;
 const ok = (l: string, c: boolean, d?: unknown) => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c || d === undefined ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
 
 async function cleanup() {
+  await prisma.rateLimit.deleteMany({ where: { key: 'verify-email:198.51.100.7' } });
   await prisma.securityEvent.deleteMany({ where: { email: { startsWith: TAG } } }).catch(() => {});
   await prisma.courseOperator.deleteMany({ where: { email: { startsWith: TAG } } });
 }

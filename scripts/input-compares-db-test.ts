@@ -8,7 +8,7 @@ import { randomBytes } from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { SignJWT } from 'jose';
-import { verifyToken, signToken } from '../src/lib/auth';
+import { verifyToken } from '../src/lib/auth';
 import { secretEquals } from '../src/lib/secret-compare';
 import { cronAuthFailure } from '../src/lib/cron-auth';
 import { POST as verifyPOST } from '../src/app/api/auth/verify/route';
@@ -32,6 +32,7 @@ async function cleanup() {
 }
 
 async function main() {
+  if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET must be set (as in CI): the algorithm check signs with it');
   await cleanup();
 
   // L10: the compare helper.
@@ -53,7 +54,8 @@ async function main() {
   // Behaviour, not only source: a token signed with the right secret but another algorithm is refused.
   const key = new TextEncoder().encode(process.env.JWT_SECRET!);
   const hs384 = await new SignJWT({ type: 'operator', operatorId: 'x' }).setProtectedHeader({ alg: 'HS384' }).setExpirationTime('1h').sign(key);
-  check('a right-secret HS384 token is refused; HS256 is accepted', (await verifyToken(hs384)) === null && !!(await verifyToken(await signToken({ operatorId: 'x', email: 'x@test.local', sv: 0 }))));
+  const hs256 = await new SignJWT({ type: 'operator', operatorId: 'x' }).setProtectedHeader({ alg: 'HS256' }).setExpirationTime('1h').sign(key);
+  check('a right-secret HS384 token is refused; the same token as HS256 is accepted', (await verifyToken(hs384)) === null && !!(await verifyToken(hs256)));
 
   // M2: a filter object never reaches the query.
   const token = randomBytes(32).toString('hex');
