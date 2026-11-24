@@ -1,7 +1,8 @@
 // Security audit 2026-11-24 (M13): Next.js at or past 15.5.29, which fixes GHSA-f3mh-rxg3-f5g2
-// (HttpOnly cookies exposed through a response header on Edge runtime routes: src/middleware.ts
-// runs on Edge and reads gr_operator), GHSA-7qx7-33qx-rqx2 and GHSA-pc58-hwjq-p385. The CI
-// package gate fails only on high advisories, so these moderate ones need their own floor.
+// (HttpOnly cookies exposed through a response header on Edge runtime routes; we have none today,
+// and middleware is outside that fix and sets no cookie), GHSA-7qx7-33qx-rqx2 and
+// GHSA-pc58-hwjq-p385. A floor, not a live leak: the CI package gate fails only on high
+// advisories, so these moderate ones need their own.
 // Run: npx tsx scripts/next-version-test.ts
 import { readFileSync } from 'fs';
 
