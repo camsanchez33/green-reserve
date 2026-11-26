@@ -59,7 +59,14 @@ export async function rateLimitCount(key: string, limit: number, windowSeconds: 
   }
 }
 
+/**
+ * The connection's address for per-IP limits. Audit 2026-11-24 L14: the header the platform sets comes
+ * first (Vercel: x-vercel-forwarded-for, then x-real-ip), so a client can't pick its own bucket by sending
+ * an X-Forwarded-For; the left-most X-Forwarded-For hop is only the fallback off the platform (local runs).
+ */
 export function clientIp(req: Request): string {
+  const platform = req.headers.get('x-vercel-forwarded-for') || req.headers.get('x-real-ip');
+  if (platform) return platform.split(',')[0].trim();
   const fwd = req.headers.get('x-forwarded-for');
   return fwd ? fwd.split(',')[0].trim() : 'unknown';
 }

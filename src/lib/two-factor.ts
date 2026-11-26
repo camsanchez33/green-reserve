@@ -56,7 +56,7 @@ export async function issueTwoFactorCode(operator: CourseOperator, methodOverrid
       await sendTwoFactorCodeEmail({ operatorName: operator.name, operatorEmail: operator.email, code: emailCode });
     }
   } else {
-    console.log('[2fa] sending via email to:', operator.email);
+    console.log('[2fa] sending via email — operatorId:', operator.id); // L13: the row id, never the address
     await sendTwoFactorCodeEmail({ operatorName: operator.name, operatorEmail: operator.email, code });
   }
 

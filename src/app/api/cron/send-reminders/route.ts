@@ -44,7 +44,7 @@ export const GET = cronRoute('send-reminders', async (req: NextRequest) => {
         checkInToken: booking.checkInToken,
       });
       sent++;
-    } catch (err) { console.error(`Reminder failed for ${booking.golferEmail}:`, err); }
+    } catch (err) { console.error(JSON.stringify({ ev: 'reminder.fail', bookingId: booking.id, error: err instanceof Error ? err.message : String(err) })); } // L13: the row id, never the address
   }
 
   // ── Membership renewal reminders ──

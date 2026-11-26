@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
-import { Resend } from 'resend';
-import { ADMIN_EMAIL } from '@/lib/contact';
+import { sendStaffLoginLinkEmail } from '@/lib/email';
 import { withAudit } from '@/lib/admin-audit';
-import { logSent } from '@/lib/sent-messages';
 
 async function resendStaffSetup(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -13,8 +11,8 @@ async function resendStaffSetup(req: NextRequest) {
   if (noArea) return noArea;
   if (!requireRole(session, MANAGER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const { staffId } = await req.json();
-  if (!staffId) return NextResponse.json({ error: 'Missing staffId' }, { status: 400 });
+  const { staffId } = ((await req.json().catch(() => null)) ?? {}) as { staffId?: unknown };
+  if (typeof staffId !== 'string' || !staffId) return NextResponse.json({ error: 'Missing staffId' }, { status: 400 });
 
   const staff = await prisma.courseStaff.findUnique({
     where: { id: staffId },
@@ -22,23 +20,13 @@ async function resendStaffSetup(req: NextRequest) {
   });
   if (!staff) return NextResponse.json({ error: 'Staff not found' }, { status: 404 });
 
-  const resend = new Resend(process.env.RESEND_API_KEY);
-  const loginUrl = `${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/dashboard/login`;
-
-  // Awaited, and Resend's returned error checked: fired-and-forgotten this died
-  // when the function froze, and Resend never throws — so the admin was told
-  // "sent" either way (CLAUDE.md gotchas 6 and 7).
-  const r = await resend.emails.send({
-    from: `GreenReserve <${ADMIN_EMAIL}>`,
-    to: staff.email,
-    subject: `Your GreenReserve staff login — ${staff.course?.name ?? ''}`,
-    html: `<p>Hi ${staff.name},</p><p>Here is your dashboard login link:</p><p><a href="${loginUrl}">${loginUrl}</a></p><p>Your login email: <strong>${staff.email}</strong></p><p>If you&apos;ve forgotten your password, use the reset link on the login page.</p>`,
-  }).catch(err => ({ data: null, error: { message: err instanceof Error ? err.message : String(err) } }));
-  // BRAIN-1b: this one sends outside lib/email.ts, so it logs itself.
-  await logSent({ kind: 'staff_setup_email', courseId: staff.courseId, channel: 'email', to: staff.email, status: r.error ? 'failed' : 'sent', providerId: r.data?.id, error: r.error?.message });
-  if (r.error) {
-    console.error('Staff setup email failed:', r.error);
-    return NextResponse.json({ error: `The login email did not send (${r.error.message}). Check the address and try again.` }, { status: 502 });
+  // Audit 2026-11-24 L7: through getResend() and letterEmail() (every string escaped; the send is logged
+  // by getResend and throws on a Resend error). It was hand-built HTML from the unescaped name, on its own client.
+  try {
+    await sendStaffLoginLinkEmail({ to: staff.email, personName: staff.name, courseName: staff.course?.name ?? '', courseId: staff.courseId });
+  } catch (err) {
+    console.error(JSON.stringify({ ev: 'staff_setup_email.fail', staffId: staff.id, error: err instanceof Error ? err.message : String(err) }));
+    return NextResponse.json({ error: `The login email did not send (${err instanceof Error ? err.message : 'email error'}). Check the address and try again.` }, { status: 502 });
   }
 
   return NextResponse.json({ success: true });

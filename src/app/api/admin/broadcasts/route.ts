@@ -16,8 +16,8 @@ async function recipients() {
     orderBy: { name: 'asc' },
   });
   // One operator can run several courses — email them once.
-  const operators = new Map<string, { email: string; name: string }>();
-  for (const c of courses) if (c.operator) operators.set(c.operator.id, { email: c.operator.email, name: c.operator.name });
+  const operators = new Map<string, { id: string; email: string; name: string }>();
+  for (const c of courses) if (c.operator) operators.set(c.operator.id, { id: c.operator.id, email: c.operator.email, name: c.operator.name });
   return { courses, operators: [...operators.values()] };
 }
 
@@ -116,7 +116,7 @@ async function postBroadcast(req: NextRequest) {
     results.forEach((r, i) => {
       if (r.status === 'fulfilled') emailsSent++;
       else {
-        console.error('Announcement email failed for', operators[i].email, r.reason);
+        console.error(JSON.stringify({ ev: 'announcement_email.fail', operatorId: operators[i].id, error: r.reason instanceof Error ? r.reason.message : String(r.reason) })); // L13: the row id, never the address
         emailFailures.push(operators[i].email);
       }
     });
