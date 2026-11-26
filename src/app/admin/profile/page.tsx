@@ -105,7 +105,7 @@ export default function ProfilePage() {
   const app = installState ? (
     <ProfileCard title="App" labelId="pf-app"
       top={installState === 'prompt' ? <button type="button" className={s.lnk} onClick={install}>Install app</button> : undefined}>
-      <ProfileRow>{installState === 'prompt' ? <><span className={s.k}>This device</span>Not installed</> : SAFARI_INSTALL_TEXT[installState]}</ProfileRow>
+      {installState !== 'prompt' && <ProfileRow>{SAFARI_INSTALL_TEXT[installState]}</ProfileRow>}
     </ProfileCard>
   ) : null;
 
