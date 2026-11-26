@@ -192,23 +192,6 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     <BirdieWidget />
     <AgreementNotice />
     <Toaster />
-    {/* GLASS-2 (Cam 2026-11-12): what the glass frosts — blurred ribbons, fixed behind every rail page (globals.css .op-waves). */}
-    <svg className="op-waves" viewBox="0 0 1400 1100" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
-      <defs>
-        <filter id="op-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="38" /></filter>
-        <filter id="op-softer" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="16" /></filter>
-      </defs>
-      <g filter="url(#op-soft)">
-        <path className="w1" d="M-120 260 C 240 60, 520 420, 820 230 S 1300 40, 1560 300" />
-        <path className="w4" d="M-200 980 C 200 760, 460 1040, 760 820 S 1220 640, 1600 900" />
-        <path className="w2" d="M980 -80 C 860 220, 1180 380, 1040 640 S 1180 980, 1320 1180" />
-      </g>
-      <g filter="url(#op-softer)">
-        <path className="w3" d="M-60 520 C 300 380, 520 700, 900 520 S 1300 360, 1500 560" />
-        <path className="w3" d="M200 -60 C 300 200, 120 420, 380 640" />
-      </g>
-    </svg>
-
     {/* SD-2: below md the 224px rail is gone. A slim strip carries identity,
         the course switcher and sign-out; the tabs live in a bottom bar. */}
     <header className="md:hidden bg-white border-b border-line px-4 py-2.5 flex items-center gap-3">
