@@ -18,36 +18,17 @@ import { todayIn, addDaysStr } from './course-time';
 import { desiredSlots, generateTeeTimes } from './tee-sheet-engine';
 import { heldBy, ninesByProduct, type HoldEvent } from './event-hold';
 export { heldBy };
+// The helpers the event pages run in the browser live in a pure file, so those pages don't
+// pull this file's database code into the bundle (security audit 2026-11-24).
+import { DEFAULT_TASKS, shotgunWindow, HEADCOUNT_TASK, shotgunLabels, groupStartTime } from './event-shared';
+export { DEFAULT_TASKS, shotgunWindow, HEADCOUNT_TASK, shotgunLabels, groupStartTime };
 
 export const EVENT_KINDS = ['outing', 'tournament', 'league', 'other'] as const;
 export type EventKind = typeof EVENT_KINDS[number];
 export const KIND_LABEL: Record<EventKind, string> = { outing: 'Outing', tournament: 'Tournament', league: 'League night', other: 'Other' };
 
-/** The default prep checklist (Cam 2026-10-22), due N days before the event (negative = after). */
-export const DEFAULT_TASKS: { label: string; daysBefore: number }[] = [
-  { label: 'Confirm the headcount', daysBefore: 7 },
-  { label: 'Order the food', daysBefore: 5 },
-  { label: 'Make the pairings', daysBefore: 2 },
-  { label: 'Cart signs, scorecards and rules sheet', daysBefore: 1 },
-  { label: 'Send the final invoice', daysBefore: -1 },
-];
-
-const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
-const toTime = (m: number) => { const c = Math.max(0, Math.min(23 * 60 + 59, m)); return `${String(Math.floor(c / 60)).padStart(2, '0')}:${String(c % 60).padStart(2, '0')}`; };
 export const isTime = (t: unknown): t is string => typeof t === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(t);
 export const isDate = (d: unknown): d is string => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d + 'T12:00:00Z'));
-
-/**
- * A shotgun holds every tee from an hour before the start (groups get to their
- * holes) to the end of the round: 4½ hours for 18, 2¼ for 9 (Cam 2026-10-22).
- */
-export function shotgunWindow(start: string, holes: number): { from: string; to: string } {
-  const s = toMin(start);
-  return { from: toTime(s - 60), to: toTime(s + (holes <= 9 ? 135 : 270)) };
-}
-
-/** The default checklist item a guarantee answers. */
-export const HEADCOUNT_TASK = 'Confirm the headcount';
 
 /** The day the organizer's guaranteed headcount is due; null = the course doesn't ask for one. */
 export const guaranteeDue = (e: { date: string; guaranteeDaysBefore: number | null }) =>
@@ -351,31 +332,6 @@ export async function cancelEvent(courseId: string, id: string) {
   const released = await releaseHold(id, existing);
   if (existing.date >= todayIn((await prisma.course.findUnique({ where: { id: courseId }, select: { timezone: true } }))?.timezone)) await generateTeeTimes(courseId, existing.date);
   return { released };
-}
-
-/**
- * Revamp 3 fix 10 (Cam 2026-10-29): a shotgun with more groups than holes puts two
- * groups on a hole — they read 1A, 1B (by group number), never two "hole 1"s.
- * A hole with one group reads just its number.
- */
-export function shotgunLabels(groups: { groupNo: number; startHole: number | null }[]): Map<number, string> {
-  const byHole = new Map<number, number[]>();
-  for (const g of groups) if (g.startHole != null) byHole.set(g.startHole, [...new Set([...(byHole.get(g.startHole) ?? []), g.groupNo])]);
-  const out = new Map<number, string>();
-  for (const [hole, gs] of byHole) {
-    const sorted = [...gs].sort((a, b) => a - b);
-    sorted.forEach((g, i) => out.set(g, sorted.length > 1 ? `${hole}${String.fromCharCode(65 + Math.min(i, 25))}` : String(hole)));
-  }
-  return out;
-}
-
-/**
- * Revamp 3 fix 10: a tee-times event's group N starts at the Nth time it holds — or
- * nowhere, when a booking in the window left it fewer times than groups. Never the
- * first time again, which may be a public booking's.
- */
-export function groupStartTime(groupNo: number, heldTimes: string[]): string | null {
-  return heldTimes[groupNo - 1] ?? null;
 }
 
 /** Pure: put players into groups of `size` in list order, numbering groups from 1. Shotgun groups start on holes 1, 2, … (then 1B, 2B, …) */
