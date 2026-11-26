@@ -7,6 +7,7 @@ import { canOpenAdminHref } from '@/components/admin/admin-href';
 import ProblemRow, { type ProblemInfo } from './ProblemRow';
 import { useAdminSession } from '@/lib/admin-session-context';
 import g from './admin-glass.module.css';
+import OwnerAssistant from '@/components/admin/OwnerAssistant';
 
 // ADMIN-REDO Overview (Cam 2026-11-11, the "green glass" mockup,
 // ADMIN_REDO_SPEC.md): six numbers against last month, the fees chart with
@@ -252,6 +253,7 @@ export default function AdminOverview() {
           </>
         )}
       </main>
+      {role === 'owner' && <OwnerAssistant />}
     </>
   );
 }
