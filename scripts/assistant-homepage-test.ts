@@ -32,6 +32,7 @@ const lib = readFileSync(new URL('../src/lib/assistant/homepage.ts', import.meta
 const route = readFileSync(new URL('../src/app/api/assistant/homepage/route.ts', import.meta.url), 'utf8');
 ok('no database, no course data', !/prisma|getCourseBrief|courseId: (?!null)/.test(lib + route));
 ok('route: no tools', !/tools:/.test(route));
+ok('route: a time limit on the model call', /timeout: 20_000/.test(route) && /maxDuration = 30/.test(route));
 ok('route: key, then per-IP, before the body', route.indexOf('assistantClient()', route.indexOf('export async function POST')) < route.indexOf('publicIpAllows(') && route.indexOf('publicIpAllows(') < route.indexOf('req.json()'));
 ok('route: anything but a normal end → the Book a call line', /stop_reason !== 'end_turn' \|\| !text\) return NextResponse\.json\(\{ reply: HOMEPAGE_UNSURE/.test(route));
 ok('route: log has no words', !/logAssistant\(\{[^}]*(history|text|reply)/.test(route));
@@ -43,7 +44,13 @@ ok('widget: plain text, one link (Book a call)', !/dangerouslySetInnerHTML/.test
   delete process.env.ANTHROPIC_API_KEY;
   const { GET, POST } = await import('../src/app/api/assistant/homepage/route');
   ok('no key: GET off', (await (await GET()).json()).enabled === false);
-  ok('no key: POST 503', (await POST(new NextRequest('http://localhost/api/assistant/homepage', { method: 'POST', body: '{"messages":[{"role":"user","content":"hi"}]}' }))).status === 503);
+  ok('no key: POST 503', (await POST(new NextRequest('http://localhost/api/assistant/homepage', { method: 'POST', body: '{"messages":[{"role":"user","content":"hi"}]}', headers: { 'content-type': 'application/json' } }))).status === 503);
+  process.env.ANTHROPIC_API_KEY = 'test-key-never-sent';
+  ok('cross-site: text/plain refused', (await POST(new NextRequest('http://localhost/api/assistant/homepage', { method: 'POST', body: '{"messages":[{"role":"user","content":"hi"}]}', headers: { 'content-type': 'text/plain' } }))).status === 400);
+  process.env.ASSISTANT_OFF = 'homepage';
+  ok('kill switch: ASSISTANT_OFF=homepage → off', (await (await GET()).json()).enabled === false);
+  delete process.env.ASSISTANT_OFF;
+  delete process.env.ANTHROPIC_API_KEY;
   if (saved !== undefined) process.env.ANTHROPIC_API_KEY = saved;
   console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
   process.exit(failed ? 1 : 0);

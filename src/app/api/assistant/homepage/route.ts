@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { clientIp } from '@/lib/rate-limit';
 import { platformAllows, publicIpAllows } from '@/lib/assistant/caps';
-import { assistantClient, systemBlocks, logAssistant, ASSISTANT_MODEL, ASSISTANT_EFFORT, FALLBACK_BETA } from '@/lib/assistant/prompt';
+import { assistantClient, systemBlocks, logAssistant, personaOff, ASSISTANT_MODEL, ASSISTANT_EFFORT, FALLBACK_BETA } from '@/lib/assistant/prompt';
 import { HOMEPAGE_PERSONA, HOMEPAGE_MAX_TOKENS, HOMEPAGE_UNSURE, sanitizeHomepageHistory } from '@/lib/assistant/homepage';
 
 // ASSIST-5 (Cam 2026-11-24): "Ask about GreenReserve" on greenreserve.app. Public, no sign-in, no tools, no account or
@@ -15,14 +15,19 @@ import { HOMEPAGE_PERSONA, HOMEPAGE_MAX_TOKENS, HOMEPAGE_UNSURE, sanitizeHomepag
 // answer becomes the "Book a call" line. Logs carry tokens and how the turn ended, never the words.
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 export async function GET() {
-  return NextResponse.json({ enabled: !!assistantClient() }, { headers: { 'Cache-Control': 'no-store' } });
+  return NextResponse.json({ enabled: !!assistantClient() && !personaOff('homepage') }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function POST(req: NextRequest) {
   const client = assistantClient();
-  if (!client) return NextResponse.json({ error: 'Questions are not available right now.' }, { status: 503 });
+  if (!client || personaOff('homepage')) return NextResponse.json({ error: 'Questions are not available right now.' }, { status: 503 });
+  // Only this site's own page may ask: a JSON body and no cross-site fetch.
+  if (!/^application\/json\b/i.test(req.headers.get('content-type') ?? '') || req.headers.get('sec-fetch-site') === 'cross-site') {
+    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
+  }
   if (!(await publicIpAllows('homepage', clientIp(req)))) {
     return NextResponse.json({ error: 'That is a lot of questions — book a call and we will answer them all.' }, { status: 429 });
   }
@@ -42,7 +47,7 @@ export async function POST(req: NextRequest) {
       model: ASSISTANT_MODEL, max_tokens: HOMEPAGE_MAX_TOKENS, system: systemBlocks(HOMEPAGE_PERSONA, '', ''), messages: history,
       output_config: { effort: ASSISTANT_EFFORT },
       betas: [FALLBACK_BETA], fallbacks: 'default',
-    });
+    }, { timeout: 20_000 });
   } catch (err) {
     console.error('[assistant] homepage call failed:', err instanceof Anthropic.APIError ? `${err.status} ${err.name}` : err instanceof Error ? err.name : 'error');
     return NextResponse.json({ reply: HOMEPAGE_UNSURE });
