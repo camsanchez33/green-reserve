@@ -60,13 +60,15 @@ export function sanitizeHomepageHistory(raw: unknown): { role: 'user' | 'assista
     const r = (m as { role?: unknown }).role;
     const c = (m as { content?: unknown }).content;
     if ((r !== 'user' && r !== 'assistant') || typeof c !== 'string') continue;
-    const text = c.replace(/\s+/g, ' ').trim().slice(0, HOMEPAGE_MAX_CHARS);
+    const text = c.replace(/[<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, HOMEPAGE_MAX_CHARS);
     if (!text) continue;
     const last = turns[turns.length - 1];
     if (last && last.role === r) last.content = `${last.content} ${text}`.slice(0, HOMEPAGE_MAX_CHARS * 2);
     else turns.push({ role: r, content: text });
   }
-  while (turns.length && turns[0].role !== 'user') turns.shift();
-  while (turns.length && turns[turns.length - 1].role !== 'user') turns.pop();
-  return turns.slice(-HOMEPAGE_MAX_TURNS);
+  // Slice first, then trim, so a long conversation never starts on the bot's turn.
+  const kept = turns.slice(-HOMEPAGE_MAX_TURNS);
+  while (kept.length && kept[0].role !== 'user') kept.shift();
+  while (kept.length && kept[kept.length - 1].role !== 'user') kept.pop();
+  return kept;
 }
