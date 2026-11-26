@@ -68,8 +68,12 @@ the emailed 6-digit code is used instead. Columns on `AdminUser`:
 removed).
 
 - **Phone lost, recovery codes at hand:** sign in with a recovery code (format
-  `xxxx-xxxx`) in place of the app code, then on `/admin/profile` choose
-  "Set up a new device" and "Regenerate recovery codes".
+  `xxxx-xxxx`) in place of the app code, then go straight to `/admin/profile`
+  and choose "Move to a new phone". Within 5 minutes of a recovery-code sign-in
+  that needs nothing more (security audit 2026-11-24 M6); after that it asks
+  "Confirm it's you" (passkey, app or another recovery code), so if that was
+  your last code, do it inside the 5 minutes. Then "Make new codes" (it asks "Confirm
+  it's you" too; the new app answers it).
 - **Phone and recovery codes both gone:** drop the account back to the email
   path so the owner can get in and re-enrol. In the Neon SQL editor, against
   the production database, for the owner's row only:

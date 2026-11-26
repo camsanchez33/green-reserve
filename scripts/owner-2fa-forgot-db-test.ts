@@ -28,6 +28,7 @@ import { authenticator } from 'otplib';
 import { POST as twoFactor } from '../src/app/api/admin/two-factor/route';
 import { POST as forgot } from '../src/app/api/admin/forgot-password/route';
 import { POST as passkeys } from '../src/app/api/admin/passkeys/route';
+import { authenticationOptions, registrationOptions, addPasskey, consumeChallenge } from '../src/lib/owner-passkey';
 
 const TAG = 'owner2faforgottest';
 let failed = 0;
@@ -53,8 +54,8 @@ const post2fa = (body: unknown) => twoFactor(req('/api/admin/two-factor', body),
   // ── M6 ──
   const owner = await prisma.adminUser.create({ data: { name: 'Two Owner', email: `${TAG}+owner@t.local`, passwordHash: 'x', role: 'owner', active: true } });
   const device = await prisma.ownerDevice.create({ data: { adminId: owner.id, tokenHash: `${TAG}-dev`, approvedAt: new Date() } });
-  const session = async (stepUpAt: Date | null, stepUpFresh = false, method = 'email') => {
-    const s = await prisma.ownerSession.create({ data: { adminId: owner.id, deviceId: device.id, method, expiresAt: new Date(Date.now() + 3600_000), stepUpAt, stepUpFresh } });
+  const session = async (stepUpAt: Date | null, stepUpFresh = false, method = 'email', createdAt = new Date()) => {
+    const s = await prisma.ownerSession.create({ data: { adminId: owner.id, deviceId: device.id, method, expiresAt: new Date(Date.now() + 3600_000), stepUpAt, stepUpFresh, createdAt } });
     jar = { gr_owner: await signOwnerToken(s.id, owner.id, s.expiresAt) };
     return s;
   };
@@ -101,7 +102,18 @@ const post2fa = (body: unknown) => twoFactor(req('/api/admin/two-factor', body),
   await session(new Date(), false, 'recovery');
   ok('M6 right after signing in with a recovery code, the app can be moved (no lockout)', (await post2fa({ action: 'start' })).status === 200);
   await session(new Date(Date.now() - 10 * 60_000), false, 'recovery');
-  ok('M6 …but not 10 minutes later', (await post2fa({ action: 'start' })).status === 403);
+  const late = await post2fa({ action: 'start' });
+  ok('M6 …but not 10 minutes later, and the answer says how to get back in', late.status === 403 && /Sign in again at \/cam with a recovery code/.test(((await late.json()) as { error?: string }).error ?? ''));
+  await session(new Date(), false, 'recovery', new Date(Date.now() - 10 * 60_000));
+  ok('M6 …and a later confirm does not reopen it (the 5 minutes run from the sign-in)', (await post2fa({ action: 'start' })).status === 403);
+
+  // The passkey challenge slot is tagged: one armed to confirm or sign in can't register a passkey.
+  await authenticationOptions(owner.id);
+  const sneaky = await addPasskey(owner.id, { id: 'x', rawId: 'x', type: 'public-key', response: { clientDataJSON: '', attestationObject: '' }, clientExtensionResults: {} } as never, 'mine');
+  ok('M6 a challenge armed by "Confirm it\'s you" cannot be used to add a passkey', !sneaky.ok && /too long/.test(sneaky.ok ? '' : sneaky.error), sneaky);
+  ok('M6 …and it is still there for the confirm it was armed for', !!(await consumeChallenge(owner.id, 'authenticate')));
+  await registrationOptions({ id: owner.id, email: owner.email, name: owner.name });
+  ok('M6 a registration challenge cannot answer a sign-in or confirm', (await consumeChallenge(owner.id, 'authenticate')) === null && !!(await consumeChallenge(owner.id, 'register')));
 
   // Adding a passkey needs a fresh confirm too (a new passkey would pass every later confirm).
   await session(new Date(), false);

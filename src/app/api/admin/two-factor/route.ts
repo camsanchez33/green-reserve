@@ -55,15 +55,23 @@ async function announce(req: NextRequest, admin: { id: string; email: string; na
   }
 }
 
+const RECOVERY_MOVE_MS = 5 * 60_000;
+
 /** M6: the check before a new authenticator secret is handed out. Called last, so a refusal spends nothing. */
 async function enrolGate(session: AdminSession, replacing: boolean): Promise<NextResponse | null> {
   if (replacing) {
     if (!stepUpRequired(session) && session.ownerSessionId) {
-      // Signed in with a recovery code, and a second factor proved in the last 5 minutes.
-      const s = await prisma.ownerSession.findUnique({ where: { id: session.ownerSessionId }, select: { method: true } });
-      if (s?.method === 'recovery') return null;
+      // Signed in with a recovery code in the last 5 minutes (the sign-in itself, not a later confirm).
+      const s = await prisma.ownerSession.findUnique({ where: { id: session.ownerSessionId }, select: { method: true, createdAt: true } });
+      if (s?.method === 'recovery' && Date.now() - s.createdAt.getTime() < RECOVERY_MOVE_MS) return null;
     }
-    return freshStepUpRequired(session);
+    const refused = await freshStepUpRequired(session);
+    if (refused && session.ownerSessionId) {
+      const s = await prisma.ownerSession.findUnique({ where: { id: session.ownerSessionId }, select: { method: true } });
+      // Say why, so an owner who spent their last recovery code knows the way back.
+      if (s?.method === 'recovery') return NextResponse.json({ error: 'Confirm it’s you to move the app. No passkey, app or recovery code left? Sign in again at /cam with a recovery code and come straight here: for 5 minutes after that, moving the app needs nothing more.', code: 'step_up' }, { status: 403 });
+    }
+    return refused;
   }
   if (!stepUpRequired(session)) return null;
   return NextResponse.json({ error: 'For your safety, set this up within 5 minutes of signing in. Sign in again at /cam, then come straight here.' }, { status: 403 });

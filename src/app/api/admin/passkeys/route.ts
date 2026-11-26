@@ -50,7 +50,7 @@ async function postPasskey(req: NextRequest) {
   if (body.action === 'options') {
     // Audit 2026-11-24 M6 review: adding a passkey changes how the account signs in, and a new passkey can
     // then pass every fresh confirm, so it needs a FRESH confirm (used up here), not just a recent sign-in.
-    // 'add' answers this prompt's challenge, which only these options armed.
+    // 'add' answers only a registration challenge, which only these options arm (lib/owner-passkey tags the slot).
     const su = await freshStepUpRequired(g.session); if (su) return su;
     return NextResponse.json(await registrationOptions(admin));
   }
