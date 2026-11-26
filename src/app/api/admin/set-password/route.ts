@@ -22,7 +22,12 @@ export async function POST(req: NextRequest) {
   }
 
   const admin = await prisma.adminUser.findUnique({ where: { id: payload.adminId } });
-  if (!admin) return NextResponse.json({ error: 'Account not found' }, { status: 404 });
+  // A genuinely signed link whose account is gone (deleted since it was sent). The link itself
+  // carried the email, so recording it reveals nothing the caller did not already send.
+  if (!admin) {
+    await securityEvent(req, { kind: 'signin_failed', surface: 'admin', email: payload.email, accountId: payload.adminId, detail: 'set password, account no longer exists' });
+    return NextResponse.json({ error: 'Account not found' }, { status: 404 });
+  }
 
   // MP-2b: MP-2 stopped this route setting active:true (so a pre-deactivation
   // token could not reactivate an account) but left it happily writing a
@@ -31,6 +36,7 @@ export async function POST(req: NextRequest) {
   // "check your email" because it refuses inactive accounts by design. Three
   // false confirmations and no way out. Say the true thing instead.
   if (!admin.active) {
+    await securityEvent(req, { kind: 'signin_failed', surface: admin.role === 'owner' ? 'owner' : 'admin', email: admin.email, accountId: admin.id, detail: 'set password, account deactivated' });
     return NextResponse.json({ error: 'This account has been deactivated — contact an owner to have it re-enabled.' }, { status: 403 });
   }
 
@@ -41,8 +47,10 @@ export async function POST(req: NextRequest) {
   }
 
   const now = new Date();
-  if (admin.setPasswordTokenExpiry && admin.setPasswordTokenExpiry < now)
+  if (admin.setPasswordTokenExpiry && admin.setPasswordTokenExpiry < now) {
+    await securityEvent(req, { kind: 'signin_failed', surface: admin.role === 'owner' ? 'owner' : 'admin', email: admin.email, accountId: admin.id, detail: 'set password, link expired' });
     return NextResponse.json({ error: 'Token expired' }, { status: 400 });
+  }
 
   // If mustChangePassword was already false, this is a forgot-password reset
   // (not first-time account activation) — worth a security notification.

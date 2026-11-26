@@ -35,7 +35,7 @@ const isSha = (v: string | null) => !!v && /^[a-f0-9]{64}$/.test(v);
 
 async function cleanup() {
   await prisma.rateLimit.deleteMany({ where: { OR: [{ key: { contains: TAG } }, { key: { contains: '198.18.0.' } }] } });
-  await prisma.securityEvent.deleteMany({ where: { email: { startsWith: TAG } } }).catch(() => {});
+  await prisma.securityEvent.deleteMany({ where: { OR: [{ email: { startsWith: TAG } }, { ip: { startsWith: '198.18.' } }] } }).catch(() => {});
   await prisma.courseOperator.deleteMany({ where: { email: { startsWith: TAG } } });
   await prisma.adminUser.deleteMany({ where: { email: { startsWith: TAG } } });
 }
@@ -85,6 +85,54 @@ const get = (token: string) => resetGet(new NextRequest(`http://localhost/api/au
   const otherLink = await signAdminSetPasswordToken({ adminId: emp.id, email: emp.email });
   ok('admin set-password: a signed link that is not the stored one is refused, and recorded', (await post(setPassword, '/api/admin/set-password', { token: otherLink, password: PW })).status === 400
     && (await prisma.securityEvent.count({ where: { accountId: emp.id, detail: 'set password, link already used or replaced' } })) >= 1);
+
+  // ── Every refusal on a set-password or reset link is a security event; the replies stay as they were ──
+  const events = (where: object) => prisma.securityEvent.count({ where });
+  const bodyOf = async (r: Response) => ({ status: r.status, body: await r.json() });
+
+  const gone = await signAdminSetPasswordToken({ adminId: 'no-such-admin-' + TAG, email: `${TAG}+gone@t.local` });
+  const goneRes = await bodyOf(await post(setPassword, '/api/admin/set-password', { token: gone, password: PW }));
+  ok('admin set-password: account gone → same 404 reply', goneRes.status === 404 && goneRes.body.error === 'Account not found', goneRes);
+  ok('admin set-password: account gone is recorded', (await events({ accountId: 'no-such-admin-' + TAG, kind: 'signin_failed', surface: 'admin', detail: 'set password, account no longer exists' })) === 1);
+
+  const off = await prisma.adminUser.create({ data: { name: 'Hash Off', email: `${TAG}+off@t.local`, passwordHash: 'x', role: 'support', active: false } });
+  const offLink = await signAdminSetPasswordToken({ adminId: off.id, email: off.email });
+  await prisma.adminUser.update({ where: { id: off.id }, data: { setPasswordToken: hashToken(offLink), setPasswordTokenExpiry: new Date(Date.now() + 3_600_000) } });
+  const offRes = await bodyOf(await post(setPassword, '/api/admin/set-password', { token: offLink, password: PW }));
+  ok('admin set-password: deactivated → same 403 reply', offRes.status === 403 && offRes.body.error === 'This account has been deactivated — contact an owner to have it re-enabled.', offRes);
+  ok('admin set-password: deactivated is recorded', (await events({ accountId: off.id, kind: 'signin_failed', surface: 'admin', detail: 'set password, account deactivated' })) === 1);
+  ok('admin set-password: deactivated account keeps its old password', (await prisma.adminUser.findUniqueOrThrow({ where: { id: off.id } })).passwordHash === 'x');
+
+  const oldLink = await signAdminSetPasswordToken({ adminId: emp.id, email: emp.email });
+  await prisma.adminUser.update({ where: { id: emp.id }, data: { setPasswordToken: hashToken(oldLink), setPasswordTokenExpiry: new Date(Date.now() - 60_000) } });
+  const oldRes = await bodyOf(await post(setPassword, '/api/admin/set-password', { token: oldLink, password: PW }));
+  ok('admin set-password: expired → same 400 reply', oldRes.status === 400 && oldRes.body.error === 'Token expired', oldRes);
+  ok('admin set-password: expired is recorded', (await events({ accountId: emp.id, kind: 'signin_failed', surface: 'admin', detail: 'set password, link expired' })) === 1);
+
+  const INVALID = 'This reset link is invalid or has expired.';
+  const anon = (ip: string) => (body: unknown) => resetPost(new NextRequest('http://localhost/api/auth/reset-password', {
+    method: 'POST', body: JSON.stringify(body), headers: { 'content-type': 'application/json', 'x-forwarded-for': ip },
+  }));
+  const badOwner = await bodyOf(await anon('198.18.1.1')({ token: 'f'.repeat(64), password: PW }));
+  ok('owner reset: an unknown link → same reply', badOwner.status === 400 && badOwner.body.error === INVALID, badOwner);
+  ok('owner reset: an unknown link is recorded, with no account named', (await events({ ip: '198.18.1.1', kind: 'signin_failed', surface: 'course', detail: 'owner reset password, bad or already used link', accountId: null, email: '' })) === 1);
+
+  const opLate = 'e'.repeat(64);
+  await prisma.courseOperator.update({ where: { id: op.id }, data: { resetToken: hashToken(opLate), resetTokenExpiry: new Date(Date.now() - 60_000) } });
+  const lateRes = await bodyOf(await post(resetPost, '/api/auth/reset-password', { token: opLate, password: PW }));
+  ok('owner reset: expired → same reply, and recorded', lateRes.status === 400 && lateRes.body.error === INVALID
+    && (await events({ accountId: op.id, kind: 'signin_failed', detail: 'owner reset password, link expired' })) === 1, lateRes);
+
+  const opTwice = 'd'.repeat(64);
+  await prisma.courseOperator.update({ where: { id: op.id }, data: { resetToken: hashToken(opTwice), resetTokenExpiry: new Date(Date.now() + 3_600_000) } });
+  const opRace = await Promise.all([1, 2].map(() => post(resetPost, '/api/auth/reset-password', { token: opTwice, password: PW }).then(r => r.status)));
+  ok('owner reset: one link twice at once lands once', opRace.filter(s => s === 200).length === 1 && opRace.filter(s => s === 400).length === 1, opRace);
+  ok('owner reset: the race loser is recorded', (await events({ accountId: op.id, detail: 'owner reset password, link used by another submit at the same moment' })) === 1);
+  ok('owner reset: the change itself is recorded', (await events({ accountId: op.id, kind: 'password_changed', detail: 'owner, reset link' })) === 1);
+
+  const badStaff = await bodyOf(await anon('198.18.1.2')({ token: 'aaa.bbb.ccc', password: PW }));
+  ok('staff reset: a bad link → same reply, and recorded', badStaff.status === 400 && badStaff.body.error === INVALID
+    && (await events({ ip: '198.18.1.2', kind: 'signin_failed', surface: 'course', detail: 'staff reset password, bad or expired link' })) === 1, badStaff);
 
   for (const f of ['src/app/api/admin/login/route.ts', 'src/app/api/cam/login/route.ts', 'src/app/api/admin/forgot-password/route.ts']) {
     ok(`${f.split('/').slice(-2, -1)[0]}: stores only the hash of the set-password link`, read(f).includes('setPasswordToken: hashToken(token)') && !read(f).includes('setPasswordToken: token,'));
