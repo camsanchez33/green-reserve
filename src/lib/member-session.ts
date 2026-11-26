@@ -128,7 +128,7 @@ function membershipEmailWhere(courseId: string, email: string): Prisma.CourseMem
 }
 
 /** The membership whose member rates and window apply to this email at this course right now (lib/member-rates), or
- *  null. A member's rate still wins over a resident's; the two-groups rule (lower price, longer window) comes later. */
+ *  null. A golfer who is also a resident gets the lower own seat and the longer window (TWO-GROUPS-PRICE, lib/two-groups). */
 export async function liveMembershipFor(course: { id: string } & LapseRule, email: string) {
   if (!email.trim()) return null;
   return prisma.courseMembership.findFirst({

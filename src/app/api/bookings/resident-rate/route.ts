@@ -3,7 +3,9 @@ import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
 import { prisma } from '@/lib/prisma';
 import { loggedInAt, liveMembershipFor, residentOn } from '@/lib/member-session';
 import { applyTierRates } from '@/lib/tier-rates';
-import { dealPct, dealRateSeat } from '@/lib/last-minute';
+import { dealPct } from '@/lib/last-minute';
+import { pickOwnSeat, memberGivesMore } from '@/lib/two-groups';
+import { cartRuleOf } from '@/lib/cart-pricing';
 import { demandPctFor, onlinePublicSeat } from '@/lib/demand-pricing';
 import { holdingsFor, ROUND_PACKS_ON } from '@/lib/round-packs';
 
@@ -12,14 +14,16 @@ import { holdingsFor, ROUND_PACKS_ON } from '@/lib/round-packs';
 // another:
 //  • a live membership with a tier (this course's member sign-in, gr_member): the member's own spot at the member rate, guests at the public rate
 //    unless the tier includes them (Cam 2026-10-29, lib/member-rates);
-//  • otherwise RES-1: one player at the resident rate when their card is good.
+//  • otherwise RES-1: one player at the resident rate when their card is good;
+//  • in both groups (TWO-GROUPS-PRICE, Cam 2026-11-24, lib/two-groups): the lower own seat after deals, the member
+//    rate on a tie, never both.
 // PRICE-3: and the member's own round packs here. Says nothing to anyone else.
 export async function GET(req: NextRequest) {
   const teeTimeId = req.nextUrl.searchParams.get('teeTimeId') ?? '';
   if (!teeTimeId) return NextResponse.json({ residentGreenFee: null, member: null, packs: [] });
   const tt = await prisma.teeTime.findUnique({
     where: { id: teeTimeId },
-    select: { courseId: true, date: true, time: true, productId: true, residentRateCents: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, course: { select: { memberGraceDays: true, timezone: true, hasMemberPricing: true, hasResidentPricing: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true, id: true, demandMode: true, demandFloorPct: true, demandCeilingPct: true } } },
+    select: { courseId: true, date: true, time: true, productId: true, residentRateCents: true, greenFeeCents: true, cartFeeCents: true, memberRateCents: true, course: { select: { memberGraceDays: true, timezone: true, hasMemberPricing: true, hasResidentPricing: true, lastMinuteOn: true, lastMinuteHours: true, lastMinutePct: true, lastMinuteCounter: true, lastMinuteStack: true, cartPricing: true, id: true, demandMode: true, demandFloorPct: true, demandCeilingPct: true } } },
   });
   if (!tt) return NextResponse.json({ residentGreenFee: null, member: null, packs: [] });
   const grace = tt.course;
@@ -27,7 +31,7 @@ export async function GET(req: NextRequest) {
   const pct = dealPct(tt.course, tt, 'online');
   // PRICE-5: never above the online public seat (the lower of the deal and the demand price).
   const pub = onlinePublicSeat(tt.greenFeeCents, pct, await demandPctFor(tt.course, tt));
-  const rated = (cents: number) => Math.min(pub, dealRateSeat(pct, cents, tt.greenFeeCents, tt.course.lastMinuteStack));
+  const deals = { pubSeat: pub, dealPct: pct, publicCents: tt.greenFeeCents, stack: tt.course.lastMinuteStack };
   // Cam 2026-11-18: only this course's member sign-in counts (no golfer accounts).
   const signedIn = await loggedInAt(tt.courseId);
   // PRICE-3: the signed-in member's own round packs at this course (their member email is the holder).
@@ -38,14 +42,16 @@ export async function GET(req: NextRequest) {
   if (signedIn) tier = (await liveMembershipFor(grace, signedIn.email))?.tier ?? null;
   // Switched off in Settings (lib/pricing-switch): no member or resident rate is shown, as none is charged.
   if (!memberPricingOn(tt.course)) tier = null;
-  if (tier) {
-    const rates = applyTierRates(tt, tier);
+  const rates = tier ? applyTierRates(tt, tier) : null;
+  const card = tt.residentRateCents != null && residentPricingOn(tt.course) && signedIn ? await residentOn(tt.courseId, signedIn.email, tt.date) : null;
+  const pick = pickOwnSeat(rates ? rates.greenFeeCents : null, card ? tt.residentRateCents : null, deals, !!tier && !!rates && memberGivesMore(tier, rates.cartFeeCents, tt.cartFeeCents, cartRuleOf(tt.course.cartPricing) === 'per_cart'));
+  if (tier && rates && pick.group === 'member' && pick.seat != null) {
     return NextResponse.json({
       residentGreenFee: null,
-      member: { name: tier.name, greenFee: rated(rates.greenFeeCents) / 100, cartFee: rates.cartFeeCents / 100, guestsMemberRate: tier.guestsPayMemberRate },
+      member: { name: tier.name, greenFee: pick.seat / 100, cartFee: rates.cartFeeCents / 100, guestsMemberRate: tier.guestsPayMemberRate },
       packs,
     });
   }
-  if (tt.residentRateCents == null || !residentPricingOn(tt.course) || !signedIn || !(await residentOn(tt.courseId, signedIn.email, tt.date))) return NextResponse.json({ residentGreenFee: null, member: null, packs });
-  return NextResponse.json({ residentGreenFee: rated(tt.residentRateCents) / 100, member: null, packs });
+  if (pick.group === 'resident' && pick.seat != null) return NextResponse.json({ residentGreenFee: pick.seat / 100, member: null, packs });
+  return NextResponse.json({ residentGreenFee: null, member: null, packs });
 }

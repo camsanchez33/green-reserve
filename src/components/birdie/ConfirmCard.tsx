@@ -22,6 +22,7 @@ export function ConfirmCard({ card }: { card: ProposalCard }) {
     setState({ kind: 'applying' });
     let ok = false;
     let message = '';
+    let failedStatus: number | null = null;
     // ACT-2: a card may make several calls (one per tee time). They run in
     // order and stop at the first refusal, which is reported with how far it got.
     const calls = cardCalls(card);
@@ -34,6 +35,7 @@ export function ConfirmCard({ card }: { card: ProposalCard }) {
           body: JSON.stringify(call.body),
         });
         if (!r.ok) {
+          failedStatus = r.status;
           const d = await r.json().catch(() => ({}));
           const why = typeof d.error === 'string' ? d.error : `The change was refused (${r.status}).`;
           message = calls.length > 1 ? `${why} Stopped after ${done} of ${calls.length} — the rest were not changed.` : `${why}${typeof d.error === 'string' ? '' : ' Nothing was changed.'}`;
@@ -51,7 +53,7 @@ export function ConfirmCard({ card }: { card: ProposalCard }) {
     // its own route, and that is what the operator is shown.
     fetch('/api/birdie/chat', {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ applied: { title: card.title, method: card.call.method, path: card.call.path, ok, error: message, calls: calls.length, done } }),
+      body: JSON.stringify({ applied: { method: card.call.method, path: card.call.path, ok, status: failedStatus, calls: calls.length, done } }),
     }).catch(() => undefined);
     // A page showing what just changed (Settings' description) re-reads it.
     if (ok) window.dispatchEvent(new CustomEvent(APPLIED_EVENT, { detail: { paths: calls.map(c => c.path) } }));
