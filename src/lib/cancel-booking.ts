@@ -13,6 +13,7 @@ import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventA
 import { liveNoShowCharge, refundNoShowFee, chargeNoShow } from './no-show-fee';
 import { recordMove, feeBackCents, chargeWhat } from './money-ledger';
 import { roundApplicationFeeCents } from './shop';
+import { notBeingCharged, BEING_CHARGED, READER_STALE_MS } from './checkin-booking';
 
 export type CancellationOptions = {
   /**
@@ -36,15 +37,18 @@ export type CancellationOptions = {
   courseCalledOff?: 'weather' | 'closure';
 };
 
+const loadForCancel = (bookingId: string) => prisma.booking.findUnique({
+  where: { id: bookingId },
+  include: {
+    teeTime: true,
+    course: { select: { name: true, slug: true, cancellationHours: true, stripeAccountId: true, stripeAccountActive: true, timezone: true } },
+  },
+});
+type CancelBooking = NonNullable<Awaited<ReturnType<typeof loadForCancel>>>;
+
 export async function performCancellation(bookingId: string, actor: EventActor, opts: CancellationOptions = {}) {
-  const { notifySlotAlerts = true, reason, waiveFee = false, keepSlotBlocked = false } = opts;
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    include: {
-      teeTime: true,
-      course: { select: { name: true, slug: true, cancellationHours: true, stripeAccountId: true, stripeAccountActive: true, timezone: true } },
-    },
-  });
+  const { waiveFee = false } = opts;
+  let booking = await loadForCancel(bookingId);
 
   if (!booking) return { error: 'Booking not found', status: 404 } as const;
   if (booking.status === 'cancelled') return { error: 'Already cancelled', status: 409 } as const;
@@ -61,6 +65,34 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
       : 'This tee time has already gone off — mark the group a no-show instead.', status: 409 } as const;
   }
 
+  // Audit 2026-11-24 M1: the cancel ignored the charge lock, so a golfer cancelling while staff or the pay
+  // link were charging could end up paying for the round plus a hold or late fee, or be refunded while the
+  // booking stayed paid. The cancel now CLAIMS the round the way a card charge does (shopLockedAt, one
+  // conditional write) before any Stripe call: a live card charge or reader payment answers BEING_CHARGED,
+  // and while the cancel holds the claim, check-in, the pay link, the counter and the cutoff cron all
+  // refuse the round. The claim is let go when the cancel ends, whatever happened.
+  const stamp = new Date();
+  const claimed = await prisma.booking.updateMany({
+    where: { id: bookingId, status: 'confirmed', AND: [notBeingCharged(stamp.getTime()), { OR: [{ readerStartedAt: null }, { readerStartedAt: { lt: new Date(stamp.getTime() - READER_STALE_MS) } }] }] },
+    data: { shopLockedAt: stamp },
+  });
+  if (!claimed.count) {
+    const now = await prisma.booking.findUnique({ where: { id: bookingId }, select: { status: true } });
+    if (now?.status === 'cancelled') return { error: 'Already cancelled', status: 409 } as const;
+    if (now?.status === 'completed') return { error: 'This round was already checked in and paid for — nothing to cancel', status: 409 } as const;
+    return { error: BEING_CHARGED, status: 409 } as const;
+  }
+  try {
+    // Read again under the claim: a hold the cron took, or a payment, since the first read.
+    booking = (await loadForCancel(bookingId))!;
+    return await cancelUnderClaim(booking, bookingId, actor, opts, stamp);
+  } finally {
+    await prisma.booking.updateMany({ where: { id: bookingId, shopLockedAt: stamp }, data: { shopLockedAt: null } }).catch(err => console.error(JSON.stringify({ ev: 'cancel.unclaim.fail', bookingId, error: err instanceof Error ? err.message : String(err) })));
+  }
+}
+
+async function cancelUnderClaim(booking: CancelBooking, bookingId: string, actor: EventActor, opts: CancellationOptions, stamp: Date) {
+  const { notifySlotAlerts = true, reason, waiveFee = false, keepSlotBlocked = false } = opts;
   // MP-1b B1 — a round can now be PAID while still 'confirmed'.
   // collectPayment() (MP-1 fix-now #5) charges without checking anyone in, so a
   // booking can sit at confirmed + paid + roundPaymentIntentId with checkedInAt
@@ -224,7 +256,8 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   // conditional: only the cancel that moves it off 'confirmed' frees seats.
   const won = await prisma.$transaction(async (tx) => {
     const moved = await tx.booking.updateMany({
-      where: { id: bookingId, status: 'confirmed' },
+      // M1: only while this cancel still holds the round (a claim gone stale was taken over by a charge).
+      where: { id: bookingId, status: 'confirmed', shopLockedAt: stamp },
       data: {
         status: 'cancelled',
         cancelledAt: new Date(),

@@ -10,7 +10,7 @@ import { refundSeparateAccessFee } from './access-fee';
 import { roundChargeCents, roundApplicationFeeCents, shopLinesFor } from './shop';
 import { ensureShopTax, recordRoundShopTax } from './round-shop-tax';
 import { noShowClosed, NO_SHOW_CLOSED_ERROR } from './no-show-fee';
-import { recordMove } from './money-ledger';
+import { recordMove, feeBackCents } from './money-ledger';
 import { holdRefundCents, hasShareToRefund, splitOffLateArrivals } from './split-booking-db';
 import { cartCharge, cartRuleOf } from './cart-pricing';
 import { ciEquals } from '@/lib/like-exact';
@@ -487,8 +487,12 @@ async function chargeBooking(
   // the charge) and the checked_in event is written after, best-effort —
   // stripeId (the round's PaymentIntent) dedupes a retry.
   {
-    await prisma.booking.update({
-      where: { id: bookingId },
+    // Audit 2026-11-24 M1: conditional on the booking still being confirmed. A cancel now takes the same
+    // claim, so this can only miss on a path without one (a paid round, the card reader) — and if it does
+    // miss after this attempt charged the card, the charge goes straight back instead of a cancelled
+    // booking being marked paid.
+    const recorded = await prisma.booking.updateMany({
+      where: { id: bookingId, status: 'confirmed' },
       data: {
         paymentStatus: 'paid',
         ...(alreadyPaid ? {} : { paidAt: new Date() }),
@@ -500,6 +504,25 @@ async function chargeBooking(
         ...(mode.recordCheckIn ? { status: 'completed', checkedInAt: new Date(), noShowAt: null, ...(partialApplied ? { checkedInPlayers: showed } : {}) } : {}),
       },
     });
+    if (!recorded.count) {
+      const chargedNow = !!paymentIntentId && chargedCents != null && !alreadyPaid;
+      let refunded = false;
+      if (chargedNow) {
+        try {
+          const refund = await refundOnConnectedAccount({ paymentIntentId: paymentIntentId as string, connectedAccountId: booking.course.stripeAccountId as string, idempotencyKey: `checkin-race-${bookingId}-${paymentIntentId}` });
+          refunded = true;
+          await recordMove({ courseId: booking.courseId, what: 'round', direction: 'in', method: opts?.cardPresent ? 'card_present' : 'card', account: 'course', amountCents: chargedCents as number, platformFeeCents: roundApplicationFeeCents(booking), stripeId: paymentIntentId as string, bookingId, actor: actor.type, note: 'charged as the booking was cancelled' });
+          await recordMove({ courseId: booking.courseId, what: 'round', direction: 'out', method: opts?.cardPresent ? 'card_present' : 'card', account: 'course', amountCents: refund.amount, platformFeeCents: feeBackCents(refund.amount, chargedCents as number, roundApplicationFeeCents(booking)), stripeId: refund.id, bookingId, actor: actor.type, note: 'given back: the booking was cancelled while it was charged' });
+        } catch (err) {
+          console.error(JSON.stringify({ ev: 'checkin.race_refund.fail', bookingId, paymentIntentId, error: err instanceof Error ? err.message : String(err) }));
+        }
+      }
+      if (claimRound) await unlock();
+      console.error(JSON.stringify({ ev: 'checkin.record.missed', bookingId, chargedNow, refunded }));
+      return { error: chargedNow
+        ? (refunded ? 'This booking was cancelled while the card was being charged, so the charge was given back.' : 'This booking was cancelled while the card was being charged, and the refund did not go through — refund it in Stripe.')
+        : 'This booking was cancelled — nothing was charged.', status: 409 } as const;
+    }
     // LEDGER-1: the round's charge (card or reader), with GreenReserve's application fee.
     if (paymentIntentId && chargedCents != null && !alreadyPaid) {
       await recordMove({ courseId: booking.courseId, what: 'round', direction: 'in', method: opts?.cardPresent ? 'card_present' : 'card', account: 'course', amountCents: chargedCents, platformFeeCents: roundApplicationFeeCents(booking), stripeId: paymentIntentId, bookingId, actor: actor.type });

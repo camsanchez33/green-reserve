@@ -16,7 +16,7 @@ const STAFF = { type: 'staff' as const, id: null };
 type Call = { pi: string; amount?: number; appFee: unknown; account: string; key: string };
 const calls: Call[] = [];
 const seen = new Map<string, { id: string; amount: number }>();
-const refunds = stripe.refunds as unknown as { create: unknown };
+const refunds = stripe.refunds as unknown as { create: unknown; list: unknown };
 refunds.create = async (p: { payment_intent: string; amount?: number; refund_application_fee?: boolean }, o: { stripeAccount: string; idempotencyKey: string }) => {
   calls.push({ pi: p.payment_intent, amount: p.amount, appFee: p.refund_application_fee, account: o.stripeAccount, key: o.idempotencyKey });
   // Idempotent like Stripe: the same key returns the same refund.
@@ -24,10 +24,12 @@ refunds.create = async (p: { payment_intent: string; amount?: number; refund_app
   // Like Stripe: the same key with a different amount is refused.
   if (prior && prior.amount !== (p.amount ?? 1500)) throw new Error('Keys for idempotent requests can only be used with the same parameters they were first used with.');
   if (prior) return prior;
-  const r = { id: `re_${calls.length}`, amount: p.amount ?? 1500 };
+  const r = { id: `re_${calls.length}`, amount: p.amount ?? 1500, pi: p.payment_intent };
   seen.set(o.idempotencyKey, r);
   return r;
 };
+// Audit 2026-11-24 L5: the cap is read from Stripe's refund list for the round's PaymentIntent — answered from the refunds made here.
+refunds.list = async (q: { payment_intent?: string }) => ({ data: [...seen.values()].filter(r => (r as { pi?: string }).pi === q.payment_intent).map(r => ({ amount: r.amount, status: 'succeeded' })) });
 
 async function cleanup() {
   const ids = (await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } })).map(c => c.id);

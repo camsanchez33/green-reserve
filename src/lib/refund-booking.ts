@@ -12,6 +12,7 @@
 // GreenReserve does not keep $1.50/player on a round that was refunded.
 
 import Stripe from 'stripe';
+import { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { stripe } from './stripe';
 import { sendRefundEmail } from './email';
@@ -36,6 +37,37 @@ export async function recordPaymentEvent(e: {
       bookingId: e.bookingId, kind: e.kind, amountCents: e.amountCents,
       stripeId: e.stripeId ?? '', actor: e.actor, actorName: e.actorName ?? null, detail: e.detail ?? '',
     },
+  });
+}
+
+/**
+ * Audit 2026-11-24 L5: what has already been refunded on the round's OWN charge, from Stripe. The cap
+ * used to add up every 'refund' event on the booking, and a cutoff hold or a late fee given back is a
+ * 'refund' event on a different charge, so it ate into what the round could still refund. Stripe's list
+ * for the round's PaymentIntent is exact, and also counts a refund made in the Stripe dashboard.
+ */
+export async function refundedOnRound(paymentIntentId: string, stripeAccount: string): Promise<number> {
+  const list = await stripe.refunds.list({ payment_intent: paymentIntentId, limit: 100 }, { stripeAccount });
+  return list.data.filter(r => r.status !== 'failed' && r.status !== 'canceled').reduce((s, r) => s + r.amount, 0);
+}
+
+/**
+ * L5: a refund is written once, however many requests see it. Two identical refunds sent at once share an
+ * idempotency key, so Stripe hands both the same refund; each then wrote a row (and the webhook a third).
+ * A transaction-scoped advisory lock on the refund id serialises the check and the write. `also` runs in
+ * the same transaction when this call is the one that writes. True when it wrote.
+ */
+export async function recordRefundEventOnce(
+  e: { bookingId: string; kind: PaymentEventKind; amountCents: number; stripeId: string; actor: 'cron' | 'admin' | 'operator' | 'golfer' | 'stripe' | 'system'; actorName?: string; detail?: string },
+  also?: (tx: Prisma.TransactionClient) => Promise<unknown>,
+): Promise<boolean> {
+  return prisma.$transaction(async tx => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${'payment-event:' + e.stripeId}))`;
+    const seen = await tx.paymentEvent.findFirst({ where: { stripeId: e.stripeId }, select: { id: true } });
+    if (seen) return false;
+    await tx.paymentEvent.create({ data: { bookingId: e.bookingId, kind: e.kind, amountCents: e.amountCents, stripeId: e.stripeId, actor: e.actor, actorName: e.actorName ?? null, detail: e.detail ?? '' } });
+    if (also) await also(tx);
+    return true;
   });
 }
 
@@ -67,7 +99,6 @@ export async function refundBooking(bookingId: string, opts: {
     include: {
       teeTime: { select: { date: true, time: true } },
       course: { select: { name: true, stripeAccountId: true } },
-      paymentEvents: { where: { kind: 'refund' }, select: { amountCents: true } },
     },
   });
   if (!booking) return { ok: false, error: 'Booking not found', status: 404 };
@@ -77,7 +108,9 @@ export async function refundBooking(bookingId: string, opts: {
   if (!booking.roundPaymentIntentId) return { ok: false, error: 'No round charge is on record for this booking.', status: 409 };
   if (!booking.course.stripeAccountId) return { ok: false, error: 'The course has no connected Stripe account — the charge cannot be refunded from here.', status: 409 };
 
-  const alreadyRefunded = booking.paymentEvents.reduce((s, e) => s + e.amountCents, 0);
+  let alreadyRefunded: number;
+  try { alreadyRefunded = await refundedOnRound(booking.roundPaymentIntentId, booking.course.stripeAccountId); }
+  catch (err) { return { ok: false, error: `Could not read the round's refunds from Stripe (${err instanceof Error ? err.message : String(err)}). Try again.`, status: 502 }; }
   // POS-1a: the round's charge also carried any shop items and their fee.
   const charged = roundChargedTotal(booking);
   const remaining = charged - alreadyRefunded;
@@ -113,13 +146,14 @@ export async function refundBooking(bookingId: string, opts: {
   const full = alreadyRefunded + amountCents >= charged;
   // LEDGER-1: GreenReserve's application fee comes back pro rata (refund_application_fee: true).
   await recordMove({ courseId: booking.courseId, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, platformFeeCents: feeBackCents(refund.amount, charged, roundApplicationFeeCents(booking)), stripeId: refund.id, bookingId, actor: opts.actor === 'operator' ? 'staff' : 'admin', note: reason });
-  await prisma.$transaction([
-    prisma.paymentEvent.create({
-      data: { bookingId, kind: 'refund', amountCents, stripeId: refund.id, actor: opts.actor, actorName: opts.actorName, detail: reason },
-    }),
+  // L5: once per refund id — a twin request (same key, same refund) writes nothing and sends no second email.
+  const wrote = await recordRefundEventOnce(
+    { bookingId, kind: 'refund', amountCents, stripeId: refund.id, actor: opts.actor, actorName: opts.actorName, detail: reason },
     // paymentStatus only flips on a FULL refund; a partial one is still a paid round with money returned.
-    ...(full ? [prisma.booking.update({ where: { id: bookingId }, data: { paymentStatus: 'refunded', shopLockedAt: null } }) /* AUDIT-1: the round is open again — its old charge claim mustn't block collecting it again */] : []),
-  ]);
+    // AUDIT-1: the round is open again — its old charge claim mustn't block collecting it again.
+    full ? tx => tx.booking.update({ where: { id: bookingId }, data: { paymentStatus: 'refunded', shopLockedAt: null } }) : undefined,
+  );
+  if (!wrote) return { ok: true, refundId: refund.id, amountCents, full, emailSent: false };
 
   let emailSent = false;
   try {

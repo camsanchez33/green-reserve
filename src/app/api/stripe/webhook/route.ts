@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
-import { findBookingByStripeId, recordPaymentEvent } from '@/lib/refund-booking';
+import { findBookingByStripeId, recordPaymentEvent, recordRefundEventOnce } from '@/lib/refund-booking';
 import { bookingIdForFeeCharge } from '@/lib/access-fee';
 import { logStripeWebhook } from '@/lib/cron-log';
 import { mirrorMove } from '@/lib/money-ledger';
@@ -76,9 +76,12 @@ export async function POST(req: NextRequest) {
         ]) : [null, null];
         const kind = isFee ? 'fee_refunded' : noShowFee && refundFailed ? 'no_show_fee_refunded' : 'refund';
         for (const r of refundList) {
+          // Audit 2026-11-24 L5: a refund any of our routes already recorded (under any kind) is skipped, and
+          // the check and write are one locked step, so a route recording the same refund at the same moment
+          // can't make it two rows.
           const seen = await prisma.paymentEvent.findFirst({ where: { stripeId: r.id }, select: { id: true } });
           if (seen) continue;
-          await recordPaymentEvent({
+          await recordRefundEventOnce({
             bookingId: booking.id, kind, amountCents: r.amount, stripeId: r.id, actor: 'stripe',
             detail: `Refund recorded from Stripe (${r.reason ?? 'no reason given'})`,
           });
