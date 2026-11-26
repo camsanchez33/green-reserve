@@ -22,7 +22,7 @@ type Tone = 'ok' | 'warn' | 'bad' | 'neutral';
 type Filter = 'all' | 'account' | 'guest' | 'noshow' | 'failed';
 const FILTERS: [Filter, string][] = [['all', 'Everyone'], ['account', 'Golfers with an account'], ['guest', 'Guests, no account'], ['noshow', 'No-shows or late cancels'], ['failed', 'Failed charges']];
 type Line = { key: string; id: string | null; guestEmail: string | null; name: string; homeCourse: string | null; rounds: number; lastPlayed: string | null; tone: Tone };
-type List = { filter: Filter; q: string; total: number; nextOffset: number | null; golfers: Line[] };
+type List = { filter: Filter; q: string; total: number; nextOffset: number | null; golfers: Line[]; seesMoney?: boolean };
 
 interface PaymentEvent { id: string; kind: string; amount: number; actor: string; actorName: string | null; detail: string; at: string }
 interface Booking {
@@ -32,7 +32,8 @@ interface Booking {
   termsAcceptedAt: string | null; termsVersion: string | null;
   courseId: string; courseName: string; teeDate: string; teeTime: string; holes: number; events: PaymentEvent[];
 }
-interface Trust { rounds: number; noShows: number; lateCancels: number; failedCharges: number; upcoming: number; lifetimeCollected: number; refunded: number }
+/** failedCharges is null for a login without the Money area (M10 / MONEY-VIEW-1). */
+interface Trust { rounds: number; noShows: number; lateCancels: number; failedCharges: number | null; upcoming: number; lifetimeCollected: number; refunded: number }
 interface Golfer { id: string | null; email: string; firstName: string; lastName: string; phone: string; createdAt: string | null; isGuest: boolean; bookings: Booking[]; trust: Trust }
 
 const TZ = 'America/New_York';
@@ -183,19 +184,19 @@ function Everyone({ onOpen }: { onOpen: (l: Line) => void }) {
           )}
         </div>
       </section>
-      {filterOpen && <FilterDialog value={filter} onClose={() => setFilterOpen(false)} onApply={f => { setFilterOpen(false); if (f !== filter) { setD(null); setFilter(f); } }} />}
+      {filterOpen && <FilterDialog value={filter} seesMoney={d?.seesMoney !== false} onClose={() => setFilterOpen(false)} onApply={f => { setFilterOpen(false); if (f !== filter) { setD(null); setFilter(f); } }} />}
     </>
   );
 }
 
-function FilterDialog({ value, onClose, onApply }: { value: Filter; onClose: () => void; onApply: (f: Filter) => void }) {
+function FilterDialog({ value, seesMoney, onClose, onApply }: { value: Filter; seesMoney: boolean; onClose: () => void; onApply: (f: Filter) => void }) {
   const [f, setF] = useState(value);
   return (
     <Dialog labelId="gf-filter-t" onClose={onClose}>
       <h4 id="gf-filter-t">Filter</h4>
       <label className={gs.flab}>Show
         <select className={s.fld} value={f} onChange={e => setF(e.target.value as Filter)}>
-          {FILTERS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          {FILTERS.filter(([v]) => seesMoney || v !== 'failed').map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
       </label>
       <div className={s.line}>
@@ -234,7 +235,7 @@ function Record({ id, guest, onBack }: { id: string; guest: string; onBack: () =
   // The newest problem, in one sentence (bookings come newest tee time first).
   const failed = p.bookings.find(b => b.checkInFailReason && !b.checkedInAt);
   const noShow = p.bookings.find(b => b.noShow);
-  const problem = failed ? `Card declined at check-in on ${formatTeeDate(failed.teeDate)} at ${failed.courseName}.${t.failedCharges > 1 ? ` ${t.failedCharges} failed charges in all.` : ''}`
+  const problem = failed ? `Card declined at check-in on ${formatTeeDate(failed.teeDate)} at ${failed.courseName}.${(t.failedCharges ?? 0) > 1 ? ` ${t.failedCharges} failed charges in all.` : ''}`
     : noShow ? `${t.noShows > 1 ? `${t.noShows} no-shows, the last` : 'One no-show'} on ${formatTeeDate(noShow.teeDate)} at ${noShow.courseName}.` : null;
   const terms = p.bookings.filter(b => b.termsAcceptedAt && b.termsVersion).sort((a, z) => (z.termsAcceptedAt ?? '').localeCompare(a.termsAcceptedAt ?? ''))[0];
   const stat = (k: string, v: string | number, cls = '') => <div className={gs.t}><span>{k}</span><b className={cls}>{v}</b></div>;
@@ -255,7 +256,7 @@ function Record({ id, guest, onBack }: { id: string; guest: string; onBack: () =
             {stat('Upcoming', t.upcoming)}
             {stat('No-shows', t.noShows, t.noShows ? gs.tw : '')}
             {stat('Late cancels', t.lateCancels, t.lateCancels ? gs.tw : '')}
-            {stat('Failed charges', t.failedCharges, t.failedCharges ? gs.tb : '')}
+            {t.failedCharges !== null && stat('Failed charges', t.failedCharges, t.failedCharges ? gs.tb : '')}
             {stat('Paid in total', formatMoney(t.lifetimeCollected))}
           </div>
         </div>

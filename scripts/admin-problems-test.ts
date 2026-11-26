@@ -4,6 +4,7 @@
 import { readFileSync, readdirSync } from 'fs';
 import { VIEWER_PLUS, SUPPORT_PLUS, MANAGER_PLUS, OWNER_ONLY } from '../src/lib/admin-roles';
 import { ADMIN_PAGE_GATES, canOpenAdminHref, whoCanOpen } from '../src/components/admin/admin-href';
+import { isFailedChargeProblem } from '../src/lib/problems';
 
 let failed = 0;
 const check = (label: string, ok: boolean) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}`); if (!ok) failed++; };
@@ -45,7 +46,16 @@ const page = readFileSync('src/app/admin/page.tsx', 'utf8') + readFileSync('src/
 const ov = readFileSync('src/app/api/admin/today/overview/route.ts', 'utf8');
 const route = readFileSync('src/app/api/admin/problems/route.ts', 'utf8');
 check('/admin/problems redirects to Overview', /redirect\('\/admin'\)/.test(old));
-check('Overview lists problems only for the Problems area', /can\('problems'\) \? listProblems\(now\) : null/.test(ov));
+check('Overview lists problems only for the Problems area', /can\('problems'\) \? listProblems\(now, \{ money: can\('money'\) \}\) : null/.test(ov));
+// M10 / MONEY-VIEW-1: a declined card is Money's. The prefixes listProblems drops must be the keys the hourly check writes.
+{
+  const checks = readFileSync('src/lib/admin-checks.ts', 'utf8');
+  check('the failed-charge problem keys are the ones the hourly check writes', ['failed:', 'holddeclined:'].every(k => checks.includes('key: `' + k)) && isFailedChargeProblem('failed:c1') && isFailedChargeProblem('holddeclined:b1') && !isFailedChargeProblem('dispute:d1') && !isFailedChargeProblem('nostripe:c1'));
+  const calls = [readFileSync('src/app/api/admin/problems/route.ts', 'utf8'), ov, readFileSync('src/app/api/admin/today/route.ts', 'utf8')]
+    .flatMap(src => src.split('\n').filter(l => l.includes('listProblems(')));
+  check('the rail count leaves out the same declined-card problems without Money', /NOT: FAILED_CHARGE_PROBLEM_PREFIXES\.map/.test(readFileSync('src/lib/problems.ts', 'utf8')) && /openProblemCount\(\{ money: hasArea\(session, 'money'\) \}\)/.test(readFileSync('src/app/api/admin/nav-badges/route.ts', 'utf8')));
+  check('every caller of listProblems says whether the login has Money', calls.length === 3 && calls.every(l => /listProblems\([^\n]*\{ money: (can\('money'\)|hasArea\(session, 'money'\)) \}/.test(l)));
+}
 check('each problem carries its course, age and detail', /problem: \{ course: p\.courseName, courseId: p\.courseId, openedAt: p\.openedAt, detail: p\.detail, goTo: p\.href \}/.test(ov));
 check('Go to it only when the login can open it, else the course, else who can', /canOpenAdminHref\(p\.goTo, role, areas\)/.test(page) && /label: 'Open course'/.test(page) && /whoCanOpen\(p\.goTo\)/.test(page));
 check('snoozed problems still show (snoozing is gone)', /\.\.\.\(problems\?\.snoozed \?\? \[\]\)/.test(ov));
@@ -55,7 +65,7 @@ check('the problems route is read-only (no PATCH: no take, assign, note or snooz
 // The rail's count is the rows Needs attention lists: every problem not yet cleared, snoozed or not.
 const lib = readFileSync('src/lib/problems.ts', 'utf8');
 const countFn = lib.slice(lib.indexOf('export async function openProblemCount'));
-check('openProblemCount counts open and snoozed alike', /kind: 'urgent', resolvedAt: null \}/.test(countFn) && !/snoozedUntil/.test(countFn));
+check('openProblemCount counts open and snoozed alike', /kind: 'urgent', resolvedAt: null, \.\.\.notMoney \}/.test(countFn) && !/snoozedUntil/.test(countFn));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

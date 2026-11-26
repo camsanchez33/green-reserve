@@ -2,7 +2,7 @@
 // made with its email, the record's own counting rules, sorted by last played. Pure; no database.
 // Run: npx tsx scripts/admin-golfers-list-test.ts
 import { readFileSync } from 'fs';
-import { golferLines, matchesFilter, matchesQuery, canResendReceipt } from '../src/app/api/admin/golfers/list';
+import { golferLines, matchesFilter, matchesQuery, canResendReceipt, withoutFailedCharges, type GolferLine } from '../src/app/api/admin/golfers/list';
 import { likeExact } from '../src/lib/like-exact';
 
 let failed = 0;
@@ -61,6 +61,15 @@ ok('a paid round has a receipt', canResendReceipt({ status: 'completed', payment
 ok('…a cancelled booking whose fee was given back does not', !canResendReceipt({ status: 'cancelled', paymentStatus: 'refunded' }));
 ok('…nor a card only saved', !canResendReceipt({ status: 'confirmed', paymentStatus: 'card_on_file' }));
 ok('the route and the page both use canResendReceipt', /!canResendReceipt\(booking\)/.test(route) && /canResendReceipt\(b\)/.test(readFileSync('src/app/admin/golfers/page.tsx', 'utf8')));
+
+// M10 / MONEY-VIEW-1: without the Money area a line carries no failed charge, and its dot is what it would be without one.
+{
+  const base: GolferLine = { key: 'a:1', id: '1', guestEmail: null, name: 'A', email: 'a@x', phone: '', homeCourse: null, rounds: 0, lastPlayed: null, noShows: 0, lateCancels: 0, failedCharges: 2, tone: 'bad', latest: '' };
+  ok('without Money: an account with only a declined card reads ok, with no count', JSON.stringify(withoutFailedCharges(base)) === JSON.stringify({ ...base, failedCharges: 0, tone: 'ok' }), withoutFailedCharges(base));
+  ok('…a guest reads neutral', withoutFailedCharges({ ...base, id: null }).tone === 'neutral');
+  ok('…a no-show still reads warn', withoutFailedCharges({ ...base, noShows: 1 }).tone === 'warn');
+  ok('…and never matches the Failed charges filter', !matchesFilter(withoutFailedCharges(base), 'failed'));
+}
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log('\nall passed');

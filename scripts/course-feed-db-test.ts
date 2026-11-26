@@ -65,7 +65,7 @@ async function main() {
   await prisma.adminAuditLog.create({ data: { adminId: admin.id, actorName: 'Cam', action: 'refund', targetType: 'booking', targetId: b.id, courseId: course.id, reason: 'Frost', after: { amountCents: 10300 }, createdAt: T(50) } });
   await prisma.adminAlert.create({ data: { key: `failed:${course.id}`, kind: 'urgent', title: 'Card declined at check-in — Feed Test GC', firstSeenAt: T(65), resolvedAt: T(40) } });
 
-  const feed = await buildCourseFeed(course.id);
+  const feed = await buildCourseFeed(course.id, { money: true });
   const items = feed?.items ?? [];
   const has = (g: string, t: string) => items.some(i => i.group === g && i.title.includes(t));
   check('booking made → Bookings & payments', has('bookings', 'Booked — Sam Lee'));
@@ -78,14 +78,14 @@ async function main() {
   check('onboarding stage move → Problems & onboarding', has('problems', 'Onboarding: Building → Live'));
   check('newest first', items.every((it, i) => i === 0 || items[i - 1].at >= it.at));
 
-  const only = await buildCourseFeed(course.id, { groups: ['messages'] });
+  const only = await buildCourseFeed(course.id, { money: true, groups: ['messages'] });
   check('a filter shows only its group', !!only && only.items.length > 0 && only.items.every(i => i.group === 'messages'));
   // Paging across every source: walk all pages, every row exactly once, in order.
-  const all = (await buildCourseFeed(course.id, { limit: 200 }))!.items;
+  const all = (await buildCourseFeed(course.id, { money: true, limit: 200 }))!.items;
   const seen: string[] = [];
   let cursor: string | null = null;
   for (let i = 0; i < 50; i++) {
-    const pg = await buildCourseFeed(course.id, { limit: 3, cursor });
+    const pg = await buildCourseFeed(course.id, { money: true, limit: 3, cursor });
     seen.push(...pg!.items.map(x => x.id));
     cursor = pg!.next;
     if (!cursor) break;
@@ -96,13 +96,13 @@ async function main() {
   await prisma.sentMessage.createMany({ data: Array.from({ length: 7 }, (_, i) => ({ channel: 'email', kind: 'reminder_email', to: `${TAG}-many${i}@test.local`, courseId: course.id, status: 'sent', createdAt: same })) });
   let mailIds: string[] = []; cursor = null;
   for (let i = 0; i < 20; i++) {
-    const pg = await buildCourseFeed(course.id, { limit: 3, cursor, groups: ['messages'] });
+    const pg = await buildCourseFeed(course.id, { money: true, limit: 3, cursor, groups: ['messages'] });
     mailIds.push(...pg!.items.filter(x => x.title.includes('Reminder')).map(x => x.id));
     cursor = pg!.next;
     if (!cursor) break;
   }
   check('one source over a page: "Show older" reaches all 7, tied timestamps included', new Set(mailIds).size === 7 && mailIds.length === 7, String(mailIds.length));
-  check('an unknown course → null', (await buildCourseFeed('no-such-course')) === null);
+  check('an unknown course → null', (await buildCourseFeed('no-such-course', { money: true })) === null);
   void inquiry;
 
   await cleanup();

@@ -22,15 +22,15 @@ check('no red preset (red means a problem)', !Object.values(BOOKING_ACCENT_COLOU
 const lightGreen = golferLookVars({ booking_look: { look: 'light', accent: 'green' }, brand_color: '#FF0000' });
 check('booking_look wins over brand_color: Light + Green is the preset, white on it', v(lightGreen, '--g-acc') === G.light.acc && v(lightGreen, '--g-on-acc') === G.light.onAcc && v(lightGreen, '--g-card') === '#FFFFFF');
 const darkGreen = golferLookVars({ booking_look: { look: 'dark', accent: 'green' } });
-check('Dark + Green: the preset\'s dark values and the dark neutrals', v(darkGreen, '--g-acc') === G.dark.acc && v(darkGreen, '--g-on-acc') === G.dark.onAcc && v(darkGreen, '--g-card') === '#222422' && lookMode({ booking_look: { look: 'dark', accent: 'green' } }) === 'dark');
-check('the header band keeps the preset colour in Dark (Black lifts to a grey)', v(darkGreen, '--g-band') === G.light.acc && v(golferLookVars({ booking_look: { look: 'dark', accent: 'black' } }), '--g-band') === '#2C2F33' && v(golferLookVars({ booking_look: { look: 'light', accent: 'black' } }), '--g-band') === K.light.acc);
+check('Dark + Green: the preset\'s dark values and the dark neutrals', v(darkGreen, '--g-acc') === G.dark.acc && v(darkGreen, '--g-on-acc') === G.dark.onAcc && v(darkGreen, '--g-card') === 'rgb(38 38 38 / .62)' && v(darkGreen, '--g-bg') === '#141414' && lookMode({ booking_look: { look: 'dark', accent: 'green' } }) === 'dark');
+check('the header band keeps the preset colour in Dark (Black lifts to a grey)', v(darkGreen, '--g-band') === G.light.acc && v(golferLookVars({ booking_look: { look: 'dark', accent: 'black' } }), '--g-band') === '#2C2C2C' && v(golferLookVars({ booking_look: { look: 'light', accent: 'black' } }), '--g-band') === K.light.acc);
 const junk = golferLookVars({ booking_look: { look: 'sepia' as never, accent: 'red' as never }, brand_color: 'javascript:alert(1)' });
-check('a bad booking_look and a bad hex fall back to Light and the default green, never into CSS', v(junk, '--g-acc') === '#173B2A' && v(junk, '--g-bg') === '#EEEFEA');
+check('a bad booking_look and a bad hex fall back to Light and the default green, never into CSS', v(junk, '--g-acc') === '#173B2A' && v(junk, '--g-bg') === '#F2F2F2');
 check('no booking_look: a preset brand_color reads as that preset, on Light', v(golferLookVars({ brand_color: G.light.acc }), '--g-acc') === G.light.acc && lookMode({ brand_color: G.light.acc }) === 'light');
 check('no booking_look: another colour renders as it is, on Light', v(golferLookVars({ brand_color: '#336699' }), '--g-acc') === '#336699');
 check('a course that has not picked a look (accent null) keeps its own colour as it is, on Light', v(golferLookVars({ booking_look: { look: 'light', accent: null as never }, brand_color: '#7A1F2B' }), '--g-acc') === '#7A1F2B');
 check('the confirmation uses the same accent as the page', lookAccentHex({ booking_look: { look: 'dark', accent: 'yellow' }, brand_color: '#7A1F2B' }) === BOOKING_ACCENT_COLOURS.yellow.light.acc && lookAccentHex({ brand_color: '#7A1F2B' }) === '#7A1F2B');
-check('the card field text follows the look', lookText('dark').ink === '#EDEEEB' && lookText('light').ink === '#141814' && lookText(null).ink === '#141814');
+check('the card field text follows the look', lookText('dark').ink === '#EDEDED' && lookText('light').ink === '#161616' && lookText(null).ink === '#161616');
 
 // The course page
 const course = readFileSync('src/app/courses/[slug]/CourseBookingClient.tsx', 'utf8');
@@ -101,6 +101,31 @@ check('the timeline is an ordered list on the look tokens', book.includes('<ol c
 }
 check('PERS-1: the confirmation keeps the course photo (under the band) and logo (by the name), quoted into url()', book.includes('<LookShell course={course} courseSlug={courseSlug} brand>') && book.includes('{logo && <img src={logo} alt="" className={g.toplogo} />}') && book.includes('style={{ backgroundImage: `url(${JSON.stringify(photo)})` }} aria-hidden="true"') && (book.match(/courseSlug=\{courseSlug\} brand>/g) ?? []).length === 1);
 check('the confirmation note has its own class (not the course page\'s .cnote)', book.includes('<div className={g.confnote}>') && !book.includes('g.cnote'));
+
+// UI style overhaul (Cam 2026-11-26): Dark is glass, Light is solid; both neutral (R=G=B), fields match their screen.
+{
+  const L = golferLookVars({ booking_look: { look: 'light', accent: 'blue' } }), D = golferLookVars({ booking_look: { look: 'dark', accent: 'blue' } });
+  const grey = (h: string) => /^#([0-9A-F]{2})\1\1$/i.test(h);
+  check('Light is solid: white cards on #F2F2F2, no blur, R=G=B neutrals', v(L, '--g-bg') === '#F2F2F2' && v(L, '--g-card') === '#FFFFFF' && v(L, '--g-blur') === 'none' && ['--g-bg', '--g-paper', '--g-card', '--g-ink', '--g-soft', '--g-muted', '--g-line'].every(k => grey(v(L, k))));
+  check('Dark is glass: a flat #141414 page, translucent panels with blur, hairline and shadow', v(D, '--g-bg') === '#141414' && v(D, '--g-card').startsWith('rgb(38 38 38 /') && v(D, '--g-blur').startsWith('blur(') && v(D, '--g-shadow').includes('inset 0 1px 0'));
+  check('fields: white with a thin border on Light, dark glass with a faint light edge on Dark', v(L, '--g-field') === '#FFFFFF' && v(L, '--g-field-edge') === '#D4D4D4' && v(D, '--g-field').startsWith('rgb(255 255 255 /') && v(D, '--g-field-edge').startsWith('rgb(255 255 255 /'));
+  const css = readFileSync('src/components/golfer/golfer.module.css', 'utf8');
+  check('every panel wears --g-blur and --g-shadow; inputs and the card field read --g-field', css.includes('backdrop-filter: var(--g-blur, none); box-shadow: var(--g-shadow, none);') && (css.match(/background: var\(--g-field\)/g) ?? []).length >= 3);
+  check('button text on the accent is the on-accent colour (.root button would otherwise make it ink; axe 2026-11-26)', css.includes('.root button.btn { color: var(--g-on-acc); }'));
+  check('links inside the agree, text-consent and policy lines are underlined, not colour only (axe link-in-text-block)', ['.agree a {', '.sms a {', '.pol a {'].every(sel => { const i = css.indexOf(sel); return i >= 0 && css.slice(i, css.indexOf('}', i)).includes('text-decoration: underline'); }));
+}
+
+// The course page's two tabs (Cam 2026-11-24 threads b0a8979a, 1b111e7b): Tee times | Course information.
+check('tabs: a centred tablist, Tee times by default, each tab controls its own panel', course.includes("useState<'times' | 'info'>('times')") && course.includes('role="tablist" aria-label="Course page"') && course.includes('role="tab" id={`tab-${k}`} aria-controls={`panel-${k}`} aria-selected={tab === k}') && course.includes("{k === 'times' ? 'Tee times' : 'Course information'}"));
+check('tabs: the panels never show together (each is hidden unless its tab is picked)', course.includes("id=\"panel-info\" aria-labelledby=\"tab-info\" hidden={tab !== 'info'}") && course.includes("id: 'panel-times', 'aria-labelledby': 'tab-times', hidden: tab !== 'times'"));
+check('tabs: arrow keys, Home and End move between them', course.includes("e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Home' && e.key !== 'End'") && course.includes('tabRefs.current[next]?.focus();'));
+check('Course information holds directions, website, call and details (both info links)', (() => { const i = course.indexOf('id="panel-info"'), t = course.indexOf("id: 'panel-times'"); const info = course.slice(i, t); return info.includes('<b>Directions</b>') && info.includes('<b>Website</b>') && info.includes('<b>Call</b>') && (info.match(/\/info`\}>Course details and photos/g) ?? []).length === 2; })());
+check('Tee times holds the calendar, filters, the times and the alert row', (() => { const t = course.indexOf("id: 'panel-times'"); const times = course.slice(t); return times.includes('{filters}') && times.includes("{calendar('tab')}") && times.includes('{timesArea}'); })());
+check('today\'s notice shows on both tabs', (course.match(/\{notices\}/g) ?? []).length === 2);
+check('a member-only club has no tabs (nothing to book)', course.includes("const hasTabs = course.type !== 'member';"));
+check('phone: the calendar stays on the Tee times tab and the Filters sheet has the seven days beside the date', course.includes("<div className={g.calPhone}>{calendar('tab')}</div>") && course.includes("<div className={g.deskOnly}>{calendar('side')}</div>") && course.includes('for (let i = 0; i < 7; i++)') && course.includes('<b aria-hidden="true">{shortDay(selectedDate)}</b>'));
+check('picking a day moves the calendar to its month', course.includes('setCalMonth(new Date(d.getFullYear(), d.getMonth(), 1));'));
+check('every day button (calendar and seven-day row) uses the same rules and the same pickDay', (course.match(/const \{ why, membersOnly, label \} = dayInfo\(d\);/g) ?? []).length === 2 && (course.match(/onClick=\{why \? undefined : \(\) => pickDay\(ds\)\}/g) ?? []).length === 2);
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

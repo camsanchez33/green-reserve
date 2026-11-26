@@ -9,6 +9,7 @@ import { hasAcceptedAgreement } from '@/lib/agreement-gate';
 import { setupProgress } from '@/lib/course-setup';
 import { nextCheckIn, lastContact, scheduledCheckIn } from '@/lib/course-checkin';
 import { agreementDueByCourse } from '@/lib/agreement-required';
+import { hasArea } from '@/lib/admin-areas';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -21,6 +22,8 @@ export async function GET(req: NextRequest) {
   // at the bottom of this handler. The gate alone was not enough.
   if (!requireRole(session, VIEWER_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const seesMoneyAndPii = requireRole(session, SUPPORT_PLUS);
+  // M10 / MONEY-VIEW-1 (Cam 2026-11-26): fees (revenue30d) also need the Money area.
+  const seesFees = seesMoneyAndPii && hasArea(session, 'money');
 
   // Lightweight list for dropdowns — all courses including archived
   if (req.nextUrl.searchParams.get('simple') === '1') {
@@ -218,7 +221,7 @@ export async function GET(req: NextRequest) {
         c.operator?.name ?? '', seesMoneyAndPii ? (c.operator?.email ?? '') : '',
         c.active ? 'yes' : 'no', c.health.label, c.health.reason,
         `${c.setup.done} of ${c.setup.total}`, c.setup.next?.short ?? '',
-        c.bookings30d, seesMoneyAndPii ? c.revenue30d.toFixed(2) : '',
+        c.bookings30d, seesFees ? c.revenue30d.toFixed(2) : '',
         iso(nextTouch), talked ? iso(talked.at) : '', iso(c.welcomeEmailSentAt), iso(c.archivedAt),
       ].map(esc).join(','));
     }
@@ -232,7 +235,7 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  if (seesMoneyAndPii) return NextResponse.json(result);
+  if (seesMoneyAndPii) return NextResponse.json(seesFees ? result : result.map(c => ({ ...c, revenue30d: null })));
   return NextResponse.json(result.map(c => {
     const { adminNotes: _n, stripeAccountId: _s, operator, ...rest } = c;
     return { ...rest, adminNotes: '', stripeAccountId: null, revenue30d: null, operator: operator ? { ...operator, email: '' } : null };

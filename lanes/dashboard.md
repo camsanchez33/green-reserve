@@ -9,6 +9,9 @@ Charcoal glass by default; Light is glass too (dark ribbons on a light page). Ev
 screenshot both before review (`scripts/glass-test.ts` fails a charcoal-only rule). Pages use tokens, never typed hex.
 The rail: Today (Home, Tee sheet, Pro shop) · Business (Money, Members, Events, Schedule, Analytics) · Settings ·
 Support (last, with its unread count). Search without placeholder words.
+Installable app (PWA-INSTALL, Cam 2026-11-24, `docs/DECISIONS.md`): "Install app" sits beside ThemeSwitch at the
+rail's foot and in the phone More sheet (`InstallApp`, shown only when the browser can install; Safari gets its
+one-line instruction). Keep it there in any rail redo. The layout's `PwaRegister` and theme-color are Build's.
 
 ## Done (merged)
 Home · Tee sheet + time card · Pro shop (Register, Sales, Stock, Close out; blind count) · Pro shop stock box ·

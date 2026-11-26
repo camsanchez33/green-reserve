@@ -131,7 +131,7 @@ export async function GET() {
     seesSystems ? todayHealth(now).catch(() => 'failed' as const) : null,
     can('pipeline') ? todayOnboarding(now) : null,
     can('pipeline') || can('courses') || can('money') || can('messages') ? buildActionQueue(now) : null,
-    can('problems') ? listProblems(now) : null,
+    can('problems') ? listProblems(now, { money: can('money') }) : null,
     can('pipeline') ? prisma.courseInquiry.findMany({ where: { createdAt: { gte: weekAgo } }, select: { id: true, courseName: true, createdAt: true }, orderBy: { createdAt: 'desc' }, take: 8 }) : null,
     can('courses') ? prisma.course.findMany({ where: { firstWentLiveAt: { gte: weekAgo }, ...REAL_COURSE }, select: { id: true, name: true, firstWentLiveAt: true }, orderBy: { firstWentLiveAt: 'desc' }, take: 8 }) : null,
     can('courses') ? prisma.agreementAcceptance.findMany({ where: { acceptedAt: { gte: weekAgo }, course: REAL_COURSE }, select: { id: true, acceptedAt: true, course: { select: { id: true, name: true } } }, orderBy: { acceptedAt: 'desc' }, take: 8 }) : null,
