@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { getOperatorSession } from './auth';
+import { getOperatorSession, type DashboardSession } from './auth';
 import { NextResponse } from 'next/server';
 import { prisma } from './prisma';
 import { ALL_KEYS, deniedMessage, type PermissionKey } from './staff-permissions';
@@ -72,6 +72,26 @@ async function touchPersonActive(staffId: string, last: Date | null, now = new D
   } catch (e) {
     console.error('[session] lastActiveAt write failed', e);
   }
+}
+
+/**
+ * Audit 2026-11-24 L1/M4: the gr_operator session, but only while it is still live — the login exists,
+ * a staff login is still on, and the token's sessionVersion matches the row (a password change, reset,
+ * disable or remove bumps it). For the few routes that need no course (an owner with none
+ * yet, the course switcher, the verify email); every other route uses resolveDashboardSession, which
+ * checks the same. getOperatorSession() alone only checks the signature, so a killed cookie still worked.
+ */
+export async function liveOperatorSession(): Promise<DashboardSession | null> {
+  const session = await getOperatorSession();
+  if (!session) return null;
+  if (session.kind === 'staff') {
+    const row = await prisma.courseStaff.findUnique({ where: { id: session.staffId }, select: { active: true, removedAt: true, sessionVersion: true } });
+    if (!row || !row.active || row.removedAt || (session.sv ?? 0) !== row.sessionVersion) return null;
+    return session;
+  }
+  const row = await prisma.courseOperator.findUnique({ where: { id: session.operatorId }, select: { sessionVersion: true } });
+  if (!row || (session.sv ?? 0) !== row.sessionVersion) return null;
+  return session;
 }
 
 /**
