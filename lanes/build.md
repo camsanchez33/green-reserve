@@ -151,7 +151,7 @@ Mockup `lanes/build/emails-texts-mockup.html` (https://claude.ai/artifact/NBRME2
 - UI styles review: 4 styles (Glass light/dark, Solid light/dark) shown on REAL page screenshots; layout and function never change, only backgrounds, panels, buttons and controls.
 
 ## UI style overhaul — APPROVED (Cam 2026-11-26, "Approved, build it")
-Mockup https://claude.ai/artifact/EBEC6HE7LWFgPLMLzbN9p8 (v6); prototype layer in `lanes/build/ui-style/` (`themes.css` is the reference for surface tokens; `tag.js` shows the sidebar icons/labels; it was injected at capture time only).
+Mockup https://claude.ai/artifact/EBEC6HE7LWFgPLMLzbN9p8 (v6); prototype layer in `lanes/build/ui-style/` (`themes.css` is the reference for surface tokens; `tag.js.txt` shows the sidebar icons/labels; it was injected at capture time only).
 - LOOK ONLY. No page changes what it does or shows, except the items marked LAYOUT below.
 - Two styles: **Dark = glass** (Apple-style material: flat neutral #141414 page, translucent dark panels with backdrop blur, hairline light edge, soft top highlight, soft shadow, no colour cast, no blurred shapes or gradients behind the page) and **Light = solid** (white cards on neutral grey #F2F2F2, R=G=B, dark sidebar). Supersedes "the Light look is glass too" (LIGHT-PARITY wording) — both looks still get every change.
 - Admin: Dark (glass) only; green tint removed from menu hover/active.
