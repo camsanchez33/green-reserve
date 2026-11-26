@@ -17,6 +17,7 @@ import { sanitizeHistory } from '@/lib/birdie/guardrails';
 // POST { messages } → { reply }
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 const MAX_TOOL_ROUNDS = 4;
 const PER_OWNER_PER_HOUR = 40;
 
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
       const msg = await client.beta.messages.create({
         model: ASSISTANT_MODEL, max_tokens: ASSISTANT_MAX_TOKENS, system, tools: ADMIN_ASSISTANT_TOOLS, messages,
         output_config: { effort: ASSISTANT_EFFORT }, betas: [FALLBACK_BETA], fallbacks: 'default',
-      });
+      }, { timeout: Math.max(5_000, 50_000 - (Date.now() - started)), maxRetries: 0 });
       usage.input += msg.usage.input_tokens; usage.output += msg.usage.output_tokens;
       usage.cacheRead += msg.usage.cache_read_input_tokens ?? 0; usage.cacheWrite += msg.usage.cache_creation_input_tokens ?? 0;
       stopReason = msg.stop_reason;
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
       if (msg.stop_reason === 'max_tokens') { reply += '\n\n(That ran long — ask a narrower question.)'; break; }
       const uses = msg.content.filter((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === 'tool_use');
       if (msg.stop_reason !== 'tool_use' || !uses.length) break;
-      if (round >= MAX_TOOL_ROUNDS) { reply += '\n\n(That needed more lookups than I do in one go — ask a narrower question.)'; break; }
+      if (round >= MAX_TOOL_ROUNDS || Date.now() - started > 45_000) { reply += '\n\n(That needed more lookups than I do in one go — ask a narrower question.)'; break; }
       const results: Anthropic.Beta.BetaToolResultBlockParam[] = await Promise.all(uses.map(async tu => {
         // Only the two aggregate tools exist here, whatever the model asks for; each re-checks the role.
         const out = ADMIN_ASSISTANT_TOOL_NAMES.has(tu.name)
@@ -81,7 +82,10 @@ export async function POST(req: NextRequest) {
       if (reply && !/\s$/.test(reply)) reply += '\n\n';
     }
   } catch (err) {
-    console.error('[assistant] admin call failed:', err instanceof Anthropic.APIError ? `${err.status} ${err.name}` : err instanceof Error ? err.name : 'error');
+    // Labelled by instanceof: class names are minified in the production build.
+    const kind = err instanceof Anthropic.APIConnectionTimeoutError ? 'timeout' : err instanceof Anthropic.APIConnectionError ? 'connection' : err instanceof Anthropic.APIError ? `api ${err.status ?? ''}` : 'error';
+    console.error('[assistant] admin call failed:', kind);
+    logAssistant({ persona: 'admin', courseId: null, inputTokens: usage.input, outputTokens: usage.output, cacheRead: usage.cacheRead, cacheWrite: usage.cacheWrite, stopReason: 'error', ms: Date.now() - started, tools });
     return NextResponse.json({ error: 'Couldn’t answer just now — try again in a moment.' }, { status: 502 });
   }
   logAssistant({ persona: 'admin', courseId: null, inputTokens: usage.input, outputTokens: usage.output, cacheRead: usage.cacheRead, cacheWrite: usage.cacheWrite, stopReason, ms: Date.now() - started, tools });

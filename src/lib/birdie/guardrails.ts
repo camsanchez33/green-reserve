@@ -32,9 +32,11 @@ export function sanitizeHistory(raw: unknown): BirdieTurn[] {
     if (last && last.role === r) last.content = `${last.content}\n${text}`.slice(0, MAX_USER_CHARS * 2);
     else turns.push({ role: r, content: text });
   }
-  while (turns.length && turns[0].role !== 'user') turns.shift();
-  while (turns.length && turns[turns.length - 1].role !== 'user') turns.pop();
-  return turns.slice(-MAX_HISTORY_TURNS);
+  // Slice first, then trim, so a long conversation never starts on the assistant's turn (ASSIST-4 review).
+  const kept = turns.slice(-MAX_HISTORY_TURNS);
+  while (kept.length && kept[0].role !== 'user') kept.shift();
+  while (kept.length && kept[kept.length - 1].role !== 'user') kept.pop();
+  return kept;
 }
 
 const dayKey = () => new Date().toISOString().slice(0, 10);

@@ -70,7 +70,7 @@ export default function OwnerAssistant() {
           </div>
           <div className="px-4 py-2 border-b text-[12px]" style={{ borderColor: 'var(--g-line)', color: 'var(--g-muted)' }}>
             <div className="flex items-start gap-2">
-              <span className="flex-1">Knows {n('runbooks')} runbooks, the {n('company')} company docs you marked, and reads live platform numbers. Never changes anything.</span>
+              <span className="flex-1">Knows {n('runbooks')} runbook{n('runbooks') === '1' ? '' : 's'} and {n('company')} company doc{n('company') === '1' ? '' : 's'} you marked, and reads live platform numbers. Never changes anything.</span>
               <button type="button" onClick={() => setShowKnows(v => !v)} aria-expanded={showKnows} className="shrink-0 font-medium underline underline-offset-2" style={{ color: 'var(--g-ink)' }}>What it knows</button>
             </div>
             {showKnows && (

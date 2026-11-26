@@ -7,28 +7,27 @@ import path from 'node:path';
 import { ASK_TOOLS } from '../admin-ask';
 
 /**
- * The docs the owner assistant may read, repo-relative. Build's starting list for Cam to confirm or change: the
- * runbooks, the restore and shipping steps, the SMS opt-in record, the approved fee copy and the company map (which
- * says it holds no secrets). Every file is re-checked below on every read.
+ * The docs the owner assistant may read, repo-relative. Cam marks them (through Build). Build's starting list holds only
+ * the two docs with nothing stale or personal in them; RUNBOOK, SHIPPING, ORGANIZATION and LQ-2_FEE_COPY wait for Cam
+ * (ASSIST-4 review: each carries guidance that contradicts current rules, or personal details). Every file is re-checked
+ * below on every read.
  */
 export const ADMIN_DOCS: readonly { path: string; label: string; kind: 'runbook' | 'company' | 'fee' }[] = [
-  { path: 'docs/RUNBOOK.md', label: 'Runbook', kind: 'runbook' },
   { path: 'docs/RESTORE.md', label: 'Restoring the database', kind: 'runbook' },
-  { path: 'docs/SHIPPING.md', label: 'Shipping', kind: 'runbook' },
   { path: 'docs/SMS_OPT_IN.md', label: 'SMS opt-in', kind: 'runbook' },
-  { path: 'company/ORGANIZATION.md', label: 'Company organisation', kind: 'company' },
-  { path: 'legal/LQ-2_FEE_COPY.md', label: 'Fee wording (approved)', kind: 'fee' },
 ];
 
-/** Never readable, whatever the list says. */
-const NEVER = [/AUDIT_MASTER/i, /(^|\/)\.env/i, /^lanes\/security\//i, /^lanes\/testing\//i, /secret/i, /^prisma\//, /^src\//];
+/** Only these folders can ever be read... */
+const ALLOWED_DIRS = /^(docs|company|legal)\/[^/]+\.md$/i;
+/** ...and never audit, security, findings, ledgers, checklists, walks, feedback, outreach or env files, whatever the list says. */
+const NEVER = [/AUDIT/i, /(^|\/)\.env/i, /secret/i, /FINDINGS/i, /LEDGER/i, /HARDENING/i, /PASSWORD/i, /walks/i, /feedback/i, /outreach/i, /DECISIONS/i, /CODEMAP/i];
 /** A doc that looks like it carries a secret is skipped whole. */
-const SECRET = /sk_(live|test)_[A-Za-z0-9]{8,}|rk_(live|test)_[A-Za-z0-9]{8,}|whsec_[A-Za-z0-9]{8,}|sk-ant-[A-Za-z0-9_-]{8,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|postgres(ql)?:\/\/[^\s:]+:(?!(pass|password|PASSWORD|\*+|<[^>]*>)@)[^\s@]+@|AKIA[0-9A-Z]{16}/;
+const SECRET = /\bre_[A-Za-z0-9_]{16,}|\bAC[0-9a-f]{32}\b|\bgh[pousr]_[A-Za-z0-9]{20,}|sntrys_[A-Za-z0-9_+/=-]{20,}|vercel_blob_rw_[A-Za-z0-9_]{10,}|[A-Z_]*(SECRET|TOKEN|KEY)\s*=\s*['"]?[A-Za-z0-9+/_=-]{24,}|\b[0-9a-f]{64}\b|sk_(live|test)_[A-Za-z0-9]{8,}|rk_(live|test)_[A-Za-z0-9]{8,}|whsec_[A-Za-z0-9]{8,}|sk-ant-[A-Za-z0-9_-]{8,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|postgres(ql)?:\/\/[^\s:]+:(?!(pass|password|PASSWORD|\*+|<[^>]*>)@)[^\s@]+@|AKIA[0-9A-Z]{16}/;
 const MAX_DOC_CHARS = 40_000;
 
 export function docAllowed(p: string): boolean {
   const norm = path.posix.normalize(p);
-  return !norm.startsWith('..') && !path.isAbsolute(norm) && /\.md$/i.test(norm) && !NEVER.some(r => r.test(norm));
+  return !norm.startsWith('..') && !path.isAbsolute(norm) && ALLOWED_DIRS.test(norm) && !NEVER.some(r => r.test(norm));
 }
 export const looksSecret = (text: string) => SECRET.test(text);
 
@@ -44,7 +43,7 @@ export async function adminDocsBlock(): Promise<{ text: string; knows: AdminKnow
   for (const d of ADMIN_DOCS) {
     if (!docAllowed(d.path)) continue;
     let text: string;
-    try { text = await readFile(path.join(process.cwd(), d.path), 'utf8'); } catch { continue; }
+    try { text = await readFile(path.join(process.cwd(), d.path), 'utf8'); } catch { console.error(JSON.stringify({ ev: 'assistant.admin_doc_skipped', path: d.path, why: 'missing' })); continue; }
     if (looksSecret(text)) { console.error(JSON.stringify({ ev: 'assistant.admin_doc_skipped', path: d.path, why: 'secret-like' })); continue; }
     count[d.kind]++;
     parts.push(`### ${d.label} (${d.path})\n${text.slice(0, MAX_DOC_CHARS).replace(/<\/?(course_data|policy_lines|admin_docs)\b/gi, '‹$1')}`);

@@ -35,6 +35,8 @@ check('history: non-string content dropped', !h.some(t => typeof t.content !== '
 check(`history: a turn is capped at ${MAX_USER_CHARS}`, h[h.length - 1].content.length === MAX_USER_CHARS, String(h[h.length - 1].content.length));
 const long = sanitizeHistory(Array.from({ length: 40 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', content: `m${i}` })));
 check(`history: at most ${MAX_HISTORY_TURNS} turns kept`, long.length <= MAX_HISTORY_TURNS, String(long.length));
+const odd = sanitizeHistory(Array.from({ length: 13 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', content: `m${i}` })));
+check('history: 13 turns in still starts and ends on a user turn', odd[0]?.role === 'user' && odd[odd.length - 1]?.role === 'user', odd.map(t => t.role).join(','));
 check('history: junk input → empty', sanitizeHistory('nope').length === 0 && sanitizeHistory(null).length === 0);
 
 // 2. the course facts name exactly one course and nothing personal

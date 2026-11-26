@@ -72,7 +72,7 @@ const nextConfig: NextConfig = {
   // exactly those files with its route, nothing else.
   outputFileTracingIncludes: {
     '/**': ['./legal/documents/**/*'],
-    '/api/admin/assistant': ['./docs/RUNBOOK.md', './docs/RESTORE.md', './docs/SHIPPING.md', './docs/SMS_OPT_IN.md', './company/ORGANIZATION.md', './legal/LQ-2_FEE_COPY.md'],
+    '/api/admin/assistant': ['./docs/RESTORE.md', './docs/SMS_OPT_IN.md'],
   },
   // AG-2: the PDF renderer is a Node package with its own font/asset loading;
   // bundling it breaks it, so it stays external.
