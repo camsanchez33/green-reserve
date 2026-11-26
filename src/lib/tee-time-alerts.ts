@@ -30,7 +30,7 @@ import { rulesFor } from './booking-rules';
 import { membershipLive, liveMembershipWhere } from './member-rates';
 import { liveMembershipFor, canLogIn } from './member-session';
 import { consentPhone, recordSmsConsent, textCourse, type SmsScope } from './sms-consent';
-import { ALERT_SMS_CONSENT_VERSION, alertSmsConsentText } from './sms-consent-copy';
+import { alertConsentVersionOf, alertSmsConsentText } from './sms-consent-copy';
 import { alertOptInText } from './sms-copy';
 import { formatTeeDay, formatTeeTime } from './format';
 
@@ -257,9 +257,11 @@ export async function createAlert(input: CreateAlertInput, member: MemberCtx, no
 }
 
 /** Record the alert-text yes (scope 'alerts'). Returns whether it was new (send the enrollment text). */
-async function recordAlertTextConsent(a: { phone: string | null; textConsentAt: Date | null }, courseId: string): Promise<boolean> {
+// The version is the one the box the golfer ticked was worded under (its text is on the alert), so a guest
+// who ticked before a wording change and confirms after is recorded under the wording they saw.
+async function recordAlertTextConsent(a: { phone: string | null; textConsentAt: Date | null; textConsentWording: string | null }, courseId: string): Promise<boolean> {
   if (!a.phone || !a.textConsentAt) return false;
-  return recordSmsConsent(a.phone, 'opt_in', { method: 'web_alert', courseId, scope: SMS_SCOPE, wording: ALERT_SMS_CONSENT_VERSION });
+  return recordSmsConsent(a.phone, 'opt_in', { method: 'web_alert', courseId, scope: SMS_SCOPE, wording: alertConsentVersionOf(a.textConsentWording) });
 }
 
 /** The one-time enrollment text for a number new to alert texts. Never throws. */
@@ -290,7 +292,7 @@ export async function confirmAlert(token: string, now: Date = new Date()): Promi
   if (alert.status === 'active') return { result: 'already', alert };
   if (alert.status === 'stopped') return { result: 'stopped', alert };
   if (alert.status === 'ended') return { result: 'ended', alert };
-  const row = await prisma.teeTimeAlert.findUnique({ where: { id: alert.id }, select: { endsAt: true, phone: true, textConsentAt: true, courseId: true, course: { select: { teeTimeAlertsOn: true } } } });
+  const row = await prisma.teeTimeAlert.findUnique({ where: { id: alert.id }, select: { endsAt: true, phone: true, textConsentAt: true, textConsentWording: true, courseId: true, course: { select: { teeTimeAlertsOn: true } } } });
   // The course turned alerts off since: nothing turns on, no consent is recorded.
   if (row && !row.course.teeTimeAlertsOn) return { result: 'off', alert };
   if (row?.endsAt && row.endsAt.getTime() <= now.getTime()) {

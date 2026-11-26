@@ -7,7 +7,7 @@
 // The repo is PUBLIC, so documents like these must never be committed; this is
 // where they go instead.
 
-import { isBlobStoreUrl } from '@/lib/private-blob';
+import { isBlobStoreUrl } from '@/lib/blob-url';
 
 export const COMPANY_DOC_PREFIX = 'company/';
 

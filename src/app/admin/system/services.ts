@@ -133,7 +133,7 @@ export function services(d: SystemData): Svc[] {
   const b = d.birdie;
   out.push({ id: 'anthropic', g: 'watch', t: 'Anthropic', does: 'The course assistant',
     st: !b ? '' : !b.enabled ? '' : b.todayReplies >= b.dailyCap ? 'warn' : 'ok',
-    state: !b ? CANT : !b.enabled ? 'Off' : `On · ${b.todayReplies.toLocaleString()} of ${b.dailyCap.toLocaleString()} replies today` });
+    state: !b ? CANT : !b.enabled ? 'Off' : `On · ${b.todayReplies.toLocaleString()} of ${b.dailyCap.toLocaleString()} questions today` });
 
   const stores = [i.blob, i.privateBlob].filter(Boolean).length;
   out.push({ id: 'blob', g: 'watch', t: 'Blob storage', does: 'Files and private contracts',

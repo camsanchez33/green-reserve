@@ -6,6 +6,8 @@
 //   replaced, because one such character makes the whole text UCS-2 and cuts it to 70 per segment.
 //   Links are short links on our own domain (lib/short-links), passed in already made.
 // Codes (the staff sign-in code) and the opt-in / HELP replies carry their own STOP wording.
+// A2P brand (Cam 2026-11-24): the Twilio brand is GreenReserve, so the two opt-in confirmations and the
+// HELP reply open "<Course> via GreenReserve: …". Only the course name is ever shortened, never the brand.
 // Pure and client-safe. scripts/sms-copy-test.ts checks every text's length and segments.
 import { SUPPORT_EMAIL } from './contact';
 
@@ -122,19 +124,30 @@ export function alertText(courseName: string, dayLabel: string, timeLabel: strin
 
 // ---------- Opt-in, HELP and codes ----------
 
-/** The one-time confirmation when a number agrees to booking texts (Twilio requires it). Mockup: 139 characters. */
+/**
+ * Who a reply is from: "<Course> via GreenReserve", or GreenReserve alone with no course to name. The
+ * course name (only) gives way to keep one segment; the brand never does.
+ */
+function viaBrand(courseName: string | null | undefined, rest: string): string {
+  const course = toGsm(courseName ?? '').trim();
+  if (!course) return toGsm(`GreenReserve${rest}`);
+  return fit(course, n => `${n} via GreenReserve${rest}`);
+}
+
+/** The one-time confirmation when a number agrees to booking texts (Twilio requires it). 156 characters with a 21-character name. */
 export function optInText(courseName: string | null | undefined): string {
-  return fit(courseName || 'GreenReserve', n => `${n}: You're set for booking texts, up to 4 per booking. Msg & data rates may apply. Reply HELP for help, STOP to opt out.`);
+  return viaBrand(courseName, `: You're set for booking texts, up to 4 per booking. Msg & data rates may apply. Reply HELP for help, STOP to opt out.`);
 }
 
 /** The confirmation when a number agrees to tee time alert texts. */
 export function alertOptInText(courseName: string | null | undefined): string {
-  return fit(courseName || 'GreenReserve', n => `${n}: You're set for alert texts, 1 per date you picked. Msg & data rates may apply. Reply HELP for help, STOP to opt out.`);
+  return viaBrand(courseName, `: You're set for alert texts, 1 per date you picked. Msg & data rates may apply. Reply HELP for help, STOP to opt out.`);
 }
 
-/** The reply to HELP. With the course the number last agreed for: its phone. Mockup: 119 characters. */
+/** The reply to HELP. With the course the number last agreed for: its phone. 137 characters with a 21-character name. */
 export function helpText(courseName: string | null | undefined, coursePhone: string | null | undefined): string {
-  if (courseName && coursePhone) return fit(courseName, n => `${n} booking texts. Questions? Call ${coursePhone}. Msg & data rates may apply. ${STOP_LINE}`);
+  if (courseName && coursePhone?.trim()) return viaBrand(courseName, `: Booking texts. Questions? Call ${coursePhone.trim()}. Msg & data rates may apply. ${STOP_LINE}`);
+  if (courseName?.trim()) return viaBrand(courseName, `: Booking texts. Questions? ${SUPPORT_EMAIL}. Msg & data rates may apply. ${STOP_LINE}`);
   return toGsm(`GreenReserve booking texts. Questions? ${SUPPORT_EMAIL}. Msg & data rates may apply. ${STOP_LINE}`);
 }
 

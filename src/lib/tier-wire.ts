@@ -30,8 +30,11 @@ export function tierToWire<T extends TierCentsShape>(tier: T) {
     annualFeeCents, initiationFeeCents,
     ...rest
   } = tier;
+  // GUEST-PASS-OFF (Cam 2026-11-24): the unused guestPassesPerYear column never goes on the wire.
+  const { guestPassesPerYear: _guestPasses, ...wire } = rest as typeof rest & { guestPassesPerYear?: unknown };
+  void _guestPasses;
   return {
-    ...rest,
+    ...wire,
     greenFeeWeekday: centsToDollars(greenFeeWeekdayCents),
     greenFeeWeekend: centsToDollars(greenFeeWeekendCents),
     cartFeeWeekday:  centsToDollars(cartFeeWeekdayCents),
