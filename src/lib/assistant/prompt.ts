@@ -28,6 +28,11 @@ export function assistantKeyPresent(): boolean {
   return typeof k === 'string' && k.trim().length > 0;
 }
 
+/** The per-persona kill switch: ASSISTANT_OFF="golfer,homepage" turns those off everywhere without touching the key. */
+export function personaOff(persona: AssistantPersona): boolean {
+  return (process.env.ASSISTANT_OFF ?? '').split(',').map(x => x.trim().toLowerCase()).includes(persona);
+}
+
 /** The client, or null when the key is missing or the SDK refuses it. Never throws. */
 export function assistantClient(): Anthropic | null {
   if (!assistantKeyPresent()) return null;

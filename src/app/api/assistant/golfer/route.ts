@@ -5,8 +5,8 @@ import { clientIp } from '@/lib/rate-limit';
 import { getCourseBrief } from '@/lib/assistant/brief';
 import { readAssistantSettings, unknownLineFor } from '@/lib/assistant/settings';
 import { platformAllows, golferDayAllows, publicIpAllows } from '@/lib/assistant/caps';
-import { assistantClient, systemBlocks, logAssistant, ASSISTANT_MODEL, ASSISTANT_EFFORT, FALLBACK_BETA } from '@/lib/assistant/prompt';
-import { GOLFER_PERSONA, GOLFER_MAX_TOKENS, golferCourseBlock, sanitizeGolferHistory } from '@/lib/assistant/golfer';
+import { assistantClient, systemBlocks, logAssistant, personaOff, ASSISTANT_MODEL, ASSISTANT_EFFORT, FALLBACK_BETA } from '@/lib/assistant/prompt';
+import { GOLFER_PERSONA, GOLFER_MAX_TOKENS, golferCourseBlock, sanitizeGolferHistory, golferReply, policyFromBrief } from '@/lib/assistant/golfer';
 
 // ASSIST-6 (Cam 2026-11-24): the golfer question bot on a course's booking page. Public, no sign-in, no tools.
 //
@@ -14,12 +14,14 @@ import { GOLFER_PERSONA, GOLFER_MAX_TOKENS, golferCourseBlock, sanitizeGolferHis
 // POST { course: <slug>, messages } → { reply, handOff }        (handOff = the reply is the course's hand-off line)
 //
 // The course is the one whose booking page this is (its public slug); the bot reads only that course's golfer brief.
-// It is OFF until the course turns it on, and fails closed without ANTHROPIC_API_KEY. Caps, cheapest first: per IP
-// per hour, the platform's golfer budget, then the course's own day (Cam: 300 at most) — past the course's limit the
-// golfer gets the course's hand-off line instead of a model call. Logs carry tokens and how the turn ended, never the
+// It is OFF until the course turns it on, off everywhere with ASSISTANT_OFF=golfer, and fails closed without
+// ANTHROPIC_API_KEY. Caps, cheapest first: per IP per hour, then the course's own day (Cam: 300 at most), then the
+// platform's golfer budget — past either day cap the golfer gets the course's hand-off line instead of a model call.
+// The model never writes policy or the hand-off line: it answers with a marker and golferReply() puts the exact text in. Logs carry tokens and how the turn ended, never the
 // question or the answer.
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 const SLUG = /^[a-z0-9-]{1,80}$/;
 const COURSE_SELECT = {
@@ -40,7 +42,7 @@ async function courseFor(slug: unknown) {
 const off = () => NextResponse.json({ enabled: false }, { headers: { 'Cache-Control': 'no-store' } });
 
 export async function GET(req: NextRequest) {
-  const c = assistantClient() ? await courseFor(req.nextUrl.searchParams.get('course')) : null;
+  const c = assistantClient() && !personaOff('golfer') ? await courseFor(req.nextUrl.searchParams.get('course')) : null;
   if (!c) return off();
   return NextResponse.json({ enabled: true, courseName: c.name, unknownLine: c.unknownLine }, { headers: { 'Cache-Control': 'no-store' } });
 }
@@ -48,7 +50,11 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   // Fail closed before anything else: no key, no bot.
   const client = assistantClient();
-  if (!client) return NextResponse.json({ error: 'Questions are not available right now.' }, { status: 503 });
+  if (!client || personaOff('golfer')) return NextResponse.json({ error: 'Questions are not available right now.' }, { status: 503 });
+  // Only this site's own page may ask: a JSON body (a cross-site form can't send one) and no cross-site fetch.
+  if (!/^application\/json\b/i.test(req.headers.get('content-type') ?? '') || req.headers.get('sec-fetch-site') === 'cross-site') {
+    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
+  }
 
   if (!(await publicIpAllows('golfer', clientIp(req)))) {
     return NextResponse.json({ error: 'That is a lot of questions — try again in a little while.' }, { status: 429 });
@@ -73,14 +79,14 @@ export async function POST(req: NextRequest) {
 
   const started = Date.now();
   // persona (frozen) → course block: tone, hand-off line, brief (breakpoint). No volatile text, no tools.
-  const system = systemBlocks(GOLFER_PERSONA, golferCourseBlock(c.name, c.settings.tone, c.unknownLine, brief.text), '');
+  const system = systemBlocks(GOLFER_PERSONA, golferCourseBlock(c.name, c.settings.tone, brief.text), '');
   let msg: Anthropic.Beta.BetaMessage;
   try {
     msg = await client.beta.messages.create({
       model: ASSISTANT_MODEL, max_tokens: GOLFER_MAX_TOKENS, system, messages: history,
       output_config: { effort: ASSISTANT_EFFORT },
       betas: [FALLBACK_BETA], fallbacks: 'default',
-    });
+    }, { timeout: 20_000 });
   } catch (err) {
     console.error('[assistant] golfer call failed:', err instanceof Anthropic.APIError ? `${err.status} ${err.name}` : err instanceof Error ? err.name : 'error');
     return NextResponse.json({ reply: c.unknownLine, handOff: true });
@@ -93,5 +99,5 @@ export async function POST(req: NextRequest) {
   });
   // A refusal, a cut-off answer or an empty one: the course's hand-off line, never half an answer about policy.
   if (msg.stop_reason !== 'end_turn' || !text) return NextResponse.json({ reply: c.unknownLine, handOff: true });
-  return NextResponse.json({ reply: text.slice(0, 2000), handOff: text === c.unknownLine });
+  return NextResponse.json(golferReply(text, policyFromBrief(brief.text), c.unknownLine));
 }

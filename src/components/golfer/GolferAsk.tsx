@@ -59,14 +59,14 @@ export function GolferAsk({ slug }: { slug: string }) {
     <>
       {!open && (
         <button type="button" onClick={() => setOpen(true)}
-          className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-40 min-h-[44px] max-w-[calc(100vw-2rem)] truncate rounded-full px-4 text-[14px] font-semibold shadow-sm"
+          className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-30 min-h-[44px] max-w-[calc(100vw-2rem)] truncate rounded-full px-4 text-[14px] font-semibold shadow-sm"
           style={{ background: 'var(--g-acc)', color: 'var(--g-on-acc)' }}>
           {title}
         </button>
       )}
       {open && (
         <div role="dialog" aria-label={title}
-          className="fixed z-50 inset-x-0 bottom-0 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[380px] max-h-[min(560px,85vh)] flex flex-col rounded-t-[14px] sm:rounded-[14px] border shadow-lg"
+          className="fixed z-50 inset-x-0 bottom-0 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[380px] max-h-[min(560px,85vh)] flex flex-col rounded-t-[12px] sm:rounded-[12px] border shadow-lg"
           style={{ background: 'var(--g-card)', borderColor: 'var(--g-line)', color: 'var(--g-ink)' }}>
           <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: 'var(--g-line)' }}>
             <h2 className="min-w-0 flex-1 truncate text-[15px] font-semibold">{title}</h2>
@@ -83,7 +83,7 @@ export function GolferAsk({ slug }: { slug: string }) {
             ))}
           </div>
           <form className="flex items-center gap-2 px-3 py-3 border-t" style={{ borderColor: 'var(--g-line)' }} onSubmit={e => { e.preventDefault(); ask(input); }}>
-            <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} maxLength={500} disabled={busy} aria-label={title}
+            <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} maxLength={500} disabled={busy} aria-label="Your question"
               className="flex-1 min-w-0 min-h-[40px] rounded-[10px] border px-3 text-[14px] focus:outline-none"
               style={{ background: 'var(--g-paper)', borderColor: 'var(--g-line)', color: 'var(--g-ink)' }} />
             <button type="submit" disabled={busy || !input.trim()} className="min-h-[40px] rounded-[10px] px-4 text-[14px] font-semibold disabled:opacity-50"
