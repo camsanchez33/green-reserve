@@ -70,7 +70,10 @@ export async function POST(req: NextRequest) {
       // First-time activation still works: employees are created active.
     },
   });
-  if (count === 0) return NextResponse.json({ error: 'Token already used or invalid' }, { status: 400 });
+  if (count === 0) {
+    await securityEvent(req, { kind: 'signin_failed', surface: admin.role === 'owner' ? 'owner' : 'admin', email: admin.email, accountId: admin.id, detail: 'set password, link used by another submit at the same moment' });
+    return NextResponse.json({ error: 'Token already used or invalid' }, { status: 400 });
+  }
 
   await passwordChanged(req, admin, isReset ? 'reset with Forgot password' : 'set in place of a temporary password');
   // The owner's change is emailed by passwordChanged() (with device and place), so not twice.
