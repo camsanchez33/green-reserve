@@ -31,9 +31,9 @@ check('the pay page needs the sale token', lib.includes('sale.payToken !== token
 check('the pay route is rate limited', pub.includes('rateLimit(`shop-sale-pay:'));
 // POS-3 R3: starting a card-reader payment needs the agreement too (card payments: link, resend, reader).
 // MEM-ACCT 1b: counter payment also puts a sale on account (with cash) and voids one off it.
-check('staff routes need shop.sell; cash, on account and every void (audit 2026-11-24 L6) also need counter payment; only card payments need the agreement',
+check('staff routes need shop.sell; cash and on account also need counter payment; only card payments need the agreement',
   staff.includes("requirePermission(session, 'shop.sell')") && (staff.match(/requirePermission\(g\.session, 'sheet\.counter_payment'\)/g) || []).length === 3
-  && staff.includes("pay === 'cash' || pay === 'account'") && /body\.action === 'void_cash'\) \{[\s\S]{0,400}const denied = requirePermission\(g\.session, 'sheet\.counter_payment'\); if \(denied\) return denied;/.test(staff)
+  && staff.includes("pay === 'cash' || pay === 'account'") && staff.includes("if (acct) { const denied = requirePermission(g.session, 'sheet.counter_payment')")
   && (staff.match(/requireAgreementCurrent\(g\.session\.courseId\)/g) || []).length === 3);
 check('staff writes are scoped to the session course', staff.includes('courseId: g.session.courseId') && lib.includes('where: { id: saleId, courseId, status'));
 check('stock is optional and bounded', items.includes('n > 100000') && items.includes("body.stockCount === ''"));

@@ -249,9 +249,9 @@ export async function PATCH(req: NextRequest) {
   }
   // Dead end 23 (Cam 2026-10-29: "Same day, before close-out", anyone with the shop permission).
   if (body.action === 'void_cash') {
-    // Audit 2026-11-24 L6: voiding takes money back out of the day's takings, so it needs the counter-payment
-    // power for every sale (it used to need it only for a member-account sale; shop.sell alone could void cash).
-    const denied = requirePermission(g.session, 'sheet.counter_payment'); if (denied) return denied;
+    // MEM-ACCT 1b: taking a sale off a member's account needs the power that put it on.
+    const acct = await prisma.shopSale.findFirst({ where: { id, courseId: g.session.courseId, status: 'paid_account' }, select: { id: true } });
+    if (acct) { const denied = requirePermission(g.session, 'sheet.counter_payment'); if (denied) return denied; }
     const r = await voidCashSale(g.session.courseId, id);
     if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status });
     return NextResponse.json({ sale: r.value });

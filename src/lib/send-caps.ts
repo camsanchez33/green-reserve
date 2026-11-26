@@ -15,9 +15,9 @@ export const SEND_CAP_MESSAGE = 'That’s a lot of sends for now. Wait a while, 
 
 export async function golferSendAllowed(a: { courseId: string; bookingId: string; kind: 'pay_link' | 'receipt'; via: 'sms' | 'email'; to: string }): Promise<boolean> {
   const dest = a.to.trim().toLowerCase().slice(0, 200);
-  // Checked in this order and all counted, so a refused send still uses up the per-booking try.
-  const booking = await rateLimit(`send:${a.kind}:${a.via}:booking:${a.bookingId}`, SENDS_PER_BOOKING_HOUR, 3600);
-  const destination = await rateLimit(`send:${a.via}:dest:${a.courseId}:${dest}`, SENDS_PER_DESTINATION_HOUR, 3600);
-  const course = await rateLimit(`send:course:${a.courseId}`, SENDS_PER_COURSE_HOUR, 3600);
-  return booking && destination && course;
+  // In this order, stopping at the first refusal: a loop on one booking uses up that booking's sends, never
+  // the whole course's (which would stop every desk's sends for the hour).
+  if (!(await rateLimit(`send:${a.kind}:${a.via}:booking:${a.bookingId}`, SENDS_PER_BOOKING_HOUR, 3600))) return false;
+  if (!(await rateLimit(`send:${a.via}:dest:${a.courseId}:${dest}`, SENDS_PER_DESTINATION_HOUR, 3600))) return false;
+  return rateLimit(`send:course:${a.courseId}`, SENDS_PER_COURSE_HOUR, 3600);
 }

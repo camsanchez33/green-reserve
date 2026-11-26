@@ -12,8 +12,8 @@ import { jsonBody, teamOwner, teamResponse } from '@/lib/team-route';
 // StaffPermissionChange per person whose keys change, and securityEvent when
 // sign-in is affected.
 
-// ── Kept for Settings → Staff & permissions (StaffPermissions.tsx) until the Team
-// page (#460) replaces it; delete GET and POST with that component. Owner only.
+// ── The old list (GET), owner only. Its old Add (POST) is gone (audit 2026-11-24 L9); PATCH and DELETE
+// are Team's.
 
 /** The old screen's list: the old shape, people removed on Team left out. */
 export async function GET(req: NextRequest) {

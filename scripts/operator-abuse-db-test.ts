@@ -1,8 +1,7 @@
-// Audit 2026-11-24 M11, L3, L6, L9.
+// Audit 2026-11-24 M11, L3, L9 (L6 is held for Cam: it reverses his 2026-10-29 void rule).
 //  M11: pay links and receipts could be sent without limit (and a receipt to any number typed), each one
 //       costing Twilio money and sender reputation. Now capped per booking, per destination and per course.
 //  L3: any staff login could mint the 30-day preview token. Owner only now.
-//  L6: shop.sell alone could void a cash sale. sheet.counter_payment now, for every sale.
 //  L9: the old uncapped staff Add (POST /api/operator/staff) is gone.
 // Real database. Run: npx tsx scripts/operator-abuse-db-test.ts
 import { readFileSync } from 'fs';
@@ -19,9 +18,8 @@ nextServer.after = (task: unknown) => { void Promise.resolve(typeof task === 'fu
 
 import { prisma } from '../src/lib/prisma';
 import { signStaffToken, signToken } from '../src/lib/auth';
-import { SENDS_PER_BOOKING_HOUR, SENDS_PER_DESTINATION_HOUR, golferSendAllowed } from '../src/lib/send-caps';
+import { SENDS_PER_BOOKING_HOUR, SENDS_PER_DESTINATION_HOUR, SENDS_PER_COURSE_HOUR, golferSendAllowed } from '../src/lib/send-caps';
 import { PATCH as bookingsPatch } from '../src/app/api/operator/bookings/route';
-import { PATCH as shopPatch } from '../src/app/api/operator/shop-sales/route';
 import { GET as previewLink } from '../src/app/api/operator/preview-link/route';
 import * as staffRoute from '../src/app/api/operator/staff/route';
 
@@ -54,8 +52,6 @@ const patch = async (h: (r: NextRequest) => Promise<Response | undefined>, url: 
     return signStaffToken({ staffId: s.id, courseId: course.id, email: s.email, sv: 0 });
   };
   const desk = await mkStaff('desk', ['sheet.checkin']);
-  const seller = await mkStaff('seller', ['shop.sell']);
-  const cashier = await mkStaff('cashier', ['shop.sell', 'sheet.counter_payment']);
   const owner = await signToken({ operatorId: op.id, email: op.email, sv: 0 });
 
   // ── M11 ──
@@ -86,6 +82,33 @@ const patch = async (h: (r: NextRequest) => Promise<Response | undefined>, url: 
     return { status: r.status, consentUnchanged: before === afterCount };
   })();
   ok('M11 a capped text is refused before any consent is recorded or text sent', smsCapped.status === 429 && smsCapped.consentUnchanged, smsCapped);
+  // The course cap: once the course has sent its share this hour, a fresh booking and address are refused too.
+  const seed = (key: string, count: number) => prisma.rateLimit.upsert({ where: { key }, create: { key, count, windowStart: new Date() }, update: { count, windowStart: new Date() } });
+  const fresh = await prisma.booking.create({ data: { teeTimeId: tt.id, courseId: course.id, golferName: 'Kim', golferEmail: `${TAG}+kim@t.local`, players: 1, greenFeeTotal: 4000, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 4000, status: 'completed', paymentStatus: 'paid' } });
+  await seed(`send:course:${course.id}`, SENDS_PER_COURSE_HOUR);
+  const courseCapped = await patch(bookingsPatch, '/api/operator/bookings', { id: fresh.id, action: 'send_receipt', via: 'email', to: `${TAG}+new@t.local` });
+  ok(`M11 past ${SENDS_PER_COURSE_HOUR} sends in an hour the course is refused, on any booking`, courseCapped.status === 429, courseCapped.status);
+  await prisma.rateLimit.deleteMany({ where: { key: `send:course:${course.id}` } });
+
+  // A loop on one booking uses up that booking, never the course: a refused send counts nothing further.
+  const before = (await prisma.rateLimit.findUnique({ where: { key: `send:course:${course.id}` } }))?.count ?? 0;
+  for (let i = 0; i < 5; i++) await patch(bookingsPatch, '/api/operator/bookings', { id: booking.id, action: 'send_receipt', via: 'email', to: `${TAG}+loop${i}@t.local` });
+  const afterLoop = (await prisma.rateLimit.findUnique({ where: { key: `send:course:${course.id}` } }))?.count ?? 0;
+  ok('M11 refused sends on a used-up booking do not eat the course\'s sends', afterLoop === before, { before, afterLoop });
+
+  // Pay link by text, on the round's day: a number with no consent gets the "ask them" answer before anything is counted.
+  const today = new Date().toISOString().slice(0, 10);
+  const tToday = await prisma.teeTime.create({ data: { courseId: course.id, date: today, time: '23:50', playersAvailable: 4, greenFeeCents: 4000, cartFeeCents: 0 } });
+  const due = await prisma.booking.create({ data: { teeTimeId: tToday.id, courseId: course.id, golferName: 'Ray', golferEmail: `${TAG}+ray@t.local`, golferPhone: '+12025550173', players: 1, greenFeeTotal: 4000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 4150, status: 'confirmed', paymentStatus: 'no_payment_method' } });
+  const ask = await patch(bookingsPatch, '/api/operator/bookings', { id: due.id, action: 'send_pay_link', via: 'sms' });
+  const askBody = await ask.json() as { needsConsent?: boolean };
+  const counted = await prisma.rateLimit.findUnique({ where: { key: `send:pay_link:sms:booking:${due.id}` } });
+  ok('M11 a pay-link text to a number that hasn\'t agreed asks first, and counts nothing', ask.status === 409 && askBody.needsConsent === true && !counted, { s: ask.status, askBody, counted });
+  await seed(`send:pay_link:sms:booking:${due.id}`, SENDS_PER_BOOKING_HOUR);
+  const consentsBefore = await prisma.smsConsent.count();
+  const capped = await patch(bookingsPatch, '/api/operator/bookings', { id: due.id, action: 'send_pay_link', via: 'sms', smsConsent: 'verbal' });
+  ok('M11 a capped pay-link text is refused before the verbal consent is recorded', capped.status === 429 && (await prisma.smsConsent.count()) === consentsBefore, capped.status);
+
   const route = read('src/app/api/operator/bookings/route.ts');
   ok('M11 all four sends (pay link and receipt, text and email) are capped', (route.match(/golferSendAllowed\(/g) ?? []).length === 4);
 
@@ -94,14 +117,6 @@ const patch = async (h: (r: NextRequest) => Promise<Response | undefined>, url: 
   ok('L3 a staff login cannot mint the preview link', (await previewLink()).status === 403);
   jar = { gr_operator: owner };
   ok('L3 the owner can', (await previewLink()).status === 200);
-
-  // ── L6 ──
-  jar = { gr_operator: seller };
-  const sellerVoid = await patch(shopPatch, '/api/operator/shop-sales', { id: 'no-such-sale', action: 'void_cash' });
-  ok('L6 shop.sell alone cannot void a cash sale', sellerVoid.status === 403, sellerVoid.status);
-  jar = { gr_operator: cashier };
-  const cashierVoid = await patch(shopPatch, '/api/operator/shop-sales', { id: 'no-such-sale', action: 'void_cash' });
-  ok('L6 with sheet.counter_payment the void goes on (to "not found" here)', cashierVoid.status !== 403, cashierVoid.status);
 
   // ── L9 ──
   ok('L9 the old uncapped staff Add is gone', !('POST' in staffRoute));
