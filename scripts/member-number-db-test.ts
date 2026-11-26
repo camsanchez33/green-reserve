@@ -83,7 +83,7 @@ async function cleanup() {
   // Numbers are given where members are made: staff adding one (each path of the add) and the import. Join online is
   // gone for good (GOLFER-SIGNIN-RETIRED).
   const addRoute = readFileSync('src/app/api/operator/members/route.ts', 'utf8');
-  ok('every staff add gives a number', (addRoute.match(/memberNumber: await assignMemberNumber\(/g) ?? []).length >= 3);
+  ok('every staff add gives a number', (addRoute.match(/memberNumber: await assignMemberNumber\(/g) ?? []).length >= 2); // H1: one add path (no account link) and the counter re-add
   const imp = readFileSync('src/lib/member-import.ts', 'utf8');
   ok('imported members get a number', imp.includes('.then(made => assignMemberNumber(made.id))'));
   ok('a test-course reset starts numbers again (its members are gone)', readFileSync('src/lib/data-reset.ts', 'utf8').includes("prisma.membershipTier.updateMany({ where: { courseId }, data: { numberLast: 0 } })"));
@@ -94,7 +94,7 @@ async function cleanup() {
   ok('seeing it is members.view, changing it members.edit, the member always the session’s course', photo.includes("gate('members.view')") && (photo.match(/gate\('members\.edit'\)/g) ?? []).length === 2 && photo.includes('where: { id, courseId }'));
   const members = readFileSync('src/app/api/operator/members/route.ts', 'utf8');
   ok('the members list says whether there is a photo, never where it is', members.includes('hasPhoto:       !!m.photoUrl') && !members.includes('photoUrl:'));
-  ok('every whole-row response goes through safeRow (no photoUrl)', !/NextResponse\.json\((updated|membership|again)\b/.test(members) && !/json\(\{ \.\.\.(updated|membership|again),/.test(members) && (members.match(/safeRow\(/g) ?? []).length >= 5);
+  ok('every whole-row response goes through safeRow (no photoUrl)', !/NextResponse\.json\((updated|membership|again)\b/.test(members) && !/json\(\{ \.\.\.(updated|membership|again),/.test(members) && (members.match(/safeRow\(/g) ?? []).length >= 4); // H1: the linked-account add path is gone
   ok('a notes edit doesn’t number a member from before (no backfill), nor a request', members.includes("!membership.tierId && updated.tierId && updated.status !== 'requested'"));
 
   await cleanup(); await prisma.$disconnect();

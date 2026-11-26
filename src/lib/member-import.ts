@@ -21,20 +21,23 @@ export async function importMembers(courseId: string, rows: ImportRow[], opts: I
   const skipped: ImportResult['skipped'] = [];
   let added = 0;
 
+  // Audit 2026-11-24 H1: an import never reads GreenReserve golfer accounts. It used to link every listed
+  // address that had one and copy that account's name and phone onto this course's list, so a course could
+  // pull another course's golfer's details from a CSV of emails (and the skip reason said which addresses had
+  // no account). Each row is now an invite with only what the course typed, and needs a name. Member rates
+  // still match on the membership's own email (lib/member-session memberEmailWhere), so nothing is lost.
   const emails = rows.map(r => r.email);
-  const golfers = await prisma.golferAccount.findMany({ where: { email: { in: emails } }, select: { id: true, email: true, firstName: true, lastName: true, phone: true } });
-  const golferBy = new Map(golfers.map(g => [g.email.toLowerCase(), g]));
+  // Only this course's own memberships: by their email, or (older rows) by the email of the account they're linked to.
   const existing = await prisma.courseMembership.findMany({
-    where: { courseId, OR: [{ inviteEmail: { in: emails } }, { golferId: { in: golfers.map(g => g.id) } }] },
-    select: { inviteEmail: true, golferId: true },
+    where: { courseId, OR: [{ inviteEmail: { in: emails } }, { inviteEmail: '', golfer: { email: { in: emails } } }] },
+    select: { inviteEmail: true, golfer: { select: { email: true } } },
   });
-  const taken = new Set([...existing.map(e => e.inviteEmail.toLowerCase()), ...existing.flatMap(e => golfers.filter(g => g.id === e.golferId).map(g => g.email.toLowerCase()))]);
+  const taken = new Set(existing.map(e => (e.inviteEmail || e.golfer?.email || '').toLowerCase()).filter(Boolean));
 
   for (const r of rows) {
     if (taken.has(r.email)) { skipped.push({ line: r.line, email: r.email, reason: 'Already a member' }); continue; }
-    const golfer = golferBy.get(r.email);
-    const name = r.name || (golfer ? `${golfer.firstName} ${golfer.lastName}`.trim() : '');
-    if (!name) { skipped.push({ line: r.line, email: r.email, reason: 'No name, and no GreenReserve account to take it from' }); continue; }
+    const name = r.name.trim();
+    if (!name) { skipped.push({ line: r.line, email: r.email, reason: 'No name — add one for this row' }); continue; }
     const tier = (r.tier && byName.get(r.tier.toLowerCase())) || fallback;
     const paid = r.paid ?? opts.paidByDefault;
     const now = new Date();
@@ -43,10 +46,10 @@ export async function importMembers(courseId: string, rows: ImportRow[], opts: I
     try {
       await prisma.courseMembership.create({
         data: {
-          courseId, golferId: golfer?.id ?? null, tierId: tier.id, membershipType: tier.name,
+          courseId, golferId: null, tierId: tier.id, membershipType: tier.name,
           status: 'active', addedBy: opts.addedBy || 'import', notes: 'Imported',
-          inviteEmail: r.email, inviteName: name, invitePhone: r.phone || golfer?.phone || '',
-          inviteAccepted: !!golfer, payToken: randomUUID(), expiresAt,
+          inviteEmail: r.email, inviteName: name, invitePhone: r.phone || '',
+          inviteAccepted: false, payToken: randomUUID(), expiresAt,
           // Already a member of the course: no one-time initiation fee on their dues.
           initiationWaived: true,
           ...(paid ? { paymentStatus: 'paid_offline', lastPaidAt: now, startedAt: now } : {}),

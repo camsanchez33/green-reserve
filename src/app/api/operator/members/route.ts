@@ -115,7 +115,8 @@ export async function POST(req: NextRequest) {
   }
 
   const lowerEmail = email.trim().toLowerCase();
-  const golfer = await prisma.golferAccount.findUnique({ where: { email: lowerEmail } });
+  // Audit 2026-11-24 H1: an add never reads GreenReserve golfer accounts (it linked one and returned its name,
+  // email and phone to any course that typed the address). Every add is an invite with the name the course typed.
   const owes = amountsDue({ lastPaidAt: null, initiationWaived: false, tier }).duesCents > 0;
   const waiting = payFirst && owes;
   const startStatus = waiting ? 'awaiting_payment' : 'active';
@@ -125,7 +126,7 @@ export async function POST(req: NextRequest) {
   // than refused as a duplicate: same person, the tier and details as now entered.
   if (payFirst) {
     const unpaid = await prisma.courseMembership.findFirst({
-      where: { courseId: session.courseId, addedBy: COUNTER_ADDED, status: { in: ['awaiting_payment', 'cancelled'] }, lastPaidAt: null, duesChargeStartedAt: null, duesReaderId: '', OR: [{ inviteEmail: ciEquals(lowerEmail) }, ...(golfer ? [{ inviteEmail: '', golferId: golfer.id }] : [])] },
+      where: { courseId: session.courseId, addedBy: COUNTER_ADDED, status: { in: ['awaiting_payment', 'cancelled'] }, lastPaidAt: null, duesChargeStartedAt: null, duesReaderId: '', OR: [{ inviteEmail: ciEquals(lowerEmail) }, { inviteEmail: '', golfer: { email: ciEquals(lowerEmail) } }] },
       select: { id: true, golferId: true },
     });
     if (unpaid) {
@@ -139,47 +140,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  if (golfer) {
-    const existing = await prisma.courseMembership.findUnique({
-      where: { golferId_courseId: { golferId: golfer.id, courseId: session.courseId } },
-    });
-    if (existing) {
-      return NextResponse.json({ error: `${email} is already a member of this course` }, { status: 409 });
-    }
-    // GOLFER-LOGIN-1: the email that logs in is the membership's own; never let two memberships share it.
-    if (await prisma.courseMembership.findFirst({ where: { courseId: session.courseId, OR: [{ inviteEmail: ciEquals(lowerEmail) }, { inviteEmail: '', golfer: { email: ciEquals(lowerEmail) } }] }, select: { id: true } })) {
-      return NextResponse.json({ error: `${email} already has a membership here` }, { status: 409 });
-    }
-    const membership = await prisma.courseMembership.create({
-      data: {
-        courseId:       session.courseId,
-        golferId:       golfer.id,
-        tierId,
-        membershipType: tier.name,
-        status:         startStatus,
-        addedBy,
-        notes:          notes || '',
-        expiresAt:      expiresAt ? new Date(expiresAt) : null,
-        inviteEmail:    lowerEmail,
-        inviteName:     name || `${golfer.firstName} ${golfer.lastName}`,
-        invitePhone:    phone || golfer.phone || '',
-        inviteAccepted: true,
-        payToken:       randomUUID(),
-      },
-      include: {
-        golfer: { select: { firstName: true, lastName: true, email: true, phone: true } },
-        tier:   { select: { id: true, name: true, color: true } },
-      },
-    });
-
-    // Existing golfer account — just let them know, no password setup needed (after paying, when paying first).
-    if (!waiting) after(sendWelcome(membership.id).catch(err => console.error('Member linked email error:', err)));
-    if (!payFirst) after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
-
-    return NextResponse.json({ ...safeRow(membership), memberNumber: await assignMemberNumber(membership.id), linked: true, awaitingPayment: waiting }, { status: 201 });
-  } else {
+  {
     if (!name?.trim()) {
-      return NextResponse.json({ error: 'Name is required for members without an existing account' }, { status: 400 });
+      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
     const existingInvite = await prisma.courseMembership.findFirst({
       where: { courseId: session.courseId, OR: [{ inviteEmail: ciEquals(lowerEmail) }, { inviteEmail: '', golfer: { email: ciEquals(lowerEmail) } }] },
@@ -206,7 +169,7 @@ export async function POST(req: NextRequest) {
       include: { tier: { select: { id: true, name: true, color: true } } },
     });
 
-    // No GolferAccount yet — send a set-password invite link (after paying, when paying first).
+    // The invite link to the member's own email (after paying, when paying first).
     if (!waiting) after(sendWelcome(membership.id).catch(err => console.error('Member invite email error:', err)));
     if (!payFirst) after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
 
