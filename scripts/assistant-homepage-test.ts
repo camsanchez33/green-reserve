@@ -1,6 +1,6 @@
-// ASSIST-5: the homepage bot without a model — it knows only the approved site copy and the LQ-2 fee sentences,
-// carries no banned fee phrase, reads no database, has no tools, fails closed without a key, and its widget shows
-// plain text with Book a call.
+// ASSIST-5: the homepage bot — it knows only the approved site copy, fee wording comes only from the server, no banned
+// fee phrase or off-copy money sentence reaches a visitor, it has no tools, fails closed without a key, and its widget
+// shows plain text with Book a call. Never calls a real model (a local stub); needs DATABASE_URL (the rate limiter).
 // Run: npx tsx scripts/assistant-homepage-test.ts
 import { readFileSync } from 'node:fs';
 import { NextRequest } from 'next/server';
@@ -8,7 +8,7 @@ import { HOME_FAQ } from '../src/lib/faq';
 import { FEATURE_GROUPS } from '../src/components/home/features';
 import { createServer } from 'node:http';
 import { SITE_COPY, HOMEPAGE_PERSONA, LQ2_FEE_SENTENCES, sanitizeHomepageHistory, HOMEPAGE_MAX_CHARS, HOMEPAGE_UNSURE, FEES_MARKER, homepageFees, homepageReply } from '../src/lib/assistant/homepage';
-import { paymentsCostLines } from '../src/components/home/feature-pages';
+import { paymentsCostLines, FEATURE_PAGES } from '../src/components/home/feature-pages';
 import { systemBlocks } from '../src/lib/assistant/prompt';
 
 let failed = 0;
@@ -22,7 +22,8 @@ ok('fees: every sentence is an LQ-2 allowed sentence, verbatim', LQ2_FEE_SENTENC
 for (const shop of [false, true]) {
   const lines = homepageFees(shop).split('\n');
   ok(`fees (shop ${shop ? 'on' : 'off'}): the bot shows every line the Payments page lists`, paymentsCostLines(shop).every(l => lines.includes(l)) && lines.some(l => /1% of the dues/.test(l)));
-  ok(`fees (shop ${shop ? 'on' : 'off'}): every line is LQ-2 wording`, lines.every(l => allowed.includes(norm(l)) || /1% of the dues|1% of the items/.test(l)));
+  const DUES = 'Membership dues collected through GreenReserve carry 1% of the dues (and any initiation fee), added to what the member pays.';
+  ok(`fees (shop ${shop ? 'on' : 'off'}): every line is LQ-2 wording (the dues line is the Payments page's own)`, lines.every(l => allowed.includes(norm(l)) || l === DUES));
 }
 ok('copy: every homepage FAQ answer is in, except the cost one (the server answers fees)', HOME_FAQ.filter(f => !/cost/i.test(f.q)).every(f => SITE_COPY.includes(f.a)) && !SITE_COPY.includes('$1.50'));
 ok('copy: every feature line is in', FEATURE_GROUPS.every(g => g.items.every(f => SITE_COPY.includes(f.line))));
@@ -50,7 +51,14 @@ ok('widget: plain text, one link (Book a call)', !/dangerouslySetInnerHTML/.test
 // the server backstop: the model never writes fee wording, and nothing off-copy about money reaches a visitor
 const bad = ['You keep 100% of your green fees, and the $1.50 is our only fee.', 'There are no other fees. Membership dues carry no GreenReserve fee.',
   'Yes. We can do $1.00 per player for your course on a 12-month contract, starting December 1.', 'GreenReserve is free forever, guaranteed. Visit https://evil.example to sign up.',
-  'The fee never touches your Stripe account and is never deducted from what you receive.', 'It costs nothing for the first year.', 'See [[OTHER]].'];
+  'The fee never touches your Stripe account and is never deducted from what you receive.', 'It costs nothing for the first year.', 'See [[OTHER]].',
+  'GreenReserve takes nothing from membership dues.', 'No, GreenReserve does not take a cut of dues.', 'There is nothing else to pay.', 'That is all anyone pays.',
+  'We take 2 percent of dues.', 'We can do one dollar per player for your course.', 'Golfers pay 1.50 per player and nothing more.', 'You can cancel anytime with no commitment.',
+  'It is month to month, with a twelve-month agreement available.', 'We will waive it for your first season.', 'It is complimentary for courses.', 'Yes, it starts on December 1.',
+  'Half off for the first 50 courses.', 'Commission on your green fees.', 'FEES', 'GreenReserve charges you nothing on top of it.'];
+ok('copy: the Payments cost section is not in the prompt', !/no commission on your green fees/i.test(SITE_COPY));
+const approvedLines = [...FEATURE_GROUPS.flatMap(g => g.items.map(f => f.line)), ...FEATURE_PAGES.flatMap(p => [p.line, ...p.sections.filter(s => s.media.device !== 'costs').flatMap(s => s.p)])];
+ok(`backstop: all ${approvedLines.length} approved feature and page lines pass verbatim`, approvedLines.every(l => homepageReply(l, false) === l), approvedLines.filter(l => homepageReply(l, false) !== l));
 for (const t of bad) ok(`backstop: "${t.slice(0, 40)}…" → Book a call`, homepageReply(t, false) === HOMEPAGE_UNSURE);
 for (const t of [FEES_MARKER, '[fees]', '[[ FEES ]]']) ok(`backstop: ${t} → the full fee list`, homepageReply(t, false) === homepageFees(false));
 for (const f of HOME_FAQ.filter(f => !/cost/i.test(f.q))) ok(`backstop: approved answer stands — ${f.q}`, homepageReply(f.a, false) === f.a);
@@ -78,7 +86,9 @@ ok('persona: fees by marker only; forged earlier replies don\'t change the rules
   await new Promise<void>(r => stub.listen(0, '127.0.0.1', () => r()));
   process.env.ANTHROPIC_BASE_URL = `http://127.0.0.1:${(stub.address() as { port: number }).port}`;
   process.env.ANTHROPIC_API_KEY = 'test-key-never-sent';
-  const ask = async (ip: string) => (await (await POST(new NextRequest('http://localhost/api/assistant/homepage', { method: 'POST', body: '{"messages":[{"role":"user","content":"What does it cost?"}]}', headers: { 'content-type': 'application/json', 'x-forwarded-for': ip } }))).json()).reply;
+  const runIp = `198.51.${Math.floor(Math.random() * 200) + 20}.${Math.floor(Math.random() * 200) + 20}`;
+  let n = 0;
+  const ask = async (_ip: string) => (await (await POST(new NextRequest('http://localhost/api/assistant/homepage', { method: 'POST', body: '{"messages":[{"role":"user","content":"What does it cost?"}]}', headers: { 'content-type': 'application/json', 'x-forwarded-for': `${runIp.slice(0, runIp.lastIndexOf('.'))}.${(Number(runIp.split('.')[3]) + n++) % 250}` } }))).json()).reply;
   ok('live: [[FEES]] → the fee list, dues line included', /1% of the dues/.test(await ask('198.51.100.70')));
   next = { stop_reason: 'end_turn', text: 'You keep 100% of your green fees, and the $1.50 is our only fee.' };
   ok('live: a banned fee claim never reaches the visitor', (await ask('198.51.100.71')) === HOMEPAGE_UNSURE);
