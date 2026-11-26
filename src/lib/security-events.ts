@@ -54,6 +54,19 @@ export async function securityEvent(req: Request | null, e: { kind: SecurityKind
   }
 }
 
+/**
+ * A refused set-password or reset link. These doors take no email and have no rate limit of their
+ * own, so without this cap a few hundred junk links a second would spend the address's
+ * MAX_EVENTS_PER_IP_HOUR and hide its later sign-ins and lockouts. BURST_PER_IP rows still make
+ * the burst Problem, so the attack stays on record.
+ */
+export async function linkRefusalEvent(req: Request, e: { surface: SecuritySurface; email?: string | null; accountId?: string | null; detail: string }): Promise<void> {
+  try {
+    if (!(await rateLimit(`secev:link:${evidentiaryIp(req).slice(0, 64)}`, BURST_PER_IP, 3600))) return;
+  } catch { /* rateLimit fails open; recording never blocks a reply */ }
+  await securityEvent(req, { kind: 'signin_failed', ...e });
+}
+
 const HOUR = 60 * 60 * 1000;
 
 /** What the hourly check turns into Problems. Plain words only — no IPs or emails (Problems is open to employees). */

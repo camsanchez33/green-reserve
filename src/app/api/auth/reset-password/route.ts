@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import { validatePasswordStrength } from '@/lib/password';
 import { sendPasswordChangedNotification } from '@/lib/email';
 import { verifyStaffResetToken, signToken } from '@/lib/auth';
-import { securityEvent } from '@/lib/security-events';
+import { securityEvent, linkRefusalEvent } from '@/lib/security-events';
 import { hashToken } from '@/lib/token-hash';
 
 // Audit 2026-11-24 M9: an owner's reset or setup link is looked up by its SHA-256; the column never holds the token.
@@ -47,7 +47,10 @@ export async function POST(req: NextRequest) {
 
   if (isStaffToken(token)) {
     const staff = await staffFromToken(token);
-    if (!staff) return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
+    if (!staff) {
+      await linkRefusalEvent(req, { surface: 'course', detail: 'staff reset password, bad or expired link' });
+      return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
+    }
     // The new hash changes the fingerprint, which kills this link. Clearing the
     // lockout lets a staff member who locked themselves out back in at once.
     // Team (Cam 2026-11-17): CourseStaff.sessionVersion now exists, so a reset
@@ -60,7 +63,10 @@ export async function POST(req: NextRequest) {
       where: { id: staff.id, password: staff.password },
       data: { password: await bcrypt.hash(password, 12), failedLoginAttempts: 0, lockoutUntil: null, passwordSetAt: new Date(), sessionVersion: { increment: 1 } },
     });
-    if (count === 0) return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
+    if (count === 0) {
+      await linkRefusalEvent(req, { surface: 'course', email: staff.email, accountId: staff.id, detail: 'staff reset password, link used by another submit at the same moment' });
+      return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
+    }
     const firstPassword = !!staff.invitedAt && !staff.passwordSetAt;
     await securityEvent(req, { kind: 'password_changed', surface: 'course', email: staff.email, accountId: staff.id, detail: firstPassword ? 'staff, first password from the invite link' : 'staff, reset link' });
     // Choosing a first password is not a "your password was changed" moment.
@@ -72,7 +78,13 @@ export async function POST(req: NextRequest) {
   }
 
   const operator = await prisma.courseOperator.findUnique({ where: { resetToken: hashToken(token) } });
-  if (!operator || !operator.resetTokenExpiry || operator.resetTokenExpiry < new Date()) {
+  // Every refusal is recorded; the reply stays the same either way, so nothing tells the caller which one it was.
+  if (!operator) {
+    await linkRefusalEvent(req, { surface: 'course', detail: 'owner reset password, bad or already used link' });
+    return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
+  }
+  if (!operator.resetTokenExpiry || operator.resetTokenExpiry < new Date()) {
+    await linkRefusalEvent(req, { surface: 'course', email: operator.email, accountId: operator.id, detail: 'owner reset password, link expired' });
     return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
   }
 
@@ -96,8 +108,12 @@ export async function POST(req: NextRequest) {
       ...(signIn ? { lastLoginAt: new Date(), failedLoginAttempts: 0, lockoutUntil: null } : {}),
     },
   });
-  if (count === 0) return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
+  if (count === 0) {
+    await linkRefusalEvent(req, { surface: 'course', email: operator.email, accountId: operator.id, detail: 'owner reset password, link used by another submit at the same moment' });
+    return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
+  }
 
+  await securityEvent(req, { kind: 'password_changed', surface: 'course', email: operator.email, accountId: operator.id, detail: isSetup ? 'owner, set-your-password link' : 'owner, reset link' });
   // Choosing a first password is not a "your password was changed" moment.
   if (!isSetup) {
     after(sendPasswordChangedNotification({ operatorName: operator.name, operatorEmail: operator.email })
