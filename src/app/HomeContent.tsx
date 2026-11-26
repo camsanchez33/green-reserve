@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import HomeCloser from '@/components/home/HomeCloser';
 import HomeAsk from '@/components/home/HomeAsk';
+import StickyDemoBar from '@/components/home/StickyDemoBar';
 import ScoreCard from '@/components/home/ScoreCard';
 import { FEATURE_GROUPS, featureHref } from '@/components/home/features';
 import s from './home.module.css';
@@ -12,7 +13,7 @@ import s from './home.module.css';
 // feature's own page, one compact Free block (no fee list on Home), then the shared bottom block.
 // Copy rules still hold: NO durations, NO contract terms, fee sentences only from legal/LQ-2_FEE_COPY.md.
 // A server component; the client JS is the shared bottom block's Cal.com calendar (CalEmbed) and Contact us pop-up
-// (ContactDialog), and the "Questions?" bot (HomeAsk, ASSIST-5).
+// (ContactDialog), the phone's sticky Book a demo bar (StickyDemoBar) and the "Questions?" bot (HomeAsk, ASSIST-5).
 
 export default function HomeContent() {
   return (
@@ -24,7 +25,7 @@ export default function HomeContent() {
             <Image src="/brand/logo-cream.svg" unoptimized alt="GreenReserve" width={1530} height={286} priority className={s.heroALogo} />
           </h1>
           <p className={`${s.display} ${s.heroALine}`}>The tee sheet your course deserves.</p>
-          <a className={`${s.btn} ${s.cream}`} href="#demo">Book a demo</a>
+          <a className={`${s.btn} ${s.cream}`} href="#demo" id="hero-demo">Book a demo</a>
           <a className={s.down} href="#about" aria-label="See what's included">
             <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
           </a>
@@ -64,6 +65,7 @@ export default function HomeContent() {
       </section>
 
       <HomeCloser />
+      <StickyDemoBar />
       <HomeAsk />
     </div>
   );

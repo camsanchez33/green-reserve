@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { signToken, signStaffToken, signPendingTwoFactorToken } from '@/lib/auth';
-import { issueTwoFactorCode } from '@/lib/two-factor';
+import { issueTwoFactorCode, TooManyCodesError, TOO_MANY_CODES_MESSAGE } from '@/lib/two-factor';
 import bcrypt from 'bcryptjs';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { securityEvent } from '@/lib/security-events';
-import { failUnknownLogin, unknownLoginLockedUntil } from '@/lib/login-guard';
+import { failUnknownLogin, unknownLoginLockedUntil, claimPasswordAttempt, clearPasswordAttempts, dummyPasswordCheck, lockoutMinutes, LOGIN_MAX_ATTEMPTS } from '@/lib/login-guard';
 
 // SEC-3 audit: an email with no usable login (none, or a staff login turned
 // off) answers, takes as long and locks exactly like a real one — so nothing
@@ -22,11 +22,8 @@ async function unknownLogin(req: NextRequest, email: string, password: string, a
   return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
 }
 
-const MAX_ATTEMPTS = 5;
-const LOCKOUT_MS = 15 * 60 * 1000;
-
 function lockoutResponse(lockoutUntil: Date) {
-  const minutes = Math.ceil((lockoutUntil.getTime() - Date.now()) / 60000);
+  const minutes = lockoutMinutes(lockoutUntil);
   return NextResponse.json({ error: `Too many attempts, try again in ${minutes} minute${minutes === 1 ? '' : 's'}` }, { status: 429 });
 }
 
@@ -53,21 +50,32 @@ export async function POST(req: NextRequest) {
       return lockoutResponse(operator.lockoutUntil);
     }
 
+    // Audit 2026-11-24 M3: the try is claimed atomically before the compare (lib/login-guard).
+    const claim = await claimPasswordAttempt('operator', operator.id);
+    if (!claim.claimed) {
+      // Locked by a try sent at the same moment: the same bcrypt work an unknown email does in that race.
+      await dummyPasswordCheck(password);
+      await securityEvent(req, { kind: 'signin_failed', surface: 'course', email, accountId: operator.id, detail: 'owner login, while locked out' });
+      return lockoutResponse(claim.lockoutUntil);
+    }
     const valid = await bcrypt.compare(password, operator.password);
     if (!valid) {
-      const failedLoginAttempts = operator.failedLoginAttempts + 1;
-      const lockoutUntil = failedLoginAttempts >= MAX_ATTEMPTS ? new Date(Date.now() + LOCKOUT_MS) : null;
-      await prisma.courseOperator.update({ where: { id: operator.id }, data: { failedLoginAttempts, lockoutUntil } });
+      const lockoutUntil = claim.attempts >= LOGIN_MAX_ATTEMPTS ? claim.lockoutUntil : null;
       await securityEvent(req, { kind: lockoutUntil ? 'locked_out' : 'signin_failed', surface: 'course', email, accountId: operator.id, detail: 'owner login, wrong password' });
       if (lockoutUntil) return lockoutResponse(lockoutUntil);
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    await prisma.courseOperator.update({ where: { id: operator.id }, data: { failedLoginAttempts: 0, lockoutUntil: null } });
+    await clearPasswordAttempts('operator', operator.id);
 
     try {
       await issueTwoFactorCode(operator);
     } catch (err) {
+      // Only someone with the right password reaches this, so saying so tells nobody anything.
+      if (err instanceof TooManyCodesError) {
+        await securityEvent(req, { kind: 'rate_limited', surface: 'course', email, accountId: operator.id, detail: 'sign-in codes per account' });
+        return NextResponse.json({ error: TOO_MANY_CODES_MESSAGE }, { status: 429 });
+      }
       // Both SMS and email failed — extremely rare. Log and let them in via
       // the resend buttons on the 2FA page rather than blocking login entirely.
       console.error('2FA: both SMS and email delivery failed:', err);
@@ -88,17 +96,23 @@ export async function POST(req: NextRequest) {
       return lockoutResponse(staff.lockoutUntil);
     }
 
+    // Audit 2026-11-24 M3: the try is claimed atomically before the compare (lib/login-guard).
+    const claim = await claimPasswordAttempt('staff', staff.id);
+    if (!claim.claimed) {
+      // Locked by a try sent at the same moment: the same bcrypt work an unknown email does in that race.
+      await dummyPasswordCheck(password);
+      await securityEvent(req, { kind: 'signin_failed', surface: 'course', email, accountId: staff.id, detail: 'staff login, while locked out' });
+      return lockoutResponse(claim.lockoutUntil);
+    }
     const valid = await bcrypt.compare(password, staff.password);
     if (!valid) {
-      const failedLoginAttempts = staff.failedLoginAttempts + 1;
-      const lockoutUntil = failedLoginAttempts >= MAX_ATTEMPTS ? new Date(Date.now() + LOCKOUT_MS) : null;
-      await prisma.courseStaff.update({ where: { id: staff.id }, data: { failedLoginAttempts, lockoutUntil } });
+      const lockoutUntil = claim.attempts >= LOGIN_MAX_ATTEMPTS ? claim.lockoutUntil : null;
       await securityEvent(req, { kind: lockoutUntil ? 'locked_out' : 'signin_failed', surface: 'course', email, accountId: staff.id, detail: 'staff login, wrong password' });
       if (lockoutUntil) return lockoutResponse(lockoutUntil);
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    await prisma.courseStaff.update({ where: { id: staff.id }, data: { failedLoginAttempts: 0, lockoutUntil: null } });
+    await clearPasswordAttempts('staff', staff.id);
     await securityEvent(req, { kind: 'signin_ok', surface: 'course', email, accountId: staff.id, detail: 'staff' });
 
     const token = await signStaffToken({ staffId: staff.id, courseId: staff.courseId, email: staff.email, sv: staff.sessionVersion });

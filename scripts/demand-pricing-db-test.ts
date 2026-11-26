@@ -147,10 +147,10 @@ async function cleanup() {
   const swap = readFileSync('src/app/api/manage/[bookingId]/available-times/route.ts', 'utf8');
   ok('a golfer\'s own swap shows the price the move charges', swap.includes("onlinePublicSeat(t.greenFeeCents, dealPct(course, t, 'online'), demandPctAt(course, demand, t))"));
   const route = readFileSync('src/app/api/bookings/route.ts', 'utf8');
-  ok('online booking: the public seat is the lower of the deal and demand; member and resident seats capped at it', route.includes('onlinePublicSeat(teeTimeFull.greenFeeCents, lastMinutePct, demandPct)') && route.includes('Math.min(pubSeat, dealRateSeat(lastMinutePct, greenFeePerPlayerCents') && route.includes('Math.min(pubSeat, dealRateSeat(lastMinutePct, teeTimeFull.residentRateCents') && route.includes('publicGreen: pubSeat') && route.includes('...kept,'));
+  ok('online booking: the public seat is the lower of the deal and demand; member and resident seats capped at it', route.includes('onlinePublicSeat(teeTimeFull.greenFeeCents, lastMinutePct, demandPct)') && route.includes('pickOwnSeat(appliedTier ? resolvedGreenFeeOverride : null') && route.includes('ratedSeat(teeTimeFull.residentRateCents, seatDeals)') && route.includes('const seatDeals = { pubSeat,') && route.includes('publicGreen: pubSeat') && route.includes('...kept,'));
   const member = readFileSync('src/app/api/member/[courseSlug]/tee-times/route.ts', 'utf8');
-  ok('the member list prices as the booking does', member.includes('onlinePublicSeat(t.greenFeeCents, pct, dem)') && member.includes('Math.min(pub, dealRateSeat('));
-  ok('the resident-rate check too', readFileSync('src/app/api/bookings/resident-rate/route.ts', 'utf8').includes('Math.min(pub, dealRateSeat('));
+  ok('the member list prices as the booking does', member.includes('onlinePublicSeat(t.greenFeeCents, pct, dem)') && member.includes('pickOwnSeat(') && member.includes('{ pubSeat: pub, dealPct: pct,'));
+  ok('the resident-rate check too', readFileSync('src/app/api/bookings/resident-rate/route.ts', 'utf8').includes('const deals = { pubSeat: pub, dealPct: pct,'));
   const counter = readFileSync('src/lib/counter-pay.ts', 'utf8');
   ok('counter pricing never reads demand', !/demand/i.test(counter));
   ok('the daily cron works out the weekly suggestions', readFileSync('src/app/api/cron/generate-tee-times/route.ts', 'utf8').includes('refreshDemand(c.id, new Date(), { claim: true })'));

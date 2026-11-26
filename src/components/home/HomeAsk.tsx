@@ -1,6 +1,7 @@
 'use client';
 // ASSIST-5 (Cam 2026-11-24; mockup lanes/build/ai-assistant-mockup.html "Homepage bot"): "Questions?" at the bottom
-// right of greenreserve.app — a panel on desktop, a sheet on a phone. Answers about GreenReserve only, in plain text
+// right of greenreserve.app — a panel on desktop, a sheet on a phone. On a phone the launcher sits above the sticky
+// Book a demo bar (StickyDemoBar, shown up to 880px wide) so it never covers it. Answers about GreenReserve only, in plain text
 // (never HTML, never links), and always offers Book a call (the #demo section below). Renders nothing until
 // GET /api/assistant/homepage says it is on.
 import { useEffect, useRef, useState } from 'react';
@@ -50,7 +51,7 @@ export default function HomeAsk() {
     <>
       {!open && (
         <button type="button" onClick={() => setOpen(true)}
-          className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-40 min-h-[44px] rounded-full bg-pine px-5 text-[15px] font-semibold text-white shadow-sm hover:bg-pine-hover">
+          className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] min-[881px]:bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-40 min-h-[44px] rounded-full bg-pine px-5 text-[15px] font-semibold text-white shadow-sm hover:bg-pine-hover">
           Questions?
         </button>
       )}

@@ -54,7 +54,8 @@ export type SystemBlock = Anthropic.Beta.BetaTextBlockParam;
 export function systemBlocks(persona: string, courseBlock: string, volatile: string): SystemBlock[] {
   const blocks: SystemBlock[] = [];
   if (courseBlock) {
-    blocks.push({ type: 'text', text: persona });
+    // Two breakpoints: the persona (shared by every course) and the course block after it.
+    blocks.push({ type: 'text', text: persona, cache_control: { type: 'ephemeral' } });
     blocks.push({ type: 'text', text: courseBlock, cache_control: { type: 'ephemeral' } });
   } else {
     blocks.push({ type: 'text', text: persona, cache_control: { type: 'ephemeral' } });
