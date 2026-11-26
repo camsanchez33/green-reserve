@@ -211,7 +211,7 @@ async function course(n: string) {
   const handlers = routes.flatMap(p => [...route(p).matchAll(/export async function (GET|POST|PATCH|DELETE)\([^)]*\) \{\n  const g = await teamOwner\(req, \{ write: (true|false) \}\); if \('error' in g\) return g\.error;/g)].map(m => `${p}:${m[1]}:${m[2]}`));
   const all = routes.flatMap(p => [...route(p).matchAll(/export async function (GET|POST|PATCH|DELETE)\((?!\))/g)].map(m => `${p}:${m[1]}`));
   const oldAdd = route('src/app/api/operator/staff/route.ts');
-  ok('the old Settings add (kept until #460) is owner-gated and audited', oldAdd.includes("tx.teamChange.create({ data: { courseId: ctx.courseId, actorId: ctx.operatorId") && oldAdd.includes("kind: 'access_changed', surface: 'course', email, accountId: staffId"));
+  ok('the old Settings add is gone (audit 2026-11-24 L9: it had no cap and said which emails are logins)', !/export async function POST/.test(oldAdd));
   ok('…and Team’s invite never makes a temporary password', !route('src/app/api/operator/staff/invite/route.ts').includes('tempPassword') && !route('src/lib/team.ts').includes('tempPassword'));
   ok('every Team route handler starts with the owner gate', handlers.length === all.length, { handlers: handlers.length, all });
   ok('…and every write also needs the current agreement', handlers.every(h => h.includes(':GET:') ? h.endsWith(':false') : h.endsWith(':true')));
