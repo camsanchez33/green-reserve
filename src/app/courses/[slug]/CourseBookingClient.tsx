@@ -17,6 +17,7 @@ import { loginOffered } from './login/login-helpers';
 import AlertSheet, { alertPartOf, type AlertSheetOpen } from '@/components/golfer/AlertSheet';
 import g from '@/components/golfer/golfer.module.css';
 import { SUPPORT_EMAIL } from '@/lib/contact';
+import CourseQuestions, { type QuestionsMeta } from '@/components/golfer/CourseQuestions';
 
 // Option A (Cam 2026-11-18, lanes/golfer.md item 1): times of day are tiles, choose any (at least one).
 // The tee time cards group the same way. The "Tee off between" and "Price up to" sliders were removed
@@ -139,8 +140,11 @@ export default function CourseDetailPage({
   params,
   previewMode = null,
   initialCourse,
+  questions = null,
 }: {
   params: Promise<{ slug: string }>;
+  /** ASSIST-1: golfer questions, when the course turned them on (never in a preview). */
+  questions?: QuestionsMeta | null;
   previewMode?: PreviewMode;
   /** PERF-1: server-rendered course (null = not found); undefined = fetch it here (preview). */
   initialCourse?: CourseWithBrand | null;
@@ -1124,6 +1128,7 @@ export default function CourseDetailPage({
         </div>
       </div>
       <CourseFooter course={course} accent={course.brand_color || '#173B2A'} />
+      {questions && !previewMode && !isDemo && <CourseQuestions slug={slug} meta={questions} />}
 
       {/* Item 7: tee time alerts, over the booking page; focus returns to whatever opened it. */}
       {alertSheet && (

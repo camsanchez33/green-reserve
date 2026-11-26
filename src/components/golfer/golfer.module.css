@@ -268,3 +268,21 @@
 .toplogo { width: 36px; height: 36px; border-radius: 8px; background: #FFFFFF; object-fit: contain; padding: 2px; flex: none; }
 .confphoto { height: 140px; background-color: var(--g-band); background-size: cover; background-position: center; }
 .loading { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 40vh; color: var(--g-soft); font-size: 14px; }
+
+/* ASSIST-1: "Questions about <Course>" — a launcher at the bottom right and the question panel (the alert sheet's
+   right panel on a laptop, full width on a phone). Course look only, no GreenReserve branding. */
+button.qlaunch { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 50; min-height: 48px; padding: 0 18px; border: 0; border-radius: 999px; background: var(--g-acc); color: var(--g-on-acc); font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(0, 0, 0, .2); }
+button.qlaunch:hover { background: var(--g-acc-h); }
+.qpanel { display: flex; flex-direction: column; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+.qlog { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 4px 0 12px; min-height: 160px; }
+.qme, .qit { max-width: 88%; padding: 9px 12px; border-radius: 12px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; }
+.qme { align-self: flex-end; background: var(--g-acc); color: var(--g-on-acc); }
+.qit { align-self: flex-start; background: var(--g-card); border: 1px solid var(--g-line); }
+.qwait { color: var(--g-soft); }
+.qform { display: flex; gap: 8px; align-items: center; }
+.qform input { flex: 1; min-width: 0; min-height: 44px; border: 1px solid var(--g-line); border-radius: 10px; background: var(--g-paper); padding: 0 12px; }
+.qform button { min-height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--g-acc); color: var(--g-on-acc); font-weight: 700; cursor: pointer; }
+.qform button:disabled { opacity: .45; cursor: not-allowed; }
+.qchips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+.qchips button { min-height: 40px; padding: 0 12px; border: 1px solid var(--g-line); border-radius: 10px; background: none; cursor: pointer; text-align: left; }
+.qchips button:hover { border-color: var(--g-acc); }

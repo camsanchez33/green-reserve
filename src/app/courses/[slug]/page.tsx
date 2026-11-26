@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { DEMO_COURSE_SLUGS } from '@/lib/demo-courses';
 import CourseDetailPage from './CourseBookingClient';
 import { loadPublicCourse } from '@/lib/public-course';
+import { golferQuestionsMeta } from '@/lib/assistant/golfer';
 
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
@@ -45,9 +46,12 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
   const initialCourse = await loadPublicCourse(slug);
   // An unknown course is a real 404 (status and page), not the booking page with a message on it.
   if (!initialCourse) notFound();
+  // ASSIST-1: the Questions box shows only when this course turned golfer questions on (and the key is set).
+  const meta = await golferQuestionsMeta(String(initialCourse.id)).catch(() => null);
+  const questions = meta ? { courseName: meta.courseName, greeting: meta.greeting, chips: meta.chips, footer: meta.footer } : null;
   return (
     <Suspense>
-      <CourseDetailPage params={params} initialCourse={initialCourse} />
+      <CourseDetailPage params={params} initialCourse={initialCourse} questions={questions} />
     </Suspense>
   );
 }
