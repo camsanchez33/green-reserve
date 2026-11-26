@@ -26,14 +26,14 @@ switch, group toggles, "first log-in" toggle, range on/off) are not built. Build
      ticked (error: "Tick the box to agree before you log in."). It's recorded with the terms version, and later
      log-ins don't show it.
    - Member emails and pages from #477 still say "sign in as a member"; reword all of them to "Log in". The invite
-     says: "<Course> set you up as a Member. Log in at <course page> with this email to get your rates." (With Members pricing off: "...with this email to book. You can book 9 days out · 6 guest passes a year.", no rate.)
+     says: "<Course> set you up as a Member. Log in at <course page> with this email to get your rates." (With Members pricing off: "...with this email to book. You can book 9 days out.", no rate.)
    - A golfer whose session expired who opens a booking's emailed link to move it would drop to the public rate, so
      the manage page says "Log in first to keep your member rate".
    - Once logged in, the header reads "Logged in · <Name> · <Group>", "Your <Course>", "Log out".
 3. **Logged-in prices.** Each tee time card shows the public price struck through next to the golfer's price. Days
    opened by the longer booking window are outlined and read "members only". A golfer in two groups gets the lower
-   price and the longer window. Guest passes show as "Guest passes left: N of M"; at checkout a pass is used with a
-   tick next to each guest.
+   price and the longer window. There are no guest passes (GUEST-PASS-OFF, Cam 2026-11-24): no "Guest passes left", no
+   tick per guest.
 4. **Book page.** There's no guest-or-log-in choice: the form opens straight away, empty for guests. Logged in, Name
    and Email are filled and read-only ("From your <Course> log-in."), so the member keeps the cart and member rate at
    check-in.
