@@ -588,6 +588,8 @@ export function useCourseDetail() {
 
   // AW-7: a tab loads what it shows when it opens.
   function selectTab(t: TabName) {
+    // M10 / MONEY-VIEW-1: a login without the Money area has no Money tab (?tab=money opens the Timeline).
+    if (t === 'money' && detail && !detail.money) t = 'timeline';
     setTab(t);
     if (t === 'money') loadTransactions(1, '', '', '');
     if (t === 'setup') loadDocuments();
@@ -1027,7 +1029,7 @@ export function courseSetupChecks(d: CourseDetail) {
 export function courseProblemsInput(d: CourseDetail) {
   return {
     archived: !!d.course.archivedAt,
-    failedCharges: d.money.failedCharges.length,
+    failedCharges: d.money?.failedCharges.length ?? 0,
     setup: courseSetupChecks(d),
     unreadMessages: d.openItems.unreadMessages,
     // Today's rule (lib/course-action-queue): a live course's check-in call, due or overdue.

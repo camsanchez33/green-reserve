@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
-import { issueTwoFactorCode } from '@/lib/two-factor';
+import { issueTwoFactorCode, TooManyCodesError, TOO_MANY_CODES_MESSAGE } from '@/lib/two-factor';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { securityEvent } from '@/lib/security-events';
 
@@ -42,6 +42,10 @@ export async function POST(req: NextRequest) {
     const { method, phoneLast4 } = await issueTwoFactorCode(operator, requestedMethod);
     return NextResponse.json({ success: true, method, phoneLast4 });
   } catch (err) {
+    if (err instanceof TooManyCodesError) {
+      await securityEvent(req, { kind: 'rate_limited', surface: 'course', email: operator.email, accountId: operator.id, detail: 'sign-in codes per account' });
+      return NextResponse.json({ error: TOO_MANY_CODES_MESSAGE }, { status: 429 });
+    }
     console.error('2FA code resend failed:', err);
     return NextResponse.json({ error: 'Could not send verification code. Try again shortly.' }, { status: 500 });
   }

@@ -9,6 +9,10 @@ import { ON_REAL_BOOKING, ON_REAL_COURSE } from './real-courses';
 /** Failed charge: the card was tried at check-in and declined; nobody has collected since. */
 export const FAILED_CHARGE_WHERE = { checkInFailReason: { not: '' }, checkedInAt: null } as const;
 
+/** M10 / MONEY-VIEW-1 (Cam 2026-11-26): payment events that show a declined charge or GreenReserve's fee — only for
+ *  a login with the Money area (the course timeline and the golfer record leave them out otherwise). */
+export const MONEY_ONLY_PAYMENT_KINDS: string[] = ['charge_failed', 'fee_charged', 'fee_refunded', 'access_fee'];
+
 /**
  * Missed check-in: the tee time has passed, the booking still stands, and no
  * one ever charged it. Not a failed card — nothing was tried. Every one of

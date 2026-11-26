@@ -4,6 +4,7 @@ import { resolveAdminSession, requireRole, SUPPORT_PLUS, OWNER_ONLY, ownerGateEr
 import { startOfPlatformDay } from '@/lib/admin-day';
 import { GOAL_METRICS, isGoalMetric, listGoals } from '@/lib/admin-goals';
 import { needReason, reasonOf, auditAdmin, bodyWithReason } from '@/lib/admin-audit';
+import { hasArea } from '@/lib/admin-areas';
 
 // AW-4b (Cam 2026-10-21): Admin → Goals. Support+ can see them; only the owner
 // adds or removes one. A fees target arrives in dollars and is kept in cents.
@@ -16,7 +17,7 @@ export async function GET() {
   const noArea = areaGate(session, 'company');
   if (noArea) return noArea;
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Goals are for support and above.' }, { status: 403 });
-  return NextResponse.json({ goals: await listGoals(new Date()), canEdit: requireRole(session, OWNER_ONLY) });
+  return NextResponse.json({ goals: await listGoals(new Date(), { money: hasArea(session, 'money') }), canEdit: requireRole(session, OWNER_ONLY) });
 }
 
 export async function POST(req: NextRequest) {

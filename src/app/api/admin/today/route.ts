@@ -33,14 +33,21 @@ export async function GET() {
     requireRole(session, MANAGER_PLUS) && hasArea(session, 'company') ? todayHealth(now) : null,
     can('money') ? homeToday(now) : null,
     can('money') ? homeOverview(now) : null,
-    can('problems') ? listProblems(now) : null,
-    can('company') ? listGoals(now) : null,
+    can('problems') ? listProblems(now, { money: can('money') }) : null,
+    can('company') ? listGoals(now, { money: can('money') }) : null,
   ]);
   let courses = null;
   if (queue && can('courses')) {
-    const list = await todayCourses(now, queue.rows);
+    // M10 / MONEY-VIEW-1 (Cam 2026-11-26): a course's fees and its failed-charge
+    // row are Money's. Without it the row is left out and the fees go as null.
+    const seesMoney = can('money');
+    const rows = seesMoney ? queue.rows : queue.rows.filter(r => !r.id.startsWith('fc-'));
+    const list = await todayCourses(now, rows);
     const stats = await homeCourseStats(now, list.map(c => c.id));
-    courses = list.map(c => ({ ...c, ...stats.get(c.id)! }));
+    courses = list.map(c => {
+      const row = { ...c, ...stats.get(c.id)! };
+      return seesMoney ? row : { ...row, feesThisMonth: null, fees7d: null };
+    });
   }
   const needs = queue && can('pipeline') ? queue.rows.filter(r => !r.courseId) : null;
   return NextResponse.json({

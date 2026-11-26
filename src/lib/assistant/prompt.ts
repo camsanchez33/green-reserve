@@ -28,6 +28,11 @@ export function assistantKeyPresent(): boolean {
   return typeof k === 'string' && k.trim().length > 0;
 }
 
+/** The per-persona kill switch: ASSISTANT_OFF="golfer,homepage" turns those off everywhere without touching the key. */
+export function personaOff(persona: AssistantPersona): boolean {
+  return (process.env.ASSISTANT_OFF ?? '').split(',').map(x => x.trim().toLowerCase()).includes(persona);
+}
+
 /** The client, or null when the key is missing or the SDK refuses it. Never throws. */
 export function assistantClient(): Anthropic | null {
   if (!assistantKeyPresent()) return null;
@@ -49,7 +54,8 @@ export type SystemBlock = Anthropic.Beta.BetaTextBlockParam;
 export function systemBlocks(persona: string, courseBlock: string, volatile: string): SystemBlock[] {
   const blocks: SystemBlock[] = [];
   if (courseBlock) {
-    blocks.push({ type: 'text', text: persona });
+    // Two breakpoints: the persona (shared by every course) and the course block after it.
+    blocks.push({ type: 'text', text: persona, cache_control: { type: 'ephemeral' } });
     blocks.push({ type: 'text', text: courseBlock, cache_control: { type: 'ephemeral' } });
   } else {
     blocks.push({ type: 'text', text: persona, cache_control: { type: 'ephemeral' } });

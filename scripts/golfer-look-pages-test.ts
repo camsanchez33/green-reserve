@@ -17,7 +17,7 @@ check('no look picked: no site token changes (today\'s light page), the band is 
 const lightBlue = v(lookSiteVars({ booking_look: { look: 'light', accent: 'blue' }, brand_color: '#7A1F2B' }));
 check('Light + a preset: the accent replaces pine, the neutrals stay light', lightBlue['--color-pine'] === BOOKING_ACCENT_COLOURS.blue.light.acc && !('--color-paper' in lightBlue) && !('--color-ink' in lightBlue));
 const darkGreen = v(lookSiteVars({ booking_look: { look: 'dark', accent: 'green' }, brand_color: '#7A1F2B' }));
-check('Dark: the neutrals, the accent and the status colours swap to the dark values', darkGreen['--color-paper'] === '#111211' && darkGreen['--color-card'] === '#222422' && darkGreen['--color-ink'] === '#EDEEEB' && darkGreen['--color-line'] === '#343734' && darkGreen['--color-pine'] === BOOKING_ACCENT_COLOURS.green.dark.acc && darkGreen['--color-bad'] === DARK_STATUS['--color-bad']);
+check('Dark: the neutrals, the accent and the status colours swap to the dark values', darkGreen['--color-paper'] === '#141414' && darkGreen['--color-card'] === '#262626' && darkGreen['--color-ink'] === '#EDEDED' && darkGreen['--color-line'] === '#333333' && darkGreen['--color-pine'] === BOOKING_ACCENT_COLOURS.green.dark.acc && darkGreen['--color-bad'] === DARK_STATUS['--color-bad']);
 check('a bad look never reaches CSS (falls back to today\'s light page)', !Object.keys(v(lookSiteVars({ booking_look: { look: 'sepia' as never, accent: 'red' as never }, brand_color: 'javascript:x' }))).some(k => k.startsWith('--color-')));
 
 const pages = {
