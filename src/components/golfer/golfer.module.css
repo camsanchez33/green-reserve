@@ -166,7 +166,9 @@
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .bookbtn { min-height: 60px; font-size: 19px; }
 .btn.sdone { display: none; }
-.bookbar .hint { margin: 0 0 6px; font-size: 13px; color: var(--g-soft); text-align: center; }
+.bookbar .hint { display: block; width: 100%; margin: 0 0 6px; padding: 0; min-height: 32px; border: 0; background: none; cursor: pointer; font-size: 13px; color: var(--g-soft); text-align: center; text-decoration: underline; text-underline-offset: 3px; }
+.barrow { display: flex; align-items: center; gap: 12px; }
+.bartot { display: none; }
 .formerr { color: var(--g-bad); font-size: 14px; margin: 0 0 8px; }
 
 /* The course footer (CourseFrame) on the course's tokens, so the Dark look covers it too. */
@@ -310,4 +312,15 @@
   .calPhone { display: block; }
   .side .deskOnly { display: none; }
   .phoneOnly { display: block; }
+}
+
+/* The Book page on a phone (UI style overhaul mockup): the sticky bar shows the Total beside Book, and Back and Change
+   are 44px buttons rather than small text links. */
+@media (max-width: 860px) {
+  .bartot { display: flex; flex-direction: column; flex: none; line-height: 1.15; }
+  .bartot small { font-size: 12px; color: var(--g-soft); }
+  .bartot b { font-size: 18px; font-variant-numeric: tabular-nums; }
+  .barrow .bookbtn { flex: 1; min-height: 52px; font-size: 17px; }
+  .back, .chg { padding: 0 14px; border: 1px solid var(--g-line); border-radius: 10px; background: var(--g-card); text-decoration: none; }
+  .bookbar { -webkit-backdrop-filter: var(--g-blur, none); backdrop-filter: var(--g-blur, none); }
 }

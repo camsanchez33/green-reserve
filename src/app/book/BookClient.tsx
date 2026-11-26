@@ -579,7 +579,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                 <b>{formatTime(teeTime.time)} · {displayDate(date)}</b>
                 <span>{teeTime.product_label ? `${teeTime.product_label} · ` : ''}{teeTime.holes} holes · {plWord}</span>
               </div>
-              <Link className={g.lnk} href={backToTimesHref(courseSlug, params, players)} aria-label="Change the tee time">Change</Link>
+              <Link className={`${g.lnk} ${g.chg}`} href={backToTimesHref(courseSlug, params, players)} aria-label="Change the tee time">Change</Link>
             </div>
 
             {/* SP-B: Stripe JS loads only when this course's policy needs a card —
@@ -600,6 +600,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
                   onRangeStale={reloadBuckets}
                   member={member}
                   payNow={payNow}
+                  total={total}
                   summary={summary}
                   policy={policyLine}
                   look={lookMode(course)}
@@ -614,7 +615,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
   );
 }
 
-function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuckets, accent, needsCard, courseName, onConfirmed, promoCode = '', packLineId = '', member = null, payNow = 0, summary = null, policy = null, look = 'light', holdNow = '' }: {
+function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuckets, accent, needsCard, courseName, onConfirmed, promoCode = '', packLineId = '', member = null, payNow = 0, total = 0, summary = null, policy = null, look = 'light', holdNow = '' }: {
   /** The course's look, for the card field (Stripe draws it in its own frame). */
   look?: BookingLook;
   /** Past the cutoff at a hold course: what is charged within the hour (holdTodayLine), instead of "$0 now". */
@@ -623,6 +624,8 @@ function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuc
   member?: { name: string; email: string } | null;
   /** What the golfer pays today, for the Book button. */
   payNow?: number;
+  /** The price box's Total, repeated in the phone's sticky Book bar (display only). */
+  total?: number;
   /** The cart, range balls and price box, shown after Your details. */
   summary?: React.ReactNode;
   /** The course's cancellation policy, shown just above the agree box. */
@@ -676,6 +679,8 @@ function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuc
   // Cam 2026-10-19: agreeing is a box the golfer ticks, never implied by the
   // button (clickwrap). Nothing books — card form, Apple Pay or no card — until it is.
   const [agreed, setAgreed] = useState(false);
+  // The card field's own "complete" flag, only to say in the Book bar that card details are still needed.
+  const [cardDone, setCardDone] = useState(false);
   // SMS-1 (Twilio A2P 10DLC): text consent is its own box, never pre-ticked, never part of the terms box.
   const [smsOk, setSmsOk] = useState(false);
   // The wallet button's handler is registered once; it reads the code from here, never a stale render.
@@ -833,6 +838,25 @@ function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuc
   // INVIOLABLE: No GolferAccount required to book. Name/email are for the
   // confirmation email only — never for registration or sign-up prompts.
   const fromLogin = !!member;
+  // UI style overhaul (Cam 2026-11-26, the mockup's Book page on a phone): the Book bar says what is still needed and
+  // a tap takes the golfer to the first of it. It only points; what Book checks (handleSubmit) is unchanged.
+  const missing: { key: string; words: string }[] = [];
+  if (!name.trim()) missing.push({ key: 'bk-name', words: 'your name' });
+  if (fieldError('email', email)) missing.push({ key: 'bk-email', words: 'your email' });
+  if (needsCard && !cardDone) missing.push({ key: 'bk-card', words: 'card details' });
+  if (!agreed) missing.push({ key: 'bk-agree', words: 'the box above' });
+  const missingWords = missing.length === 1 && !agreed
+    ? `Tick the box above to book${needsCard ? ' (Apple Pay and Google Pay appear once you do)' : ''}.`
+    : `Still needed: ${missing.slice(0, -1).map(m => m.words).join(', ')}${missing.length > 1 ? ' and ' : ''}${missing[missing.length - 1]?.words ?? ''}.`;
+  function goToMissing() {
+    const first = missing[0];
+    if (!first) return;
+    const el = document.getElementById(first.key);
+    const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    el?.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+    if (first.key === 'bk-card') elements?.getElement(CardElement)?.focus();
+    else el?.focus({ preventScroll: true });
+  }
   const bookWords = holdNow ? 'Book' : `Book · ${payNow > 0 ? `$${payNow.toFixed(2)}` : '$0'} now`;
   return (
     <form noValidate onSubmit={e => { e.preventDefault(); handleSubmit(); }}>
@@ -879,8 +903,8 @@ function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuc
       )}
       <div className={g.inp}>
         <span className={g.lab} id="bk-card-l">Card details</span>
-        <div className={g.cardbox} role="group" aria-labelledby="bk-card-l">
-          <CardElement options={cardStyleFor(look)} />
+        <div className={g.cardbox} role="group" aria-labelledby="bk-card-l" id="bk-card">
+          <CardElement options={cardStyleFor(look)} onChange={e => setCardDone(e.complete)} />
         </div>
         <p className={g.small}>Secured by Stripe.</p>
       </div>
@@ -889,7 +913,7 @@ function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuc
       {policy}
 
       <label className={g.agree}>
-        <input type="checkbox" checked={agreed} onChange={e => { setAgreed(e.target.checked); if (e.target.checked) setError(''); }} aria-describedby={agreed ? undefined : 'bk-hint'} />
+        <input type="checkbox" checked={agreed} id="bk-agree" onChange={e => { setAgreed(e.target.checked); if (e.target.checked) setError(''); }} aria-describedby={agreed ? undefined : 'bk-hint'} />
         <span>
           I agree to GreenReserve&apos;s <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> and
           to {courseName || 'this course'}&apos;s cancellation policy shown on this page, including that {courseName || 'the course'} and GreenReserve keep my booking history.
@@ -898,14 +922,20 @@ function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuc
 
       <div className={g.bookbar}>
         {error && <p className={g.formerr} role="alert">{error}</p>}
-        {!agreed && <p className={g.hint} id="bk-hint">Tick the box to agree to the terms before you book{needsCard ? ' (Apple Pay and Google Pay appear once you do)' : ''}.</p>}
-        <button
-          type="submit"
-          disabled={loading || !agreed || (needsCard && !stripe)}
-          className={`${g.btn} ${g.bookbtn}`}
-        >
-          {loading ? <><Loader2 size={18} className="animate-spin" aria-hidden="true" /> {needsCard ? 'Saving card…' : 'Booking…'}</> : bookWords}
-        </button>
+        {!agreed && <p className={g.vh} id="bk-hint">Tick the box to agree to the terms before you book.</p>}
+        {missing.length > 0 && !loading && (
+          <button type="button" className={g.hint} onClick={goToMissing}>{missingWords}</button>
+        )}
+        <div className={g.barrow}>
+          <span className={g.bartot}><small>Total</small><b>${total.toFixed(2)}</b></span>
+          <button
+            type="submit"
+            disabled={loading || !agreed || (needsCard && !stripe)}
+            className={`${g.btn} ${g.bookbtn}`}
+          >
+            {loading ? <><Loader2 size={18} className="animate-spin" aria-hidden="true" /> {needsCard ? 'Saving card…' : 'Booking…'}</> : bookWords}
+          </button>
+        </div>
       </div>
     </form>
   );
