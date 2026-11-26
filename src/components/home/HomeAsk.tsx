@@ -1,7 +1,8 @@
 'use client';
 // ASSIST-5 (Cam 2026-11-24; mockup lanes/build/ai-assistant-mockup.html "Homepage bot"): "Questions?" at the bottom
-// right of greenreserve.app — a panel on desktop, a sheet on a phone. On a phone the launcher sits above the sticky
-// Book a demo bar (StickyDemoBar, shown up to 880px wide) so it never covers it. Answers about GreenReserve only, in plain text
+// right of greenreserve.app — a panel on desktop, a sheet on a phone. Up to 880px wide (where the sticky
+// Book a demo bar, StickyDemoBar, can show) the launcher sits above the bar and the open panel is a full-width sheet,
+// so neither ever lands on the bar; the floating panel starts at 881px. Answers about GreenReserve only, in plain text
 // (never HTML, never links), and always offers Book a call (the #demo section below). Renders nothing until
 // GET /api/assistant/homepage says it is on.
 import { useEffect, useRef, useState } from 'react';
@@ -57,7 +58,7 @@ export default function HomeAsk() {
       )}
       {open && (
         <div role="dialog" aria-label="Ask about GreenReserve"
-          className="fixed z-50 inset-x-0 bottom-0 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:w-[380px] max-h-[min(560px,85vh)] flex flex-col rounded-t-[14px] sm:rounded-[14px] border border-line bg-white text-ink shadow-lg">
+          className="fixed z-50 inset-x-0 bottom-0 min-[881px]:inset-x-auto min-[881px]:bottom-4 min-[881px]:right-4 min-[881px]:w-[380px] max-h-[min(560px,85vh)] flex flex-col rounded-t-[14px] min-[881px]:rounded-[14px] border border-line bg-white text-ink shadow-lg">
           <div className="flex items-center gap-3 px-4 py-3 border-b border-line">
             <h2 className="min-w-0 flex-1 text-[15px] font-semibold">Ask about GreenReserve</h2>
             <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="w-9 h-9 -mr-2 flex items-center justify-center text-[20px] leading-none text-ink-muted hover:text-ink">×</button>

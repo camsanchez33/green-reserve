@@ -47,6 +47,11 @@ ok('route: anything but a normal end → the Book a call line', /stop_reason !==
 ok('route: log has no words', !/logAssistant\(\{[^}]*(history|text|reply)/.test(route));
 const widget = readFileSync(new URL('../src/components/home/HomeAsk.tsx', import.meta.url), 'utf8');
 ok('widget: plain text, one link (Book a call)', !/dangerouslySetInnerHTML/.test(widget) && (widget.match(/href=/g) || []).length === 1 && /href="#demo"/.test(widget));
+// The sticky Book a demo bar shows up to 880px; the launcher lifts above it and the panel is a sheet there.
+const homeCss = readFileSync(new URL('../src/app/home.module.css', import.meta.url), 'utf8');
+ok('widget: the bar still ends at 880px', /@media \(max-width: 880px\)\s*\{[^}]*\.stickyDemo/.test(homeCss));
+ok('widget: launcher lifted above the bar up to 880px', widget.includes('bottom-[calc(5.5rem+env(safe-area-inset-bottom))] min-[881px]:bottom-[calc(1rem+env(safe-area-inset-bottom))]'));
+ok('widget: panel is a sheet up to 880px, floating only from 881px', widget.includes('min-[881px]:inset-x-auto min-[881px]:bottom-4 min-[881px]:right-4 min-[881px]:w-[380px]') && !/\bsm:/.test(widget));
 
 // the server backstop: the model never writes fee wording, and nothing off-copy about money reaches a visitor
 const bad = ['You keep 100% of your green fees, and the $1.50 is our only fee.', 'There are no other fees. Membership dues carry no GreenReserve fee.',
