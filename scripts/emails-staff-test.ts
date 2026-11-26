@@ -63,6 +63,9 @@ const cases: Case[] = [
   { name: 'owner sign-in', e: S.ownerSignInEmail({ device: 'Safari', place: 'Albany, NY', when: 'now', method: 'passkey' }), line: 'You signed in.', must: ['with a passkey', 'Not you?', 'Sign out everywhere'], noreply: true },
   { name: 'owner password changed', e: S.ownerPasswordChangedEmail({ how: 'reset link', device: 'Safari', place: 'Albany, NY', when: 'now' }), line: 'Your password was changed.', must: ['Not you?', 'Forgot password'], noreply: true },
   { name: 'staff login link', e: S.staffLoginLinkEmail({ personName: 'Jo Smith', courseName: 'Maple Run', to: 'jo@example.test' }), line: 'Your staff login.', must: ['Maple Run', 'jo@example.test', 'Sign in'] },
+  { name: 'authenticator set up', e: S.ownerTwoFactorChangedEmail({ change: 'set_up', device: 'Safari', when: 'now' }), line: 'An authenticator app was set up.', must: ['instead of an emailed code'], noreply: true },
+  { name: 'authenticator replaced', e: S.ownerTwoFactorChangedEmail({ change: 'replaced', device: 'Safari', when: 'now' }), line: 'The authenticator app was moved to a new phone.', must: ['Not you?', 'Sign out everywhere'], noreply: true },
+  { name: 'recovery codes replaced', e: S.ownerTwoFactorChangedEmail({ change: 'recovery_codes', device: 'Safari', when: 'now' }), line: 'New recovery codes were made.', must: ['old codes no longer work'], noreply: true },
   { name: 'passkey added', e: S.ownerPasskeyChangedEmail({ change: 'added', passkey: 'iPhone', device: 'Safari', when: 'now' }), line: 'A passkey was added.', must: ['>iPhone<', 'Not you?', 'remove the passkey'], noreply: true },
   { name: 'Cam’s reply (plain)', plain: true, e: S.inquiryReplyEmail({ contactName: 'Sam Lee', courseName: 'Maple Run', body: 'Yes, it is free.\n\nTalk soon.', question: 'Is it free?', adminName: 'Cam Sanchez' }),
     must: ['Hi Sam,', 'Yes, it is free.', 'You asked: Is it free?', 'Re: your question about Maple Run'] },
@@ -105,7 +108,7 @@ check('sendOutreachEmail builds with the configured address (so it throws while 
 
 // ---------- Senders: where replies go ----------
 for (const n of ['sendTwoFactorCodeEmail', 'sendAdminTwoFactorCode', 'sendOperatorPasswordResetEmail', 'sendOperatorVerifyEmail', 'sendStaffResetLinkEmail', 'sendPasswordChangedNotification',
-  'sendAdminPasswordResetEmail', 'sendAdminPasswordChangedNotification', 'sendInquirySigninCode', 'sendOwnerDeviceApproval', 'sendOwnerSignInAlert', 'sendOwnerPasswordChanged', 'sendOwnerPasskeyChanged'])
+  'sendAdminPasswordResetEmail', 'sendAdminPasswordChangedNotification', 'sendInquirySigninCode', 'sendOwnerDeviceApproval', 'sendOwnerSignInAlert', 'sendOwnerPasswordChanged', 'sendOwnerPasskeyChanged', 'sendOwnerTwoFactorChanged'])
   check(`${n}: from noreply@ (its rendered email never asks for a reply: see above)`, fn(n).includes('from: FROM_NOREPLY') && fn(n).includes('...mail('));
 for (const n of ['sendOperatorBookingNotification', 'sendStaffLoginLinkEmail', 'sendLowStockEmail', 'sendMessageNotificationEmail', 'sendAnnouncementEmail', 'sendMonthlyReviewEmail', 'sendCourseClosedNotice', 'sendStaffWelcomeEmail', 'sendInquiryConfirmation', 'sendInquiryAlreadyBuilt', 'sendDetailsSheetConfirmationEmail', 'sendDetailsRequestEmail',
   'sendCallInviteEmail', 'sendCallReminderEmail', 'sendCallScheduledEmail', 'sendInquiryDeclinedEmail', 'sendInquiryReply', 'sendOnboardingChaseEmail', 'sendSignedAgreementsEmail', 'sendAgreementBumpNoticeEmail'])

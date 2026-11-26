@@ -22,7 +22,7 @@ import {
   detailsSheetConfirmationEmail, detailsRequestEmail, callReminderEmail, callScheduledEmail, onboardingChaseEmail,
   inquiryReplyEmail, inquiryDeclinedEmail, callInviteEmail, inquiryNotificationEmail, lockedOutAlertEmail, detailsSubmittedEmail,
   courseApprovedEmail, agreementBumpSummaryEmail, adminUrgentEmail, adminDigestEmail, adminTwoFactorEmail, adminPasswordResetEmail,
-  ownerDeviceApprovalEmail, ownerSignInEmail, ownerPasswordChangedEmail, ownerPasskeyChangedEmail, outreachEmail, type DigestFacts,
+  ownerDeviceApprovalEmail, ownerSignInEmail, ownerPasswordChangedEmail, ownerPasskeyChangedEmail, ownerTwoFactorChangedEmail, outreachEmail, type DigestFacts,
   dashboardAccessEmail, goLiveEmail, callRecapEmail,
 } from './email-staff';
 export { courseNoticeEmail };
@@ -822,6 +822,11 @@ export async function sendOwnerPasswordChanged(data: { email: string; name: stri
 // change that alters how the account signs in, so it is always announced.
 export async function sendOwnerPasskeyChanged(data: { email: string; name: string; change: 'added' | 'removed'; passkey: string; device: string; when: string }) {
   await getResend().emails.send({ meta: { kind: 'owner_passkey_changed' }, from: FROM_NOREPLY, to: data.email, ...mail(ownerPasskeyChangedEmail(data)) });
+}
+
+// Audit 2026-11-24 M6: the owner's authenticator app or recovery codes changed.
+export async function sendOwnerTwoFactorChanged(data: { email: string; name: string; change: 'set_up' | 'replaced' | 'recovery_codes'; device: string; when: string }) {
+  await getResend().emails.send({ meta: { kind: 'owner_two_factor_changed' }, from: FROM_NOREPLY, to: data.email, ...mail(ownerTwoFactorChangedEmail(data)) });
 }
 
 // AW-5: the admin's own alerts, to the admin inbox (admin@, MAIL-1). Urgent: the

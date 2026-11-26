@@ -131,7 +131,7 @@ export function ResidentsCard({ canEdit, initialSearch = '' }: { canEdit: boolea
       {formView}
       {rows && rows.length > 0 && (
         <div className="flex items-center gap-3 px-4 py-2.5 border-y border-line-soft">
-          <input value={search} onChange={e => setSearch(e.target.value)} aria-label="Find a resident" className={INPUT_COMPACT + ' !w-56'} />
+          <input value={search} onChange={e => setSearch(e.target.value)} aria-label="Find a resident" className={'ui-search ' + INPUT_COMPACT + ' !w-56'} />
           <span className="ml-auto text-[12.5px] text-ink-muted">{shown.length} of {rows.length}</span>
         </div>
       )}

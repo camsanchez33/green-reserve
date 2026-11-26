@@ -189,7 +189,8 @@ function DashboardPageInner() {
   // VIEWS-1 (Cam 2026-11-03): Grid (seat rows), List (one line per group) or Calendar (the month).
   // Remembered per browser; the grid is the default and always works without it.
   const [sheetView, setSheetViewState] = useState<SheetView>('grid');
-  useEffect(() => { try { const v = localStorage.getItem('gr_sheet_view'); if (v === 'list' || v === 'calendar') setSheetViewState(v); } catch {} }, []);
+  // UI-STYLE (Cam 2026-11-26): on a phone the sheet opens in its List view unless this browser picked a view before.
+  useEffect(() => { try { const v = localStorage.getItem('gr_sheet_view'); if (v === 'list' || v === 'calendar' || v === 'grid') setSheetViewState(v); else if (window.matchMedia('(max-width: 767px)').matches) setSheetViewState('list'); } catch {} }, []);
   const setSheetView = (v: SheetView) => { setSheetViewState(v); try { localStorage.setItem('gr_sheet_view', v); } catch {} };
   // DASH-D: the till's result — the group just checked in, shown at the top of its time's card.
   const [justDone, setJustDone] = useState<{ bookingId: string; name: string; players: number; how: string } | null>(null);
@@ -1440,7 +1441,7 @@ function DashboardPageInner() {
               {teeTimes.length > 0 && (
                 // SHEET-3 (Cam 2026-11-06: "paid and unpaid should make more sense, like all metrics"; the groups-booked count
                 // moves up from under the sheet): every number the same shape — label, value, one line under it — spread across the row.
-                <div className={'grid gap-3 grid-cols-2 sm:grid-cols-3 ' + (dayMoney && dayMoney.date === selectedDate ? (selectedDate <= today() ? 'lg:grid-cols-5' : 'lg:grid-cols-4') : 'lg:grid-cols-3') + ' mb-4'} role="group" aria-label="The day">
+                <div className={'grid gap-3 grid-cols-2 sm:grid-cols-3 ' + (dayMoney && dayMoney.date === selectedDate ? (selectedDate <= today() ? 'lg:grid-cols-5' : 'lg:grid-cols-4') : 'lg:grid-cols-3') + ' ui-stats mb-4'} role="group" aria-label="The day">
                   <div className={CARD + ' px-4 py-3'}><div className="text-[12.5px] text-ink-soft">Players</div><div className="text-[20px] font-semibold text-ink tabular-nums leading-tight">{livePlayers}<span className="text-[13px] font-normal text-ink-muted"> of {spotsOffered}</span></div><div className="text-[12px] text-ink-muted">spots booked</div></div>
                   {/* ONCOURSE-1 (Cam 2026-11-06, "rounds on the course now"): today, who is out playing; another day, the groups booked. */}
                   {selectedDate === today() ? (
@@ -1495,7 +1496,7 @@ function DashboardPageInner() {
                       <input id="sheet-search" type="search" value={sheetView === 'calendar' ? '' : search} onChange={e => setSearch(e.target.value)}
                         // Search reads one day's sheet; the month has nothing to search (Cam 2026-11-06).
                         disabled={sheetView === 'calendar'} placeholder={sheetView === 'calendar' ? 'Pick a day to search' : 'Find golfer'}
-                        className="w-32 sm:w-56 disabled:opacity-70 disabled:cursor-not-allowed bg-paper op-well rounded-md pl-8 pr-2.5 py-1.5 text-[13px] text-ink placeholder-ink-faint border border-transparent focus:bg-white focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none transition-colors"/>
+                        className="ui-search w-32 sm:w-56 disabled:opacity-70 disabled:cursor-not-allowed bg-paper op-well rounded-md pl-8 pr-2.5 py-1.5 text-[13px] text-ink placeholder-ink-faint border border-transparent focus:bg-white focus:border-pine/40 focus:ring-2 focus:ring-pine/10 outline-none transition-colors"/>
                     </div>
                     <button onClick={() => loadTimes(selectedDate)} aria-label="Refresh the sheet" title="Refresh the sheet"
                       className="w-8 h-8 rounded-md inline-flex items-center justify-center text-[16px] leading-none text-ink-muted hover:text-ink hover:bg-paper transition-colors">
@@ -1516,7 +1517,7 @@ function DashboardPageInner() {
                         className="w-8 h-8 rounded-md inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-paper transition-colors"><MessageCircle className="w-4 h-4" aria-hidden="true" /></button>
                     )}
                     {access.can('sheet.edit_times') && (
-                      <button type="button" onClick={() => setShowAddModal(true)} className="whitespace-nowrap px-2.5 py-1.5 rounded-md text-[13px] font-semibold text-pine hover:bg-paper transition-colors">+ Time</button>
+                      <button type="button" onClick={() => setShowAddModal(true)} className="ui-fab whitespace-nowrap px-2.5 py-1.5 rounded-md text-[13px] font-semibold text-pine hover:bg-paper transition-colors">+ Time</button>
                     )}
                   </div>
                 </div>

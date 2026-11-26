@@ -2,10 +2,11 @@
 // OWNER TOTP 2FA — the enrolment card on /admin/profile (owner only).
 // Start → scan the QR (or type the secret) → one correct code confirms →
 // the ten recovery codes, shown exactly once → done. "Make new codes"
-// needs a current code and invalidates all ten.
+// asks "Confirm it's you" (audit 2026-11-24 M6) and invalidates all ten.
 // My profile re-skin (Cam approved the mockup 2026-11-15): full width, an "Authenticator app" row with "Move to a new
 // phone" (or "Set up") and a "Recovery codes" row with "Make new codes"; the flows, calls and errors are as before.
 import { useEffect, useState } from 'react';
+import { stepUpFetch } from '@/lib/step-up-client';
 import { shortDay, codesLow } from '@/app/admin/profile/logic';
 import { ProfileCard, ProfileRow, Msg, profileStyles as s } from './ProfileCard';
 
@@ -32,7 +33,8 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
   useEffect(() => { if (mfaSession) load(); }, [mfaSession]);
 
   const post = async (body: Record<string, unknown>) => {
-    const r = await fetch('/api/admin/two-factor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    // Audit 2026-11-24 M6: moving to a new phone asks "Confirm it’s you" first (the dialog, then the same request again).
+    const r = await stepUpFetch('/api/admin/two-factor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.error || `Failed (${r.status})`);
     return d;
@@ -56,7 +58,8 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
   const regenerate = async () => {
     setBusy(true); setError('');
     try {
-      const d = await post({ action: 'regenerate', code });
+      // M6 review: the "Confirm it's you" dialog asks for the second factor (passkey, app or recovery code).
+      const d = await post({ action: 'regenerate' });
       setCodes(d.recoveryCodes); setRegenOpen(false); setCode(''); load();
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not regenerate.'); }
     finally { setBusy(false); }
@@ -118,11 +121,8 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
       {regenOpen && !setup && (
         <div className={s.sec}>
           <p className={s.clr} style={{ margin: 0 }}>The ten codes you have now stop working the moment new ones are issued.</p>
-          <label htmlFor="tf-regen">Current app code</label>
           <div className={s.line}>
-            <input id="tf-regen" value={code} onChange={e => setCode(digits(e.target.value))} inputMode="numeric" autoComplete="one-time-code" maxLength={6} autoFocus
-              className={`${s.fld} ${s.code}`} onKeyDown={e => { if (e.key === 'Enter' && !e.repeat && !busy && code.length === 6) regenerate(); }} />
-            <button type="button" onClick={regenerate} disabled={busy || code.length < 6} className={`${s.btn} ${s.pri}`}>{busy ? 'Working…' : 'Replace all ten'}</button>
+            <button type="button" onClick={regenerate} disabled={busy} className={`${s.btn} ${s.pri}`}>{busy ? 'Working…' : 'Replace all ten'}</button>
             <button type="button" onClick={() => { setRegenOpen(false); setCode(''); setError(''); }} disabled={busy} className={s.btn}>Cancel</button>
           </div>
         </div>

@@ -13,18 +13,20 @@ Read this, CLAUDE.md, LANES.md, lanes/build.md. Keep this file current; it repla
 - No forks from a long coordinator chat (a fork copies the whole chat). Use a fresh session or a subagent with a tight brief.
 - Briefs point to files instead of pasting history. Workers report only the PR number and a one-line verdict.
 
-## In flight (2026-11-26 ~20:15 UTC)
-- FIRST: main's "Test scripts" check is red since 4e20467 — scripts/assistant-brief-db-test.ts fails "golfer: membership benefits stay — AlphaGold: book 14 days out" (came in with AI part 1 #533). Fix it before merging more code; every code PR inherits it.
-- UI kit v2 mockup used the agent's picks because Cam's answers didn't arrive: main button = text colour, money/big numbers = Libre Franklin, switches green when on, brand green #173B2A (questionable contrast on dark glass). Get Cam's answers.
-- Security fixes for lanes/security/AUDIT-2026-11-24.md (H1, M1–M9, M11 + lows). Merged so far: #530 #531 #534.
-- Security M10: fees/failed charges visible only with the Money area (MONEY-VIEW-1).
-- #532 PWA installable app: conflicts with main; a worker is merging main in.
-- AI assistant parts 2–6 (part 1 #533 merged). Golfer bot OFF by default; current model; 300 golfer questions/course/day.
-- UI style overhaul (approved, spec in lanes/build.md "UI style overhaul — APPROVED", PR #541): worker 1 = tokens + dashboard + admin; worker 2 = golfer + homepage.
-- SMS: whole-word course names, shorter opt-in wording, fresh public/sms-opt-in.png; its PR body carries the FINAL Twilio console list for Cam.
-- UI kit v2 mockup (next phase after style ships): https://claude.ai/artifact/JVGVg9cZEQPjeHyyASp6oh — Cam reviews, then a build plus an automatic guard against hand-made buttons, text sizes and search fields (approved).
+## In flight (2026-11-26 ~22:15 UTC)
+- Merged today: #535 (test fix) #536 #538 #539 #542 #545 #544 #547 #556 #540 #554 #550 #532 #549 #555 #553. Main CI green; prod healthy.
+- #558 (UI style 4/4): main merged in at 5a619dd5 (net diff identical to the reviewed one); merge when green.
+- Security #548 #559 #557 #551: Test scripts red; an Opus worker is finding root causes and merging main in. Merge order 548, 559, 557, 551 (551's conflicts with 542/548 per its PR body). The security session (session_014ceBnz9xqRxzipaDXVP2DN) also works these; Build can't message it.
+- #537 (Assistant 3/6 settings): main merged in at ec3bc746; light-reviewer earlier PASS; check green and merge.
+- #552 homepage bot: HELD until after outreach starts (Cam).
+- UI kit: options mockups part 1 https://claude.ai/artifact/Ac11jzwJeT8cmAWQnqeVoL (answered, see UI-KIT-3 in DECISIONS) and part 2 https://claude.ai/artifact/1uT1Rncv1qgaZPAWaiC3de (picks pending). Next: v4 mockup with all picks, then build + guard.
+- #435/#436 are 10-day-old branches ~1500 commits off main: stale, left alone. Dependabot (#218 #219 #291 #292 #417): hold until after launch.
+- Other sessions push to the UI style and golfer branches too; fetch before merging main into a branch, or two workers race.
 
 ## Waiting on Cam
+- Update the Twilio console with #544's final opt-in list (merged; texts now differ from the registered samples) before outreach Nov 30.
+- Resend any owner setup link sent Nov 19-26 once #551 merges.
+- UI kit: re-answer palette 1A vs 1C and the button cap; pick part 2 options.
 - Run "Before launch: clear test data" (admin → Systems) — overdue; also clears test golfer data tied to audit H1.
 - Paste the final Twilio list (from the SMS PR) into the Twilio console; refresh the opt-in screenshot there.
 - PO box / virtual mailbox address for the outreach footer (outreach won't send until set; outreach starts Dec 1).

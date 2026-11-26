@@ -12,7 +12,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import OperatorSidebar from '@/components/OperatorSidebar';
-import OperatorSearch from '@/components/dashboard/OperatorSearch';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { Card } from '@/components/ui/Card';
 import { DeclinedCardList } from '@/components/dashboard/DeclinedCardList';
@@ -195,8 +194,6 @@ export default function DashboardHome() {
         <div className="op-home px-4 sm:px-6 py-5 flex flex-col gap-4 max-w-[1320px]">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="mr-auto font-serif text-[26px] sm:text-[30px] leading-none text-ink">{home ? longDate(home.today) : 'Today'}</h1>
-            {/* HOME-3: the one search (the rail leaves it to Home). */}
-            <div className="w-full sm:w-[280px]"><OperatorSearch /></div>
           </div>
           <p className="-mt-2 text-[13px] text-ink-muted flex items-center gap-1.5">{home ? `As of ${fmtTime(home.clock)}` : 'Loading today…'}
             <button type="button" onClick={() => { load(); loadWeather(); }} aria-label="Refresh" className="px-1 text-[15px] leading-none text-ink-muted hover:text-ink">↻</button></p>

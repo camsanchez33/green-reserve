@@ -1,4 +1,7 @@
 import { payLinkText, roundReceiptText } from '@/lib/sms-copy';
+import { golferSendAllowed, SEND_CAP_MESSAGE } from '@/lib/send-caps';
+import { hasSmsConsent } from '@/lib/sms-consent';
+import { isNorthAmericanNumber, isFictionalNumber, smsConfigured } from '@/lib/twilio';
 import { shortLink } from '@/lib/short-links';
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 import { requireRegisterOpen } from '@/lib/register-open';
@@ -274,6 +277,14 @@ export async function PATCH(req: NextRequest) {
         await prisma.booking.update({ where: { id }, data: { checkInToken: token } });
       }
       const to = normalizePhone(b.golferPhone);
+      // Texts not set up: say so first, as sendSms() would, and count nothing — never ask staff to read the
+      // consent script for a text that can't go (PAY-1: the send fails loudly, 502).
+      if (!smsConfigured()) return NextResponse.json({ error: 'The text didn’t send (Text messages are not set up (Twilio)) — try email, or take payment at the counter.' }, { status: 502 });
+      // No consent yet and none given now: the "ask them" answer, before a send is counted (so the retry with
+      // consent isn't counted twice).
+      if (smsConsent !== 'verbal' && isNorthAmericanNumber(to) && !isFictionalNumber(to) && !(await hasSmsConsent(to))) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
+      // Audit 2026-11-24 M11: capped per booking, per number and per course (lib/send-caps).
+      if (!(await golferSendAllowed({ courseId: session.courseId, bookingId: id, kind: 'pay_link', via: 'sms', to }))) return NextResponse.json({ error: SEND_CAP_MESSAGE }, { status: 429 });
       const url = `${process.env.NEXT_PUBLIC_URL}/checkin/${id}?token=${token}`;
       // SMS-1: staff read the script and the golfer said yes — record it (verbal) before the link goes.
       if (smsConsent === 'verbal') await optInAndConfirm(to, { method: 'verbal', courseId: session.courseId, bookingId: id, recordedBy: session.staffId ?? `operator:${session.operatorId}` });
@@ -288,6 +299,7 @@ export async function PATCH(req: NextRequest) {
     }
     if (!b.checkInToken) return NextResponse.json({ error: 'This booking has no pay link — check them in at the counter.' }, { status: 409 });
     if (!b.golferEmail || isPlaceholderEmail(b.golferEmail)) return NextResponse.json({ error: 'There’s no email on this booking to send the link to — check them in at the counter.' }, { status: 409 });
+    if (!(await golferSendAllowed({ courseId: session.courseId, bookingId: id, kind: 'pay_link', via: 'email', to: b.golferEmail }))) return NextResponse.json({ error: SEND_CAP_MESSAGE }, { status: 429 });
     try {
       await sendCheckInAvailableEmail({ golferName: b.golferName, golferEmail: b.golferEmail, courseName: b.course.name, date: b.teeTime.date, time: b.teeTime.time, bookingId: id, checkInToken: b.checkInToken });
     } catch (err) {
@@ -314,6 +326,10 @@ export async function PATCH(req: NextRequest) {
       const phone = toRaw || b.golferPhone || '';
       if (phone.replace(/\D/g, '').length < 10) return NextResponse.json({ error: 'Enter a mobile number for the receipt.' }, { status: 400 });
       const to = normalizePhone(phone);
+      if (!smsConfigured()) return NextResponse.json({ error: 'The text didn’t send (Text messages are not set up (Twilio)) — try email or print it.' }, { status: 502 });
+      if (smsConsent !== 'verbal' && isNorthAmericanNumber(to) && !isFictionalNumber(to) && !(await hasSmsConsent(to))) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
+      // Audit 2026-11-24 M11: checked before the verbal consent is recorded, so a refused send records nothing.
+      if (!(await golferSendAllowed({ courseId: session.courseId, bookingId: id, kind: 'receipt', via: 'sms', to }))) return NextResponse.json({ error: SEND_CAP_MESSAGE }, { status: 429 });
       if (smsConsent === 'verbal') await optInAndConfirm(to, { method: 'verbal', courseId: session.courseId, bookingId: id, recordedBy: session.staffId ?? `operator:${session.operatorId}` });
       try {
         await sendSms(to, roundReceiptText(b.course.name, await shortLink('r', url, { courseId: session.courseId }), b.roundChargedCents), { kind: 'round_receipt_text', bookingId: id });
@@ -325,6 +341,7 @@ export async function PATCH(req: NextRequest) {
     }
     const email = (toRaw || b.golferEmail || '').toLowerCase();
     if (!email || isPlaceholderEmail(email) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: 'Enter an email for the receipt.' }, { status: 400 });
+    if (!(await golferSendAllowed({ courseId: session.courseId, bookingId: id, kind: 'receipt', via: 'email', to: email }))) return NextResponse.json({ error: SEND_CAP_MESSAGE }, { status: 429 });
     try {
       await sendRoundReceiptLinkEmail({ golferName: b.golferName, to: email, courseName: b.course.name, date: b.teeTime.date, time: formatTeeTime(b.teeTime.time), bookingId: id, checkInToken: token });
     } catch (err) {

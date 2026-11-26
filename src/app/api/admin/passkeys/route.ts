@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, requireOwner, stepUpRequired } from '@/lib/admin-session';
+import { resolveAdminSession, requireOwner, stepUpRequired, freshStepUpRequired } from '@/lib/admin-session';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { registrationOptions, addPasskey } from '@/lib/owner-passkey';
 import { sendOwnerPasskeyChanged } from '@/lib/email';
@@ -48,7 +48,10 @@ async function postPasskey(req: NextRequest) {
   // Confirmed before the passkey prompt starts: confirming with a passkey arms
   // its own challenge, which would replace the one this prompt is answering.
   if (body.action === 'options') {
-    const su = stepUpRequired(g.session); if (su) return su;
+    // Audit 2026-11-24 M6 review: adding a passkey changes how the account signs in, and a new passkey can
+    // then pass every fresh confirm, so it needs a FRESH confirm (used up here), not just a recent sign-in.
+    // 'add' answers only a registration challenge, which only these options arm (lib/owner-passkey tags the slot).
+    const su = await freshStepUpRequired(g.session); if (su) return su;
     return NextResponse.json(await registrationOptions(admin));
   }
   if (body.action === 'add') {

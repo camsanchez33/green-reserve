@@ -6,7 +6,8 @@ import { prisma } from './prisma';
 export async function rateLimit(key: string, limit: number, windowSeconds: number): Promise<boolean> {
   // Keys that gate money (BIRDIE B1) fail CLOSED — a broken counter must not
   // uncap paid API spend. Everything else (login, forms) still fails open.
-  const failClosed = key.startsWith('birdie:') || key.startsWith('change-pw:'); // audit 2026-11-24 M4: a broken counter must not remove the guess cap
+  // Audit 2026-11-24 M4: so does the change-password guess cap; M11: so do the golfer send caps (each text is Twilio money).
+  const failClosed = key.startsWith('birdie:') || key.startsWith('change-pw:') || key.startsWith('send:');
   try {
     const rows = await prisma.$queryRaw<{ count: number }[]>`
       INSERT INTO "RateLimit" ("key", "count", "windowStart")
