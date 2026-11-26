@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
   if (!history.length) return NextResponse.json({ error: 'Ask something first.' }, { status: 400 });
 
   // The course is the session's, always. The brief is rebuilt from its rows now.
-  // A login without schedule.view gets the brief without rates, closed days and dues (what Schedule guards).
+  // A login without schedule.view, events.manage and members.view gets the limited brief (fullBrief above).
   const brief = await getCourseBrief(session.courseId, fullBrief(session) ? 'staff' : 'staff-limited');
   if (!brief) return NextResponse.json({ error: 'Course not found.' }, { status: 404 });
   if (!brief.settings.staffOn) return NextResponse.json({ error: 'Your course has the assistant switched off (Settings → Assistant).' }, { status: 503 });
@@ -230,7 +230,7 @@ export async function PUT(req: NextRequest) {
     // No card title: it can name a golfer. The route, the method and whether it worked are enough.
     ev: 'birdie.applied', courseId: session.courseId, actor: session.isStaff ? `staff:${session.staffId ?? ''}` : `op:${session.operatorId ?? ''}`,
     // No error text either: a route's error can echo an upstream body (an address); the status is enough.
-    method: str(a.method, 10), path: str(a.path, 100).startsWith('/api/operator/') ? str(a.path, 100) : 'other', ok: a.ok === true,
+    method: str(a.method, 10), path: /^\/api\/operator\/[a-z0-9/_-]{1,60}$/.test(str(a.path, 100)) ? str(a.path, 100) : 'other', ok: a.ok === true,
     status: typeof a.status === 'number' && a.status >= 100 && a.status <= 599 ? Math.trunc(a.status) : null,
   }));
   return NextResponse.json({ ok: true });

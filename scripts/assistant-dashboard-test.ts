@@ -32,7 +32,7 @@ ok('log: applied cards log the status, never error text', /status: typeof a\.sta
 ok('access: the full brief needs schedule.view, events.manage and members.view', /can\(session, 'schedule\.view'\) && can\(session, 'events\.manage'\) && can\(session, 'members\.view'\)/.test(route) && (route.match(/fullBrief\(session\) \? 'staff' : 'staff-limited'/g) || []).length === 2);
 const sys = readFileSync(new URL('../src/app/api/admin/system/route.ts', import.meta.url), 'utf8');
 ok('system: the staff counter against the staff cap', /birdieUsageToday\('operator'\)/.test(sys) && /dailyCap: PLATFORM_PER_DAY\.operator/.test(sys));
-ok('PUT: path limited to operator routes, status clamped', /startsWith\('\/api\/operator\/'\)/.test(route) && /a\.status >= 100 && a\.status <= 599/.test(route));
+ok('PUT: path limited to operator routes, status clamped', /\^\\\/api\\\/operator\\\/\[a-z0-9\/_-\]\{1,60\}\$/.test(route) && /a\.status >= 100 && a\.status <= 599/.test(route));
 ok('widget: "What it knows" from the GET, with Live numbers', /What it knows/.test(widget) && /meta\.knows\.sections\.map/.test(widget) && /Live numbers/.test(widget));
 ok('widget: it never saves on its own — cards still need Confirm', /ConfirmCard/.test(widget));
 
