@@ -133,26 +133,28 @@ body {
    GLASS is the default (data-theme="dark"), Light is the switch. Monochrome chrome — links, buttons and charts
    white/grey (pine is the chrome colour, so it turns grey) — so colour only means something: ok green = paid /
    ahead, warn amber = to do soon, bad red = a problem. The type is the site's (EB Garamond titles, Libre
-   Franklin), as on the admin. Every text colour clears 4.5:1 on a frosted panel over the brightest ribbon in its
-   theme (scripts/glass-test.ts models it). */
+   Franklin), as on the admin. Every text colour clears 4.5:1 on its panel and on the page in its theme
+   (scripts/glass-test.ts models it). */
 :root { --op-rail-w: 14.5rem; }
 @media (min-width: 768px) { .op-look:has(.op-rail) { padding-left: var(--op-rail-w); } }
 /* Printing (event pairings, cart signs): the page alone — no rail, no bars, no gap where the rail was. */
-@media print { .op-look:has(.op-rail) { padding-left: 0; } .op-rail, .op-look nav[aria-label="Dashboard"], #op-more, .op-waves { display: none !important; } }
-/* Light — the switch, and what print always gets. Theme changes (Cam 2026-11-12): Light stays glass — the same
-   ribbons, inverted: charcoal ribbons on a light page behind frosted white panels (charcoal is the reverse). */
+@media print { .op-look:has(.op-rail) { padding-left: 0; } .op-rail, .op-look nav[aria-label="Dashboard"], #op-more { display: none !important; } }
+/* UI-STYLE (Cam 2026-11-26, "Approved, build it"; lanes/build.md "UI style overhaul"): two styles, both neutral
+   (R=G=B, no colour cast), no shapes or gradients behind the page. This replaces GLASS-2's ribbons and LIGHT-PARITY's
+   "Light is glass too"; both looks still get every change (scripts/glass-test.ts).
+   LIGHT = SOLID — the switch, and what print always gets: white cards on a neutral grey page, no blur, and a dark
+   sidebar (the rail carries its own dark tokens below). */
 .op-look:has(.op-rail) {
-  --color-page: #E9EAE6; --color-paper: #F2F3EF; --color-card: #FFFFFF; --color-white: #FFFFFF;
-  --color-rail: #E0E1DC; --color-rail-line: #CDD0C8;
-  --color-ink: #191B19; --color-ink-soft: #3E423E; --color-ink-muted: #454A43; --color-ink-faint: #474C45;
-  --color-line: #D9DBD4; --color-line-soft: #E6E7E2; --color-line-strong: #C6C9C1;
-  --color-pine: #1E201E; --color-pine-hover: #000000; --color-pine-soft: #E3E4E0;
+  --color-page: #F2F2F2; --color-paper: #F7F7F7; --color-card: #FFFFFF; --color-white: #FFFFFF;
+  --color-rail: #1E1E1E; --color-rail-line: #303030;
+  --color-ink: #161616; --color-ink-soft: #3D3D3D; --color-ink-muted: #454545; --color-ink-faint: #474747;
+  --color-line: #D9D9D9; --color-line-soft: #E6E6E6; --color-line-strong: #C6C6C6;
+  --color-pine: #1E1E1E; --color-pine-hover: #000000; --color-pine-soft: #E6E6E6;
   --color-ok: #1A5734; --color-warn: #6C4205; --color-bad: #872C1A;
-  --op-panel: rgb(255 255 255 / .58); --op-panel-solid: #FAFAF8; --op-rail-glass: rgb(255 255 255 / .40); --op-edge: rgb(255 255 255 / .8);
-  /* LIGHT-PARITY (Cam 2026-11-12: "Light and Charcoal get the SAME redesign"): the mockup's Light ribbons — grey
-     sweeps and one white fold — wells inside a panel are frosted white, and the tee sheet's money fills are tints. */
-  --op-wv1: rgb(120 126 122 / .22); --op-wv2: rgb(150 156 152 / .20); --op-wv3: rgb(255 255 255 / .70);
-  --op-well: rgb(255 255 255 / .60);
+  /* The material: an opaque panel with a whisper of an edge, no blur. */
+  --op-panel: #FFFFFF; --op-panel-solid: #FFFFFF; --op-rail-bg: #1E1E1E; --op-edge: #E4E4E4;
+  --op-blur: none; --op-shadow: 0 1px 2px rgb(20 20 20 / .06);
+  --op-well: #F7F7F7;
   --color-paid-fill: rgb(34 104 63 / .12); --color-owes-fill: rgb(138 83 9 / .12); --color-bad-fill: rgb(169 58 36 / .12);
   --op-brand-green: #173B2A;
   --op-heat0: rgb(0 0 0 / .04); --op-heat-ink3: var(--color-ink); --op-heat-ink4: #FFFFFF; --op-rain: #1F5FAF;
@@ -161,35 +163,37 @@ body {
 /* A golfer-page preview keeps the site's own colours (pine is green there) in Light too. */
 .op-look:has(.op-rail) .op-keep-light { --op-well: var(--color-page); --color-paid-fill: #CFE8D6; --color-owes-fill: #F7E1B5; --color-bad-fill: #F4CFC6; --color-pine: #173B2A; --color-pine-hover: #0F2C1F; --color-ok: #3D7A55; --color-warn: #9A5B13; --color-bad: #A3452F; --color-ink-muted: #6B706A; --op-panel-solid: #FFFFFF; }
 .op-look:has(.op-rail) .tabular-nums, .op-look:has(.op-rail) table { font-variant-numeric: tabular-nums; }
-/* The logo pair: the pine lockup in light, the cream one in charcoal. */
+/* The logo pair: the pine lockup on a light surface, the cream one on a dark one. */
 .op-look .op-dark-only { display: none; }
 
 /* Charcoal is a SCREEN look: printing (pairings, cart signs) always gets the light tokens, so light text never
    lands on white paper. `bg-white` is a panel, so it takes the card colour; white TEXT on a solid fill takes
    the dark page colour, because in charcoal the fills are the bright tints. */
 @media screen {
+/* DARK = GLASS (Apple-style material): a flat neutral #141414 page; panels are a translucent dark fill that blurs and
+   saturates what sits behind them, a 1px white hairline at low alpha, a soft top highlight and a soft shadow. */
 .op-look[data-theme="dark"]:has(.op-rail) {
   --color-stripe: #635BFF;
   color-scheme: dark;
-  --color-page: #1D1E1D; --color-paper: #262726; --color-card: #2A2B2A; --color-white: #2A2B2A;
-  --color-rail: #232423; --color-rail-line: #333433;
-  --color-ink: #EDEEEB; --color-ink-soft: #C6C8C3; --color-ink-muted: #B6B9B3; --color-ink-faint: #B3B6B0;
-  --color-line: #383A38; --color-line-soft: #303130; --color-line-strong: #464846;
-  --color-pine: #EDEEEB; --color-pine-hover: #FFFFFF; --color-pine-soft: #303230;
+  --color-page: #141414; --color-paper: #1C1C1C; --color-card: #262626; --color-white: #262626;
+  --color-rail: #1C1C1C; --color-rail-line: #2E2E2E;
+  --color-ink: #EDEDED; --color-ink-soft: #C8C8C8; --color-ink-muted: #B8B8B8; --color-ink-faint: #B4B4B4;
+  --color-line: #383838; --color-line-soft: #303030; --color-line-strong: #464646;
+  --color-pine: #EDEDED; --color-pine-hover: #FFFFFF; --color-pine-soft: #303030;
   --color-ok: #7BD9A4; --color-warn: #F2C46B; --color-bad: #FF9A8A;
-  --color-ok-fill: #1E2E24; --color-mem-fill: #33302A; --color-paid-fill: #24402F; --color-owes-fill: #4A3A1A; --color-bad-fill: #4F2A23; --color-dash: #444644; --color-dot-neutral: #6A6D69;
+  --color-ok-fill: #1E2E24; --color-mem-fill: #33302A; --color-paid-fill: #24402F; --color-owes-fill: #4A3A1A; --color-bad-fill: #4F2A23; --color-dash: #444444; --color-dot-neutral: #6A6A6A;
   --color-fairway: #3BAA6B;
-  --op-panel: rgb(44 46 44 / .55); --op-panel-solid: #2A2B2A; --op-rail-glass: rgb(30 31 30 / .50); --op-edge: rgb(255 255 255 / .09);
-  --op-wv1: rgb(160 166 162 / .15); --op-wv2: rgb(130 136 132 / .10); --op-wv3: rgb(215 220 216 / .08);
+  --op-panel: rgb(38 38 38 / .62); --op-panel-solid: #262626; --op-rail-bg: rgb(28 28 28 / .70); --op-edge: rgb(255 255 255 / .10);
+  --op-blur: blur(30px) saturate(1.8); --op-shadow: inset 0 1px 0 rgb(255 255 255 / .07), 0 1px 2px rgb(0 0 0 / .30), 0 10px 30px rgb(0 0 0 / .28);
   --op-well: rgb(255 255 255 / .05);
   --op-brand-green: #4CC183;
-  --op-heat0: rgb(255 255 255 / .05); --op-heat-ink3: #161716; --op-heat-ink4: #161716; --op-rain: #7DB8FF;
+  --op-heat0: rgb(255 255 255 / .05); --op-heat-ink3: #141414; --op-heat-ink4: #141414; --op-rain: #7DB8FF;
 }
 .op-look[data-theme="dark"]:has(.op-rail) .op-dark-only { display: inline-block; }
 .op-look[data-theme="dark"]:has(.op-rail) .op-light-only { display: none; }
 .op-look[data-theme="dark"]:has(.op-rail) .text-white { color: #FFFFFF; }
 .op-look[data-theme="dark"]:has(.op-rail) :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink, .bg-bad\/90).text-white,
-.op-look[data-theme="dark"]:has(.op-rail) :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink) .text-white { color: #161716; }
+.op-look[data-theme="dark"]:has(.op-rail) :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink) .text-white { color: #141414; }
 .op-look[data-theme="dark"]:has(.op-rail) :is(.bg-ink\/20, .bg-ink\/30, .bg-ink\/40, .bg-black\/30, .bg-black\/50) { background-color: rgb(0 0 0 / .6); }
 .op-look[data-theme="dark"]:has(.op-rail) img:not([src*="/brand/"]) { filter: brightness(.92); }
 /* A preview of a golfer page (the booking page, an email) stays in the site's light look. */
@@ -206,55 +210,57 @@ body {
 .op-look[data-theme="dark"]:has(.op-rail) .op-keep-light :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink).text-white { color: #FFFFFF; }
 }
 
-/* GLASS-2 (Cam 2026-11-12, "should look like glass like the admin home"; reverses NOGLOW-1 of 2026-11-06): the
-   glass is back, in grey — the same build as the admin's green glass. Screen only, rail pages only:
-   1. Ribbons behind the page: blurred SVG strokes (OperatorSidebar's .op-waves), fixed — plain shapes, never a
-      gradient; Cam 2026-11-12: "a more abstract design than just 2 dots". The page wrappers let them through.
-   2. Every card (bg-white + shadow-card, i.e. <Card>/CARD) is frosted — the panel at ~50% with a blur — and so
-      is the rail. A pop-up window's panel and a golfer-page preview stay solid.
-   3. The tab under the pointer lifts 2px (GLASS-1; no cursor tracking; off with reduced motion).
-   Anyone who asks for less transparency gets solid panels and no ribbons. */
+/* UI-STYLE: the sidebar is dark in BOTH looks. In Light it is the solid #1E1E1E rail, so its own text, lines and
+   active fill take light-on-dark tokens; in Dark it is the glass rail and the dark tokens already apply. */
+@media screen {
+.op-look:has(.op-rail) .op-rail {
+  --color-ink: #F2F2F2; --color-ink-soft: #CCCCCC; --color-ink-muted: #B0B0B0; --color-ink-faint: #B0B0B0;
+  --color-line: #303030; --color-line-soft: #2A2A2A; --color-rail-line: #303030; --color-white: #2C2C2C; --color-page: #2C2C2C; --color-paper: #2C2C2C;
+  --color-pine: #F2F2F2; --color-pine-hover: #FFFFFF; --op-brand-green: #4CC183; --op-well: rgb(255 255 255 / .06);
+  --op-panel: #2C2C2C; --op-panel-solid: #2C2C2C; --op-edge: rgb(255 255 255 / .10);
+  color-scheme: dark; color: var(--color-ink);
+}
+.op-look:has(.op-rail) .op-rail .op-dark-only { display: inline-block; }
+.op-look:has(.op-rail) .op-rail .op-light-only { display: none; }
+}
+
+/* The material, on screen and rail pages only. One rule for both looks; the tokens above say solid (Light) or glass
+   (Dark). A pop-up window's panel and a golfer-page preview stay solid; anyone who asks for less transparency gets solid
+   panels. */
 @media screen {
 .op-look:has(.op-rail) { isolation: isolate; }
-.op-look:has(.op-rail) .op-waves { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
-.op-look:has(.op-rail) .op-waves path { fill: none; stroke-linecap: round; }
-.op-look:has(.op-rail) .op-waves .w1 { stroke: var(--op-wv1); stroke-width: 150; }
-.op-look:has(.op-rail) .op-waves .w2 { stroke: var(--op-wv2); stroke-width: 90; }
-.op-look:has(.op-rail) .op-waves .w3 { stroke: var(--op-wv3); stroke-width: 46; }
-.op-look:has(.op-rail) .op-waves .w4 { stroke: var(--op-wv2); stroke-width: 220; }
 .op-look:has(.op-rail) .min-h-screen.bg-page { background-color: transparent; }
 .op-look:has(.op-rail) .bg-white.shadow-card:not(.op-tab) {
   background-color: var(--op-panel); border-color: var(--op-edge);
-  -webkit-backdrop-filter: blur(22px) saturate(1.2); backdrop-filter: blur(22px) saturate(1.2);
-  box-shadow: 0 0 0 1px var(--op-edge), 0 1px 0 rgb(255 255 255 / .06) inset, 0 8px 26px rgb(0 0 0 / .10);
+  -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur);
+  box-shadow: 0 0 0 1px var(--op-edge), var(--op-shadow);
 }
-.op-look[data-theme="dark"]:has(.op-rail) .bg-white.shadow-card:not(.op-tab) { box-shadow: 0 0 0 1px var(--op-edge), 0 1px 0 rgb(255 255 255 / .06) inset, 0 10px 30px rgb(0 0 0 / .32); }
 .op-look:has(.op-rail) .op-home .bg-white.shadow-card:not([role="radio"]) { border-radius: 14px; } /* HOME-3: Home's panels, as the mockup */
-/* LIGHT-PARITY: a well marked .op-well (a search box, a tile's or row's picture) is frosted — white in Light, a faint
-   lift in Charcoal (the mockups' --hover). Opt-in on purpose: bg-page also draws selected states, chips and bubbles
-   that must keep their grey (final review 2026-11-13). */
+/* A well marked .op-well (a search box, a tile's or row's picture) is a quiet fill: the paper grey in Light, a faint lift
+   in Dark. Opt-in on purpose: bg-page also draws selected states, chips and bubbles that must keep their grey (final
+   review 2026-11-13). */
 .op-look:has(.op-rail) .op-well { background-color: var(--op-well); }
-.op-look:has(.op-rail) .op-rail { background-color: var(--op-rail-glass); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
-.op-look:has(.op-rail) .op-tab { transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease, color .18s ease; }
-.op-look:has(.op-rail) .op-tab:not([aria-current]):hover {
-  transform: translateY(-2px); color: var(--color-ink);
-  background-color: color-mix(in srgb, var(--color-white) 78%, transparent);
-  box-shadow: 0 6px 18px rgba(20,24,20,.10), 0 0 0 1px rgba(20,24,20,.05);
-}
-.op-look[data-theme="dark"]:has(.op-rail) .op-tab:not([aria-current]):hover { box-shadow: 0 6px 18px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.08); }
+.op-look:has(.op-rail) .op-rail { background-color: var(--op-rail-bg); -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur); box-shadow: 1px 0 0 var(--op-edge); }
+/* UI-STYLE (Cam 2026-11-26): the sidebar item. Hover is a faint lighter fill; the current page is a lighter fill, a 2px
+   left bar and bold text. The icon is a monochrome line icon in the text colour, a touch quieter until current. Both
+   looks (the sidebar is dark in both). */
+.op-look:has(.op-rail) .op-tab { transition: background-color .15s ease, color .15s ease; }
+.op-look:has(.op-rail) .op-tab:not([aria-current]):hover { background-color: rgb(255 255 255 / .06); color: #FFFFFF; }
+.op-look:has(.op-rail) .op-tab[aria-current="page"] { background-color: rgb(255 255 255 / .12); box-shadow: inset 2px 0 0 #EDEDED; color: #FFFFFF; font-weight: 600; }
+.op-look:has(.op-rail) .op-tab .op-ic { opacity: .8; }
+.op-look:has(.op-rail) .op-tab[aria-current="page"] .op-ic { opacity: 1; }
 .op-look:has(.op-rail) .fixed.inset-0 .bg-white.shadow-card,
 .op-look:has(.op-rail) .fixed.bg-white.shadow-card,
 .op-look:has(.op-rail) .op-keep-light .bg-white.shadow-card { background-color: var(--color-white); -webkit-backdrop-filter: none; backdrop-filter: none; }
 /* TT-CARD (Cam 2026-11-12 mockup): where the time card sits BESIDE the sheet (xl and up, the sheet makes room for it) it
-   is a frosted card like the others, in both looks. Narrower, it floats over the sheet, so it stays solid; on a phone it
-   is a solid sheet over a backdrop. */
+   is a panel like the others (glass in Dark, solid in Light). Narrower, it floats over the sheet, so it stays solid; on a
+   phone it is a solid sheet over a backdrop. */
 @media screen and (min-width: 1280px) {
-  .op-look:has(.op-rail) .fixed .tt-card.bg-white.shadow-card { background-color: var(--op-panel); -webkit-backdrop-filter: blur(22px) saturate(1.2); backdrop-filter: blur(22px) saturate(1.2); }
+  .op-look:has(.op-rail) .fixed .tt-card.bg-white.shadow-card { background-color: var(--op-panel); -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur); }
 }
 }
-@media screen and (prefers-reduced-motion: reduce) { .op-look:has(.op-rail) .op-tab { transition: none; } .op-look:has(.op-rail) .op-tab:not([aria-current]):hover { transform: none; } }
+@media screen and (prefers-reduced-motion: reduce) { .op-look:has(.op-rail) .op-tab { transition: none; } }
 @media screen and (prefers-reduced-transparency: reduce) {
-  .op-look:has(.op-rail) .op-waves { display: none; }
   .op-look:has(.op-rail) .bg-white.shadow-card:not(.op-tab) { background-color: var(--op-panel-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
   .op-look:has(.op-rail) .fixed .tt-card.bg-white.shadow-card { background-color: var(--color-white); -webkit-backdrop-filter: none; backdrop-filter: none; }
   .op-look:has(.op-rail) .op-rail { background-color: var(--color-rail); -webkit-backdrop-filter: none; backdrop-filter: none; }

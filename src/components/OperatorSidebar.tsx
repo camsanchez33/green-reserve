@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import {
   Calendar, BarChart2, Clock, Users, Settings, LogOut, XCircle,
-  Flag, DollarSign, MessageSquare, ShoppingBag,
+  Flag, DollarSign, MessageSquare, ShoppingBag, Home, UserCheck, AlertTriangle, ExternalLink,
 } from 'lucide-react';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
 import AnnouncementBanner from '@/components/AnnouncementBanner';
@@ -15,6 +15,7 @@ import { recordTabVisit } from '@/lib/dashboard-visits';
 import { Toaster, toast } from '@/components/dashboard/Toast';
 import OperatorSearch from '@/components/dashboard/OperatorSearch';
 import ThemeSwitch from '@/components/dashboard/ThemeSwitch';
+import InstallApp from '@/components/pwa/InstallApp';
 
 export type OperatorNavKey =
   | 'home' | 'teesheet' | 'analytics' | 'money' | 'events'
@@ -131,7 +132,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
 
   const navItems: { key: OperatorNavKey; label: string; href: string; icon: React.ReactNode; soon?: boolean }[] = [
     // DASH-C (Cam 2026-10-22): Home — today at a glance — comes first.
-    { key: 'home',          label: 'Home',         href: '/dashboard/home',          icon: null }, // not on the phone bar, so no icon
+    { key: 'home',          label: 'Home',         href: '/dashboard/home',          icon: <Home className="w-4 h-4"/> },
     { key: 'teesheet',      label: 'Tee sheet',    href: '/dashboard',               icon: <Calendar className="w-4 h-4"/> },
     { key: 'analytics',     label: 'Analytics',    href: '/dashboard/analytics', icon: <BarChart2 className="w-4 h-4"/> },
     // W2-9 (Cam 2026-10-22): the Tournaments and Outings placeholders became one Events tab.
@@ -146,7 +147,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     // POS-2 (Cam 2026-10-19): ring up walk-up sales — cash or a pay link.
     { key: 'shop',          label: 'Pro shop',     href: '/dashboard/shop',          icon: <ShoppingBag className="w-4 h-4"/> },
     // TEAM-1 (Cam 2026-11-17): staff and roles, the owner's alone — moved out of Settings.
-    { key: 'team',          label: 'Team',         href: '/dashboard/team',          icon: null }, // not on the phone bar, so no icon
+    { key: 'team',          label: 'Team',         href: '/dashboard/team',          icon: <UserCheck className="w-4 h-4"/> },
     { key: 'settings',      label: 'Settings',     href: '/dashboard/settings',      icon: <Settings className="w-4 h-4"/> },
     // SUPPORT-1 (Cam 2026-11-12): Messages is Support — at the bottom of the rail, after Settings; on a phone, last under More.
     { key: 'messages',      label: 'Support',      href: '/dashboard/support',       icon: <MessageSquare className="w-4 h-4"/> },
@@ -192,23 +193,6 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     <BirdieWidget />
     <AgreementNotice />
     <Toaster />
-    {/* GLASS-2 (Cam 2026-11-12): what the glass frosts — blurred ribbons, fixed behind every rail page (globals.css .op-waves). */}
-    <svg className="op-waves" viewBox="0 0 1400 1100" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
-      <defs>
-        <filter id="op-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="38" /></filter>
-        <filter id="op-softer" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="16" /></filter>
-      </defs>
-      <g filter="url(#op-soft)">
-        <path className="w1" d="M-120 260 C 240 60, 520 420, 820 230 S 1300 40, 1560 300" />
-        <path className="w4" d="M-200 980 C 200 760, 460 1040, 760 820 S 1220 640, 1600 900" />
-        <path className="w2" d="M980 -80 C 860 220, 1180 380, 1040 640 S 1180 980, 1320 1180" />
-      </g>
-      <g filter="url(#op-softer)">
-        <path className="w3" d="M-60 520 C 300 380, 520 700, 900 520 S 1300 360, 1500 560" />
-        <path className="w3" d="M200 -60 C 300 200, 120 420, 380 640" />
-      </g>
-    </svg>
-
     {/* SD-2: below md the 224px rail is gone. A slim strip carries identity,
         the course switcher and sign-out; the tabs live in a bottom bar. */}
     <header className="md:hidden bg-white border-b border-line px-4 py-2.5 flex items-center gap-3">
@@ -279,6 +263,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
             )}
           </button>
         ))}
+        {/* PWA install (Cam 2026-11-24): beside the look switch; shown only when this browser can install. */}
+        <InstallApp buttonClassName="w-full text-left px-5 py-3.5 text-[14px] border-b border-line-soft text-ink" textClassName="px-5 py-3 text-[13px] text-ink-muted border-b border-line-soft" />
         <div className="px-4 py-3"><ThemeSwitch /></div>
       </div>
     )}
@@ -304,13 +290,15 @@ export default function OperatorSidebar({ active, onAlertClick }: {
       </div>
       {/* HOME-3 (Cam 2026-11-12): Home carries the one search at its top; every other page keeps it here. */}
       {active !== 'home' && <OperatorSearch />}
-      <nav aria-label="Dashboard" className="flex flex-col gap-4 text-[14px]">
+      {/* UI-STYLE (Cam 2026-11-26): small group labels, even spacing, one monochrome line icon per item (all 16px), and the
+          current page marked by a lighter fill, a left bar and bold text (globals.css .op-rail .op-tab). */}
+      <nav aria-label="Dashboard" className="flex flex-col gap-[18px] text-[14px]">
         {railGroups.map(g => {
           const items = navItems.filter(n => !n.soon && visible(n.key) && g.keys.includes(n.key)).sort((x, y) => g.keys.indexOf(x.key) - g.keys.indexOf(y.key));
           if (!items.length) return null;
           return (
             <div key={g.label || 'end'} className="flex flex-col gap-px">
-              {g.label && <div className="px-2.5 pb-1 text-[12.5px] font-bold text-ink">{g.label}</div>}
+              {g.label && <div className="px-2.5 pb-1.5 text-[11.5px] font-semibold text-ink-muted">{g.label}</div>}
               {items.map(item => {
                 const isActive = active === item.key;
                 return (
@@ -318,9 +306,9 @@ export default function OperatorSidebar({ active, onAlertClick }: {
                     key={item.key}
                     onClick={() => { if (confirmLeave()) router.push(item.href); }}
                     aria-current={isActive ? 'page' : undefined}
-                    className={'op-tab flex items-center gap-2 text-left px-2.5 py-[7px] rounded-[7px] ' + (isActive ? 'bg-white text-ink font-semibold shadow-card' : 'text-ink-soft hover:bg-white/60 hover:text-ink')}
+                    className={'op-tab flex items-center gap-2.5 text-left px-2.5 py-[7px] min-h-[34px] rounded-[7px] ' + (isActive ? 'text-ink font-semibold' : 'text-ink-soft font-medium')}
                   >
-                    <span aria-hidden="true" className="w-[6px] h-[6px] rounded-full shrink-0" style={{ backgroundColor: isActive ? brandColor : 'transparent' }} />
+                    <span aria-hidden="true" className="op-ic shrink-0 flex">{item.icon}</span>
                     <span className="flex-1">{item.label}</span>
                     {item.key === 'messages' && unreadMessages > 0 && (
                       <span className="text-[12px] font-semibold text-warn tabular-nums" aria-label={`${unreadMessages} unread`}>{unreadMessages > 99 ? '99+' : unreadMessages}</span>
@@ -348,11 +336,12 @@ export default function OperatorSidebar({ active, onAlertClick }: {
         )}
         {/* SD-8b: Settings passes no onAlertClick, so this navigates (guarded). */}
         {access.can('sheet.course_alert') && <button onClick={() => { if (onAlertClick) { onAlertClick(); return; } if (confirmLeave()) router.push('/dashboard'); }}
-          className="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-white/60 hover:text-ink transition-colors">Course alert</button>}
+          className="op-tab flex items-center gap-2.5 text-left px-2.5 py-[7px] min-h-[34px] rounded-[7px] text-ink-soft font-medium"><span aria-hidden="true" className="op-ic shrink-0 flex"><AlertTriangle className="w-4 h-4"/></span>Course alert</button>}
         {slug && (
-          <a href={'/courses/' + slug} target="_blank" rel="noopener" className="px-2.5 py-2 rounded-md text-ink-soft hover:bg-white/60 hover:text-ink transition-colors">Your booking page ↗</a>
+          <a href={'/courses/' + slug} target="_blank" rel="noopener" className="op-tab flex items-center gap-2.5 px-2.5 py-[7px] min-h-[34px] rounded-[7px] text-ink-soft font-medium"><span aria-hidden="true" className="op-ic shrink-0 flex"><ExternalLink className="w-4 h-4"/></span>Your booking page<span className="sr-only"> (opens in a new tab)</span></a>
         )}
-        <button onClick={logout} className="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-white/60 hover:text-bad transition-colors">Sign out</button>
+        <button onClick={logout} className="op-tab flex items-center gap-2.5 text-left px-2.5 py-[7px] min-h-[34px] rounded-[7px] text-ink-soft font-medium"><span aria-hidden="true" className="op-ic shrink-0 flex"><LogOut className="w-4 h-4"/></span>Sign out</button>
+        <InstallApp buttonClassName="op-tab flex items-center gap-2.5 text-left px-2.5 py-[7px] min-h-[34px] rounded-[7px] text-ink-soft font-medium" textClassName="px-2.5 py-2 text-[12px] leading-snug text-ink-muted" />
         <div className="px-1 pt-2"><ThemeSwitch /></div>
         {/* LOGO-2 (Cam 2026-10-20): "Powered by" and the GreenReserve lockup stay with the course's name. */}
         {/* CHARCOAL-1 (Cam 2026-11-12, the approved Home): "Powered by GreenReserve", GreenReserve in our green. */}

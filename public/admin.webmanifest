@@ -1,0 +1,16 @@
+{
+  "id": "/admin",
+  "name": "GreenReserve Admin",
+  "short_name": "GR Admin",
+  "description": "GreenReserve admin.",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "background_color": "#0C1C17",
+  "theme_color": "#0C1C17",
+  "icons": [
+    { "src": "/pwa/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

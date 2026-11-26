@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs';
 import { passwordChanged } from '@/lib/admin-password';
 import { tokenMatches, hashToken } from '@/lib/token-hash';
 import { securityEvent } from '@/lib/security-events';
+import { revokeAllOwnerSessions } from '@/lib/owner-session';
 
 export async function POST(req: NextRequest) {
   const { token, password } = ((await req.json().catch(() => null)) ?? {}) as { token?: unknown; password?: unknown };
@@ -63,6 +64,8 @@ export async function POST(req: NextRequest) {
       // password — the reset appeared to work and then didn't.
       failedLoginAttempts: 0,
       lockoutUntil: null,
+      // Audit 2026-11-24 M5: every employee cookie from before the new password stops working.
+      sessionVersion: { increment: 1 },
       // NOT `active: true` any more. This used to reactivate unconditionally, so
       // a deactivated admin holding a token minted before deactivation could let
       // themselves back in inside its 24h window. forgot-password already
@@ -75,6 +78,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Token already used or invalid' }, { status: 400 });
   }
 
+  // The owner's sessions live in OwnerSession rows: a new password ends every one of them too.
+  if (admin.role === 'owner') await revokeAllOwnerSessions(admin.id);
   await passwordChanged(req, admin, isReset ? 'reset with Forgot password' : 'set in place of a temporary password');
   // The owner's change is emailed by passwordChanged() (with device and place), so not twice.
   if (isReset && admin.role !== 'owner') {

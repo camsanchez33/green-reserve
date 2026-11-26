@@ -21,12 +21,21 @@ export type ProblemView = {
   history: { at: string; kind: string; who: string; text: string }[];
 };
 
-export async function listProblems(now = new Date()): Promise<{ open: ProblemView[]; snoozed: ProblemView[]; cleared: ProblemView[] }> {
-  const rows = await prisma.adminAlert.findMany({
+/**
+ * M10 / MONEY-VIEW-1 (Cam 2026-11-26): failed charges are visible only with the
+ * Money area. The hourly check's keys for a declined card (lib/admin-checks).
+ */
+export const FAILED_CHARGE_PROBLEM_PREFIXES = ['failed:', 'holddeclined:'] as const;
+export const isFailedChargeProblem = (key: string) => FAILED_CHARGE_PROBLEM_PREFIXES.some(p => key.startsWith(p));
+
+/** `money: false` leaves out the failed-charge problems. Required, so no caller forgets: it comes from the asker's areas. */
+export async function listProblems(now: Date, opts: { money: boolean }): Promise<{ open: ProblemView[]; snoozed: ProblemView[]; cleared: ProblemView[] }> {
+  const all = await prisma.adminAlert.findMany({
     where: { kind: 'urgent', OR: [{ resolvedAt: null }, { resolvedAt: { gte: new Date(now.getTime() - CLEARED_DAYS * 86_400_000) } }] },
     include: { events: { orderBy: { createdAt: 'desc' }, take: 30 } },
     orderBy: { firstSeenAt: 'asc' },
   });
+  const rows = opts.money ? all : all.filter(r => !isFailedChargeProblem(r.key));
   const ids = [...new Set(rows.map(r => r.courseId).filter((x): x is string => !!x))];
   const names = new Map((ids.length ? await prisma.course.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } }) : []).map(c => [c.id, c.name]));
   const views = rows.map((r): ProblemView => {
@@ -51,6 +60,8 @@ export async function listProblems(now = new Date()): Promise<{ open: ProblemVie
 
 /** Every problem not yet cleared — the rail's count, the same rows Overview's Needs attention lists
  *  (open and snoozed: snoozing is gone, so one snoozed before then still counts). */
-export async function openProblemCount(): Promise<{ open: number }> {
-  return { open: await prisma.adminAlert.count({ where: { kind: 'urgent', resolvedAt: null } }) };
+export async function openProblemCount(opts: { money: boolean }): Promise<{ open: number }> {
+  // M10 / MONEY-VIEW-1: without Money the declined-card problems are not listed, so they are not counted either.
+  const notMoney = opts.money ? {} : { NOT: FAILED_CHARGE_PROBLEM_PREFIXES.map(p => ({ key: { startsWith: p } })) };
+  return { open: await prisma.adminAlert.count({ where: { kind: 'urgent', resolvedAt: null, ...notMoney } }) };
 }

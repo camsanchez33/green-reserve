@@ -61,6 +61,9 @@ async function cleanup() {
   ok('B staff: none of course A\'s rows', !/Alpha/.test(sb.text), sb.text.match(/Alpha\w*/g));
   ok('B staff: its own range bucket (and A never sees it)', sb.text.includes('BravoBucket') && !sa.text.includes('BravoBucket'));
   ok('A staff: its own schedule, closure, events, tier and notes', ['AlphaTwilight', 'AlphaAeration', 'AlphaOpenScramble', 'AlphaPrivateOuting', 'AlphaGold', 'AlphaBarn', 'Do you rent clubs?'].every(w => sa.text.includes(w)));
+  const la = (await buildCourseBrief(a.id, 'staff-limited'))!;
+  ok('limited staff brief: no rates, closed days, dues or private events', !/AlphaTwilight|AlphaAeration|\$52|dues|AlphaPrivateOuting/.test(la.text), la.text.match(/AlphaTwilight|AlphaAeration|dues.*/g));
+  ok('limited staff brief: still staff notes, public events and policy', la.text.includes('AlphaBarn') && la.text.includes('AlphaOpenScramble') && la.text.includes('<policy_lines>'));
   ok('unknown course → null', (await buildCourseBrief('nope', 'staff')) === null && (await buildCourseBrief('', 'golfer')) === null);
 
   // golfer brief: only what golfers may hear
@@ -68,7 +71,8 @@ async function cleanup() {
   ok('golfer: no event closed to sign-up', !ga.text.includes('AlphaPrivateOuting') && ga.text.includes('AlphaOpenScramble'));
   ok('golfer: no member or resident rates', !ga.text.includes('$12.34'));
   ok('golfer: no dues', !ga.text.includes('$1200'));
-  ok('golfer: membership benefits stay', /AlphaGold: .*6 guest passes a year/.test(ga.text), ga.text.match(/AlphaGold.*$/m));
+  // GUEST-PASS-OFF (#529): no guest passes anywhere, so the benefit line is the booking window only.
+  ok('golfer: membership benefits stay, with no guest passes', /AlphaGold: .*book \d+ days out/.test(ga.text) && !/guest pass/i.test(ga.text), ga.text.match(/AlphaGold.*$/m));
   for (const t of [sa.text, ga.text]) ok('no organiser contact in any brief', !/Pat Organiser|pat@private|999-0000/.test(t));
   ok('no email address in any brief', ![sa.text, ga.text].some(t => /[\w.+-]+@[\w-]+\.\w+/.test(t)));
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveAdminSession, requireRole, SUPPORT_PLUS, areaGate } from '@/lib/admin-session';
 import { buildCourseFeed, FEED_GROUPS, type FeedGroup } from '@/lib/course-timeline';
+import { hasArea } from '@/lib/admin-areas';
 
 // BRAIN-1b: a course's whole story, newest first, a page at a time.
 // GET ?courseId=&before=<cursor from the last page>&groups=bookings,messages — support+, like the
@@ -15,7 +16,8 @@ export async function GET(req: NextRequest) {
   const courseId = sp.get('courseId');
   if (!courseId) return NextResponse.json({ error: 'Which course?' }, { status: 400 });
   const groups = (sp.get('groups') ?? '').split(',').filter((g): g is FeedGroup => FEED_GROUPS.some(x => x.key === g));
-  const feed = await buildCourseFeed(courseId, { cursor: sp.get('before'), groups });
+  // M10 / MONEY-VIEW-1: fees and declined charges only with the Money area.
+  const feed = await buildCourseFeed(courseId, { cursor: sp.get('before'), groups, money: hasArea(session, 'money') });
   if (!feed) return NextResponse.json({ error: 'Course not found.' }, { status: 404 });
   return NextResponse.json(feed);
 }

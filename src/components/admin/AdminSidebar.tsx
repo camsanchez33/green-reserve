@@ -7,6 +7,21 @@ import g from '@/app/admin/admin-glass.module.css';
 import CommandPalette from '@/components/admin/CommandPalette';
 import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
+import {
+  LayoutGrid, MapPin, Inbox, ClipboardCheck, Calendar, Users, DollarSign, Receipt, LineChart, BarChart2,
+  MessageSquare, Megaphone, Activity, Settings, UserCheck, Target, ClipboardList, Lock, FileText, LogOut,
+} from 'lucide-react';
+
+// UI-STYLE (Cam 2026-11-26): one monochrome line icon per menu item, the same set and size as the course dashboard's.
+const IC = 'w-4 h-4';
+const ICONS: Record<AdminNavKey, React.ReactNode> = {
+  overview: <LayoutGrid className={IC}/>, courses: <MapPin className={IC}/>, outreach: <Inbox className={IC}/>, inquiries: <ClipboardCheck className={IC}/>,
+  bookings: <Calendar className={IC}/>, golfers: <Users className={IC}/>, revenue: <DollarSign className={IC}/>, expenses: <Receipt className={IC}/>,
+  finance: <LineChart className={IC}/>, business: <BarChart2 className={IC}/>, support: <MessageSquare className={IC}/>, announcements: <Megaphone className={IC}/>,
+  system: <Activity className={IC}/>, profile: <Settings className={IC}/>, employees: <UserCheck className={IC}/>, goals: <Target className={IC}/>,
+  audit: <ClipboardList className={IC}/>, security: <Lock className={IC}/>, company: <FileText className={IC}/>,
+  problems: <Activity className={IC}/>, groups: <MapPin className={IC}/>, messages: <MessageSquare className={IC}/>,
+};
 
 export type AdminNavKey = 'overview' | 'bookings' | 'problems' | 'goals' | 'inquiries' | 'outreach' | 'courses' | 'groups' | 'employees' | 'announcements' | 'messages' | 'profile' | 'revenue' | 'expenses' | 'finance' | 'support' | 'business' | 'golfers' | 'system' | 'company' | 'audit' | 'security';
 
@@ -160,7 +175,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0 }: {
               // MP-8a: a real link — middle-click opens a tab and the nav works before hydration.
               <Link key={item.key} href={item.href} aria-current={active === item.key ? 'page' : undefined}
                 className={`${g.item} ${item.sub ? g.sub : ''} ${active === item.key ? g.on : ''}`}>
-                <span>{item.label}</span>{badges[item.key]}
+                <span aria-hidden="true" className={g.ic}>{ICONS[item.key]}</span><span className={g.lbl}>{item.label}</span>{badges[item.key]}
               </Link>
             ) : (
               <span key={item.label} className={g.soon} title="This page isn't built yet">{item.label}<em>Soon</em></span>
@@ -172,8 +187,8 @@ export default function AdminSidebar({ active, pendingInquiries = 0 }: {
       <div className={g.foot}>
         <div className={g.who}>{name || 'Signed in'} · {role}</div>
         <div className={g.footRow}>
-          <button type="button" onClick={signOut} disabled={signingOut} className={g.btn}>
-            {signingOut ? 'Signing out…' : 'Sign out'}
+          <button type="button" onClick={signOut} disabled={signingOut} className={`${g.btn} ${g.btnIc}`}>
+            <span aria-hidden="true" className={g.ic}><LogOut className={IC}/></span>{signingOut ? 'Signing out…' : 'Sign out'}
           </button>
         </div>
         {signOutError && (

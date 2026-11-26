@@ -18,12 +18,15 @@ import { useCourse } from './context';
 export function MoneyTab() {
   const { detail, txItems, refundNote, setRefundNote, txLoading, txError, txPage, setTxPage, txPages, txTotal, txFrom, setTxFrom, txTo, setTxTo, txSearch, setTxSearch, loadTransactions, openOperate } = useCourse();
   const m = detail.money;
+  // M10 / MONEY-VIEW-1: the server sends no money to a login without the Money area. The tab is hidden then and
+  // ?tab=money opens the Timeline (useCourseDetail selectTab), so this tab never renders without it.
+  if (!m) return null;
   const vs = m.feesSamePointLastMonth;
   return (
             <div className="max-w-5xl">
               <p className="text-[14px] text-ink mb-5">
                 {fmtMoney(m.feesThisMonth)} in GreenReserve fees this month from {m.roundsThisMonth} paid round{m.roundsThisMonth === 1 ? '' : 's'}
-                <span className="text-ink-muted"> · {fmtMoney(vs)} at the same point last month{detail.relationship ? ` · ${fmtMoney(detail.relationship.earnedCents / 100)} from ${detail.relationship.paidRounds} paid round${detail.relationship.paidRounds === 1 ? '' : 's'} all time` : ''}</span>.
+                <span className="text-ink-muted"> · {fmtMoney(vs)} at the same point last month{detail.relationship && detail.relationship.earnedCents !== null ? ` · ${fmtMoney(detail.relationship.earnedCents / 100)} from ${detail.relationship.paidRounds ?? 0} paid round${detail.relationship.paidRounds === 1 ? '' : 's'} all time` : ''}</span>.
                 {' '}{m.counterThisMonth.rounds === 0
                   ? 'No online booking was paid in cash this month.'
                   : <>{m.counterThisMonth.rounds} online booking{m.counterThisMonth.rounds === 1 ? ' was' : 's were'} paid in cash this month, so {fmtMoney(m.counterThisMonth.fees)} in fees wasn’t collected <span className="text-ink-muted">({m.counterAllTime.rounds} round{m.counterAllTime.rounds === 1 ? '' : 's'}, {fmtMoney(m.counterAllTime.fees)} all time)</span>.</>}
