@@ -13,6 +13,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { golferLookVars, type CourseLook } from '@/components/golfer/look';
 import { LookBackground } from '@/components/golfer/useLookBackground';
 import { CourseFooter } from '@/components/golfer/CourseFrame';
+import { GolferAsk } from '@/components/golfer/GolferAsk';
 import { loginOffered } from './login/login-helpers';
 import AlertSheet, { alertPartOf, type AlertSheetOpen } from '@/components/golfer/AlertSheet';
 import g from '@/components/golfer/golfer.module.css';
@@ -191,6 +192,9 @@ export default function CourseDetailPage({
   const [cartFilter, setCartFilter] = useState<'any' | 'walk' | 'ride'>('any');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [moreInfo, setMoreInfo] = useState(false);
+  // UI style overhaul (Cam 2026-11-24/26): the page's two tabs, "Tee times" (the default) and "Course information".
+  const [tab, setTab] = useState<'times' | 'info'>('times');
+  const tabRefs = useRef<Record<'times' | 'info', HTMLButtonElement | null>>({ times: null, info: null });
   const [logoutError, setLogoutError] = useState(false);
   const [liveNote, setLiveNote] = useState('');
   // Focus goes back to whatever opened the filters sheet or the alert.
@@ -691,6 +695,9 @@ export default function CourseDetailPage({
 
   function pickDay(ds: string) {
     setSelectedDate(ds);
+    // The calendar shows the picked day's month (a day from the seven-day row or "See <day>" can be in the next one).
+    const d = new Date(ds + 'T12:00:00');
+    setCalMonth(new Date(d.getFullYear(), d.getMonth(), 1));
   }
   function toggleTod(k: TimeOfDay) {
     if (tods.length === 1 && tods[0] === k) { setLiveNote('Keep at least one time of day.'); return; }
@@ -706,56 +713,122 @@ export default function CourseDetailPage({
   const telHref = course.phone ? `tel:${course.phone.replace(/[^\d+]/g, '')}` : '';
   const noteLine = (course.dress_code ?? []).join('. ');
   const hasMore = !!course.walking_note || (course.facilities?.length ?? 0) > 0;
+  // Only a bookable course has the two tabs; a member-only club has no tee times to show.
+  const hasTabs = course.type !== 'member';
+  function tabKey(e: React.KeyboardEvent<HTMLButtonElement>) {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Home' && e.key !== 'End') return;
+    e.preventDefault();
+    const next = e.key === 'Home' ? 'times' : e.key === 'End' ? 'info' : tab === 'times' ? 'info' : 'times';
+    setTab(next);
+    tabRefs.current[next]?.focus();
+  }
+  // Today's notice (only while one is posted) and today's conditions: on both tabs, since they matter when booking.
+  const notices = (<>
+    {course.conditions && (
+      <p className={g.alert}><StatusDot status="warn" /><span><b>Course notice:</b> {course.conditions}</span></p>
+    )}
+    {/* DASH-D (Cam 2026-11-01): today's course conditions, set on the dashboard's Home — a plain line, not an alert. */}
+    {(course.conditions_today?.length ?? 0) > 0 && (
+      <p className={g.cnote} style={{ margin: '0 0 6px' }}><b>Today</b> · {course.conditions_today!.join(' · ')}</p>
+    )}
+  </>);
+
+  /** Why a day can't be picked ('' when it can), whether only members can book it, and its spoken name. */
+  function dayInfo(d: Date) {
+    const ds = formatDate(d);
+    const opens = new Date(d); opens.setDate(opens.getDate() - viewerWindowDays);
+    const why = ds < todayStr ? 'Past'
+      : closedOn.get(ds) ? closedOn.get(ds)!
+      : ds > lastBookableStr ? `Opens ${opens.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+      : '';
+    // Logged in, the days the longer window opens are outlined and read "members only" (item 3).
+    const membersOnly = !why && !!memberSession && ds > lastPublicStr;
+    const label = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) + (why ? `, ${why}` : membersOnly ? ', members only' : '') + (ds === todayStr ? ', today' : '');
+    return { why, membersOnly, label };
+  }
+
+  // The month calendar: in the Filters sidebar on a laptop, and on the Tee times tab on a phone (Cam: "should have
+  // calendar"). idp keeps the two copies' ids apart; only one is ever displayed.
+  const calendar = (idp: string) => (
+    <div className={g.field}>
+      <span className={g.lab} id={`${idp}-cal-label`}>Date</span>
+      <div className={g.cal} role="group" aria-labelledby={`${idp}-cal-label`}>
+        <div className={g.calh}>
+          <button type="button" aria-label="Previous month" disabled={!canPrevMonth} onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1))}>‹</button>
+          <span>{monthLabel(calMonth)}</span>
+          <button type="button" aria-label="Next month" disabled={!canNextMonth} onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1))}>›</button>
+        </div>
+        <div className={g.calg}>
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <span key={i} aria-hidden="true">{d}</span>)}
+          {buildMonthGrid(calMonth).map((d, i) => {
+            if (!d) return <span key={`e${i}`} />;
+            const ds = formatDate(d);
+            const { why, membersOnly, label } = dayInfo(d);
+            return (
+              <button key={ds} type="button" aria-pressed={ds === selectedDate} aria-disabled={why ? true : undefined}
+                aria-label={label} title={why || (membersOnly ? 'Members only' : undefined)}
+                style={membersOnly && ds !== selectedDate ? { boxShadow: 'inset 0 0 0 1.5px var(--g-acc)' } : undefined}
+                onClick={why ? undefined : () => pickDay(ds)}>
+                {d.getDate()}
+              </button>
+            );
+          })}
+        </div>
+        <div className={g.calnote}>
+          <p><b>How far ahead you can book</b></p>
+          <ul>
+            <li>Everyone: {publicDays} days</li>
+            {/* No resident line until the server grants the resident window (Build 2026-11-19); it comes back then. */}
+            {course.has_member_pricing && memberWindowDays !== publicDays ? <li>Members: {memberWindowDays} days</li> : null}
+          </ul>
+          {memberSession
+            ? <p>Logged in{memberSession.tier?.name ? ` as ${memberSession.tier.name}` : ''} · showing {viewerWindowDays} days.{viewerWindowDays > publicDays ? ' Outlined days are members only.' : ''}</p>
+            : membersBookEarlier && !previewMode
+              ? <p>Showing {viewerWindowDays} days.{loginOn ? <> <Link className={g.lnk} href={loginHref}>Log in</Link> to see your longer window.</> : null}</p>
+              : null}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Phone Filters: the next seven days beside the picked date (from today, or around a later picked day).
+  const stripDays = (() => {
+    const out: Date[] = [];
+    const sel = new Date(selectedDate + 'T12:00:00');
+    const first = new Date(todayStr + 'T12:00:00');
+    const back = new Date(sel); back.setDate(back.getDate() - 3);
+    const begin = sel.getTime() - first.getTime() > 6 * 86400_000 ? back : first;
+    for (let i = 0; i < 7; i++) { const d = new Date(begin); d.setDate(begin.getDate() + i); out.push(d); }
+    return out;
+  })();
+  const dayStrip = (
+    <div className={`${g.field} ${g.phoneOnly}`}>
+      <span className={g.lab} id="strip-label">Date</span>
+      <div className={g.dayrow}>
+        <b aria-hidden="true">{shortDay(selectedDate)}</b>
+        <div className={g.strip} role="group" aria-labelledby="strip-label">
+          {stripDays.map(d => {
+            const ds = formatDate(d);
+            const { why, membersOnly, label } = dayInfo(d);
+            return (
+              <button key={ds} type="button" aria-pressed={ds === selectedDate} aria-disabled={why ? true : undefined}
+                aria-label={label} title={why || (membersOnly ? 'Members only' : undefined)}
+                style={membersOnly && ds !== selectedDate ? { boxShadow: 'inset 0 0 0 1.5px var(--g-acc)' } : undefined}
+                onClick={why ? undefined : () => pickDay(ds)}>
+                {d.toLocaleDateString('en-US', { weekday: 'short' })}<b>{d.getDate()}</b>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 
   // The filters: the sidebar on a laptop, a sheet from the bottom on a phone.
   const filters = (
     <>
-      <div className={g.field}>
-        <span className={g.lab} id="cal-label">Date</span>
-        <div className={g.cal} role="group" aria-labelledby="cal-label">
-          <div className={g.calh}>
-            <button type="button" aria-label="Previous month" disabled={!canPrevMonth} onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1))}>‹</button>
-            <span>{monthLabel(calMonth)}</span>
-            <button type="button" aria-label="Next month" disabled={!canNextMonth} onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1))}>›</button>
-          </div>
-          <div className={g.calg}>
-            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <span key={i} aria-hidden="true">{d}</span>)}
-            {buildMonthGrid(calMonth).map((d, i) => {
-              if (!d) return <span key={`e${i}`} />;
-              const ds = formatDate(d);
-              const opens = new Date(d); opens.setDate(opens.getDate() - viewerWindowDays);
-              const why = ds < todayStr ? 'Past'
-                : closedOn.get(ds) ? closedOn.get(ds)!
-                : ds > lastBookableStr ? `Opens ${opens.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-                : '';
-              // Logged in, the days the longer window opens are outlined and read "members only" (item 3).
-              const membersOnly = !why && !!memberSession && ds > lastPublicStr;
-              const label = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) + (why ? `, ${why}` : membersOnly ? ', members only' : '') + (ds === todayStr ? ', today' : '');
-              return (
-                <button key={ds} type="button" aria-pressed={ds === selectedDate} aria-disabled={why ? true : undefined}
-                  aria-label={label} title={why || (membersOnly ? 'Members only' : undefined)}
-                  style={membersOnly && ds !== selectedDate ? { boxShadow: 'inset 0 0 0 1.5px var(--g-acc)' } : undefined}
-                  onClick={why ? undefined : () => pickDay(ds)}>
-                  {d.getDate()}
-                </button>
-              );
-            })}
-          </div>
-          <div className={g.calnote}>
-            <p><b>How far ahead you can book</b></p>
-            <ul>
-              <li>Everyone: {publicDays} days</li>
-              {/* No resident line until the server grants the resident window (Build 2026-11-19); it comes back then. */}
-              {course.has_member_pricing && memberWindowDays !== publicDays ? <li>Members: {memberWindowDays} days</li> : null}
-            </ul>
-            {memberSession
-              ? <p>Logged in{memberSession.tier?.name ? ` as ${memberSession.tier.name}` : ''} · showing {viewerWindowDays} days.{viewerWindowDays > publicDays ? ' Outlined days are members only.' : ''}</p>
-              : membersBookEarlier && !previewMode
-                ? <p>Showing {viewerWindowDays} days.{loginOn ? <> <Link className={g.lnk} href={loginHref}>Log in</Link> to see your longer window.</> : null}</p>
-                : null}
-          </div>
-        </div>
-      </div>
+      <div className={g.deskOnly}>{calendar('side')}</div>
+      {dayStrip}
 
       <div className={g.field}>
         <span className={g.lab} id="pl-label">Players</span>
@@ -1030,16 +1103,27 @@ export default function CourseDetailPage({
           )}
         </header>
 
+        {/* The two tabs (Cam 2026-11-24): Tee times (the default) and Course information, centred under the header. */}
+        {hasTabs && (
+          <div className={g.ctabsWrap}>
+            <div className={g.ctabs} role="tablist" aria-label="Course page">
+              <span className={`${g.cthumb} ${tab === 'info' ? g.info : ''}`} aria-hidden="true" />
+              {(['times', 'info'] as const).map(k => (
+                <button key={k} type="button" role="tab" id={`tab-${k}`} aria-controls={`panel-${k}`} aria-selected={tab === k}
+                  tabIndex={tab === k ? 0 : -1} ref={el => { tabRefs.current[k] = el; }}
+                  onClick={() => setTab(k)} onKeyDown={tabKey}>
+                  {k === 'times' ? 'Tee times' : 'Course information'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Course information: today's notice (only while one is posted), directions, website, phone and notes. */}
-        {course.type !== 'member' && (
+        {hasTabs && (
+          <div className={g.ipanel} role="tabpanel" id="panel-info" aria-labelledby="tab-info" hidden={tab !== 'info'}>
           <section className={g.cinfo} aria-label="Course information">
-            {course.conditions && (
-              <p className={g.alert}><StatusDot status="warn" /><span><b>Course notice:</b> {course.conditions}</span></p>
-            )}
-            {/* DASH-D (Cam 2026-11-01): today's course conditions, set on the dashboard's Home — a plain line, not an alert. */}
-            {(course.conditions_today?.length ?? 0) > 0 && (
-              <p className={g.cnote} style={{ margin: '0 0 6px' }}><b>Today</b> · {course.conditions_today!.join(' · ')}</p>
-            )}
+            {notices}
             {(directionsUrl || safeSite || telHref) && (
               <div className={g.crow}>
                 {directionsUrl && (
@@ -1078,10 +1162,12 @@ export default function CourseDetailPage({
               </div>
             )}
           </section>
+          </div>
         )}
 
         {/* The site layout's main element is the page's one main landmark; this is its content. */}
-        <div className={g.wrap}>
+        <div className={g.wrap} {...(hasTabs ? { role: 'tabpanel', id: 'panel-times', 'aria-labelledby': 'tab-times', hidden: tab !== 'times' } : {})}>
+          {hasTabs && (course.conditions || (course.conditions_today?.length ?? 0) > 0) && <div className={`${g.cinfo} ${g.notice}`}>{notices}</div>}
           {course.type === 'member' ? (
             <div className={g.empty}>
               <h2>Member-only club</h2>
@@ -1113,6 +1199,7 @@ export default function CourseDetailPage({
               </aside>
 
               <section id="times" className="min-w-0 min-h-[26.5rem]" aria-label="Tee times">
+                <div className={g.calPhone}>{calendar('tab')}</div>
                 <div className={g.mbar}>
                   <span><b>{shortDay(selectedDate)}</b> · {players} {players === 1 ? 'player' : 'players'}</span>
                   <button ref={filterBtnRef} className={`${g.chip} ${g.fill} ${g.filterbtn}`} type="button" aria-expanded={filtersOpen} aria-controls="filters" onClick={() => setFiltersOpen(true)}>Filters</button>
@@ -1124,6 +1211,8 @@ export default function CourseDetailPage({
         </div>
       </div>
       <CourseFooter course={course} accent={course.brand_color || '#173B2A'} />
+      {/* ASSIST-6: golfer questions, only when the course turned them on. */}
+      <GolferAsk slug={slug} />
 
       {/* Item 7: tee time alerts, over the booking page; focus returns to whatever opened it. */}
       {alertSheet && (
