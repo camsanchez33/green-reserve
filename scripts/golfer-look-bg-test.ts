@@ -13,9 +13,9 @@ const check = (label: string, ok: boolean, detail?: unknown) => {
 
 // The background
 const darkBg = (golferLookVars({ booking_look: { look: 'dark', accent: 'green' } }) as Record<string, string>)['--g-bg'];
-check('Dark: the page background is the look\'s own --g-bg', lookPageBg({ booking_look: { look: 'dark', accent: 'green' } }) === darkBg && darkBg === '#111211');
+check('Dark: the page background is the look\'s own --g-bg', lookPageBg({ booking_look: { look: 'dark', accent: 'green' } }) === darkBg && darkBg === '#141414');
 check('Light, no look, or a Dark look without a preset accent: nothing set', lookPageBg({ booking_look: { look: 'light', accent: 'blue' } }) === null && lookPageBg({ booking_look: null, brand_color: '#7A1F2B' }) === null && lookPageBg({ booking_look: { look: 'dark', accent: null as never } }) === null && lookPageBg({}) === null);
-check('screen only, so a Dark receipt still prints on white', lookBgCss('#111211').startsWith('@media screen {') && lookBgCss('#111211').includes('html { background-color: #111211; }') && lookBgCss('#111211').includes('html > body { background-color: #111211; }'));
+check('screen only, so a Dark receipt still prints on white', lookBgCss('#141414').startsWith('@media screen {') && lookBgCss('#141414').includes('html { background-color: #141414; }') && lookBgCss('#141414').includes('html > body { background-color: #141414; }'));
 check('never under the dashboard, admin or owner pages', ['/dashboard', '/dashboard/tee-sheet', '/admin', '/admin/finance', '/cam', '/cam/x'].every(p => LOOK_BG_NEVER.test(p)) && ['/manage/a', '/book', '/courses/x', '/receipt/a', '/checkin/a', '/administer', '/dashboards'].every(p => !LOOK_BG_NEVER.test(p)));
 
 const hook = readFileSync('src/components/golfer/useLookBackground.ts', 'utf8');

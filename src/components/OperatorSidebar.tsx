@@ -15,6 +15,7 @@ import { recordTabVisit } from '@/lib/dashboard-visits';
 import { Toaster, toast } from '@/components/dashboard/Toast';
 import OperatorSearch from '@/components/dashboard/OperatorSearch';
 import ThemeSwitch from '@/components/dashboard/ThemeSwitch';
+import InstallApp from '@/components/pwa/InstallApp';
 
 export type OperatorNavKey =
   | 'home' | 'teesheet' | 'analytics' | 'money' | 'events'
@@ -192,23 +193,6 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     <BirdieWidget />
     <AgreementNotice />
     <Toaster />
-    {/* GLASS-2 (Cam 2026-11-12): what the glass frosts — blurred ribbons, fixed behind every rail page (globals.css .op-waves). */}
-    <svg className="op-waves" viewBox="0 0 1400 1100" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
-      <defs>
-        <filter id="op-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="38" /></filter>
-        <filter id="op-softer" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="16" /></filter>
-      </defs>
-      <g filter="url(#op-soft)">
-        <path className="w1" d="M-120 260 C 240 60, 520 420, 820 230 S 1300 40, 1560 300" />
-        <path className="w4" d="M-200 980 C 200 760, 460 1040, 760 820 S 1220 640, 1600 900" />
-        <path className="w2" d="M980 -80 C 860 220, 1180 380, 1040 640 S 1180 980, 1320 1180" />
-      </g>
-      <g filter="url(#op-softer)">
-        <path className="w3" d="M-60 520 C 300 380, 520 700, 900 520 S 1300 360, 1500 560" />
-        <path className="w3" d="M200 -60 C 300 200, 120 420, 380 640" />
-      </g>
-    </svg>
-
     {/* SD-2: below md the 224px rail is gone. A slim strip carries identity,
         the course switcher and sign-out; the tabs live in a bottom bar. */}
     <header className="md:hidden bg-white border-b border-line px-4 py-2.5 flex items-center gap-3">
@@ -279,6 +263,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
             )}
           </button>
         ))}
+        {/* PWA install (Cam 2026-11-24): beside the look switch; shown only when this browser can install. */}
+        <InstallApp buttonClassName="w-full text-left px-5 py-3.5 text-[14px] border-b border-line-soft text-ink" textClassName="px-5 py-3 text-[13px] text-ink-muted border-b border-line-soft" />
         <div className="px-4 py-3"><ThemeSwitch /></div>
       </div>
     )}
@@ -353,6 +339,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
           <a href={'/courses/' + slug} target="_blank" rel="noopener" className="px-2.5 py-2 rounded-md text-ink-soft hover:bg-white/60 hover:text-ink transition-colors">Your booking page ↗</a>
         )}
         <button onClick={logout} className="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-white/60 hover:text-bad transition-colors">Sign out</button>
+        <InstallApp buttonClassName="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-white/60 hover:text-ink transition-colors" textClassName="px-2.5 py-2 text-[12px] leading-snug text-ink-muted" />
         <div className="px-1 pt-2"><ThemeSwitch /></div>
         {/* LOGO-2 (Cam 2026-10-20): "Powered by" and the GreenReserve lockup stay with the course's name. */}
         {/* CHARCOAL-1 (Cam 2026-11-12, the approved Home): "Powered by GreenReserve", GreenReserve in our green. */}

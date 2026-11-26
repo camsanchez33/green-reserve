@@ -4,6 +4,13 @@ import { sendSmsOtp } from '@/lib/twilio';
 import bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
 import type { CourseOperator } from '@prisma/client';
+import { mayIssueSecondFactor } from '@/lib/login-guard';
+
+/** Audit 2026-11-24 M8: an account had as many new codes (each with 5 tries) as it asked for. */
+export class TooManyCodesError extends Error {
+  constructor() { super('Too many sign-in codes for this account in the last hour'); this.name = 'TooManyCodesError'; }
+}
+export const TOO_MANY_CODES_MESSAGE = 'Too many sign-in codes were sent to this account in the last hour. Try again later.';
 
 // The stored code carries the channel it actually went out on ('email:<hash>' /
 // 'sms:<hash>'), so the verify step knows whether a right code also proves the
@@ -23,6 +30,8 @@ export async function issueTwoFactorCode(operator: CourseOperator, methodOverrid
   const requested = methodOverride || operator.twoFactorMethod;
   const method = requested === 'sms' && operator.phone ? 'sms' : 'email';
   console.log('[2fa] issueTwoFactorCode — operatorId:', operator.id, '| requested:', requested, '| resolved:', method, '| hasPhone:', !!operator.phone);
+
+  if (!(await mayIssueSecondFactor('operator', operator.id))) throw new TooManyCodesError();
 
   const code = randomInt(100000, 1000000).toString();
   const hashedCode = await bcrypt.hash(code, 10);

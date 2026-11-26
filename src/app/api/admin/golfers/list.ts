@@ -71,6 +71,14 @@ export function golferLines(accounts: ListAccount[], bookings: ListBooking[], to
   return lines.sort((a, z) => (z.lastPlayed ?? '').localeCompare(a.lastPlayed ?? '') || z.latest.localeCompare(a.latest) || a.name.localeCompare(z.name));
 }
 
+/**
+ * M10 / MONEY-VIEW-1 (Cam 2026-11-26): failed charges are the Money area's. Without it a line carries no
+ * failed-charge count, and its dot is what it would be without one (never red for a declined card).
+ */
+export function withoutFailedCharges(l: GolferLine): GolferLine {
+  return { ...l, failedCharges: 0, tone: l.noShows || l.lateCancels ? 'warn' : l.id ? 'ok' : 'neutral' };
+}
+
 export function matchesFilter(l: GolferLine, f: ListFilter): boolean {
   if (f === 'account') return l.id !== null;
   if (f === 'guest') return l.id === null;

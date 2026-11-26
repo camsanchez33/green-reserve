@@ -2,13 +2,15 @@
 // controls as much as safety controls: the API key costs money.
 import { prisma } from '../prisma';
 import { rateLimit } from '../rate-limit';
+import { platformAllows, PLATFORM_PER_DAY as PERSONA_PER_DAY } from '../assistant/caps';
 
+/** The cheap model for small one-shot drafts (lib/notice-draft). The chat assistant runs on lib/assistant/prompt's ASSISTANT_MODEL. */
 export const BIRDIE_MODEL = 'claude-haiku-4-5';
-export const MAX_REPLY_TOKENS = 600;
 export const MAX_USER_CHARS = 1500;
 export const MAX_HISTORY_TURNS = 12;      // user+assistant messages kept from the client
 export const PER_SESSION_PER_HOUR = 20;
-export const PLATFORM_PER_DAY = 600;      // every persona, every course — the daily platform cap
+/** The operator persona's platform budget per day (lib/assistant/caps holds every persona's). */
+export const PLATFORM_PER_DAY = PERSONA_PER_DAY.operator;
 
 export function birdieEnabled(): boolean {
   return process.env.BIRDIE_ENABLED === 'true' && !!process.env.ANTHROPIC_API_KEY;
@@ -32,12 +34,12 @@ export function sanitizeHistory(raw: unknown): BirdieTurn[] {
     if (last && last.role === r) last.content = `${last.content}\n${text}`.slice(0, MAX_USER_CHARS * 2);
     else turns.push({ role: r, content: text });
   }
-  while (turns.length && turns[0].role !== 'user') turns.shift();
-  while (turns.length && turns[turns.length - 1].role !== 'user') turns.pop();
-  return turns.slice(-MAX_HISTORY_TURNS);
+  // Slice first, then trim, so a long conversation never starts on the assistant's turn (ASSIST-4 review).
+  const kept = turns.slice(-MAX_HISTORY_TURNS);
+  while (kept.length && kept[0].role !== 'user') kept.shift();
+  while (kept.length && kept[kept.length - 1].role !== 'user') kept.pop();
+  return kept;
 }
-
-const dayKey = () => new Date().toISOString().slice(0, 10);
 
 /**
  * Both caps in one place. Returns the reason to refuse, or null.
@@ -48,26 +50,16 @@ export async function checkCaps(courseKey: string): Promise<string | null> {
   if (!(await rateLimit(`birdie:course:${courseKey}`, PER_SESSION_PER_HOUR, 3600))) {
     return 'The assistant has answered a lot in the last hour — give it a little while, or write to us on Support.';
   }
-  if (!(await rateLimit(`birdie:day:${dayKey()}`, PLATFORM_PER_DAY, 86_400))) {
+  if (!(await platformAllows('operator'))) {
     return "The assistant is resting for today. Everything it can help with is a page away in the sidebar, or write to us on Support.";
   }
   return null;
 }
 
-/** Today's platform-wide message count, for /admin/system. Reads the same counter the cap uses. */
-export async function birdieUsageToday(): Promise<number> {
+/** Today's question count for one persona's platform cap, for /admin/system. Reads the same counter the cap uses. */
+export async function birdieUsageToday(persona: keyof typeof PERSONA_PER_DAY = 'operator'): Promise<number> {
   try {
-    const rows = await prisma.$queryRaw<{ count: number }[]>`SELECT "count" FROM "RateLimit" WHERE "key" = ${`birdie:day:${dayKey()}`}`;
-    return Number(rows[0]?.count ?? 0);
+    const row = await prisma.rateLimit.findUnique({ where: { key: `birdie:platform:${persona}:${new Date().toISOString().slice(0, 10)}` }, select: { count: true } });
+    return Number(row?.count ?? 0);
   } catch { return 0; }
-}
-
-/** Conversations are ours to review: one structured line per reply. */
-export function logConversation(entry: {
-  persona: string; courseId: string; sessionKey: string; question: string; reply: string;
-  inputTokens?: number; outputTokens?: number; cacheRead?: number; stopReason?: string | null; ms: number;
-}) {
-  // The spec logs the conversation, minus nothing: a question is already capped
-  // at MAX_USER_CHARS and a reply at MAX_REPLY_TOKENS, so neither is unbounded.
-  console.log(JSON.stringify({ ev: 'birdie.reply', ...entry }));
 }

@@ -269,7 +269,7 @@ export default function CourseDetailPage() {
             const setupDone = courseSetupChecks(detail).every(x => x.done);
             return (
               <div role="tablist" className="flex items-center gap-6 mt-5 -mb-5 overflow-x-auto">
-                {COURSE_TABS.map(t => (
+                {COURSE_TABS.filter(t => t.key !== 'money' || detail.money).map(t => (
                   <button
                     key={t.key} role="tab" aria-selected={tab === t.key}
                     onClick={() => selectTab(t.key)}

@@ -15,6 +15,7 @@ import { computeStripeGoLiveCheck } from '@/lib/go-live-preflight';
 import { buildRelationshipFeed } from '@/lib/course-feed';
 import { courseWeeks, courseMoney } from '@/lib/admin-course-page';
 import { needReason, reasonOf, auditAdmin, changedFields } from '@/lib/admin-audit';
+import { hasArea } from '@/lib/admin-areas';
 
 export async function GET(req: NextRequest) {
   const session = await resolveAdminSession();
@@ -25,6 +26,10 @@ export async function GET(req: NextRequest) {
   if (!requireRole(session, SUPPORT_PLUS)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   const courseId = req.nextUrl.searchParams.get('courseId');
   if (!courseId) return NextResponse.json({ error: 'Missing courseId' }, { status: 400 });
+  // M10 / MONEY-VIEW-1 (Cam 2026-11-26): GreenReserve's fees and failed charges
+  // only for a login with the Money area. Without it they go out as null
+  // (never read), and the page leaves the Money tab out.
+  const seesMoney = hasArea(session, 'money');
 
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -71,7 +76,7 @@ export async function GET(req: NextRequest) {
     // MP-5e part 3: what this course has earned GreenReserve, all time — the
     // service fee on rounds actually paid through us (same PAID rule as
     // /admin/revenue, so the two never disagree).
-    prisma.booking.aggregate({ where: { courseId, paymentStatus: 'paid', roundPaymentIntentId: { not: '' } }, _sum: { accessFeeTotal: true }, _count: { id: true } }),
+    seesMoney ? prisma.booking.aggregate({ where: { courseId, paymentStatus: 'paid', roundPaymentIntentId: { not: '' } }, _sum: { accessFeeTotal: true }, _count: { id: true } }) : null,
     prisma.message.findMany({
       where: { thread: { courseId } },
       orderBy: { createdAt: 'desc' }, take: 25,
@@ -80,7 +85,7 @@ export async function GET(req: NextRequest) {
   ]);
 
   // AW-7: the Bookings and Money tabs.
-  const [weeks, money] = await Promise.all([courseWeeks(courseId, course.timezone), courseMoney(courseId)]);
+  const [weeks, money] = await Promise.all([courseWeeks(courseId, course.timezone), seesMoney ? courseMoney(courseId) : null]);
   // "Staff seen", as on Today: staff use of the dashboard, else the owner's last sign-in.
   const ownerLogin = course.operator?.lastLoginAt ?? null;
   const staffSeenAt = course.staffLastSeenAt && (!ownerLogin || course.staffLastSeenAt > ownerLogin) ? course.staffLastSeenAt : ownerLogin;
@@ -154,9 +159,10 @@ export async function GET(req: NextRequest) {
     }),
     recentBookings,
     totalBookings,
+    // gross includes our fee (gross less green fees gives it away), so both go without Money.
     revenue30d: {
-      gross: (revenue._sum.totalAmount ?? 0) / 100,
-      platform: (revenue._sum.accessFeeTotal ?? 0) / 100,
+      gross: seesMoney ? (revenue._sum.totalAmount ?? 0) / 100 : null,
+      platform: seesMoney ? (revenue._sum.accessFeeTotal ?? 0) / 100 : null,
       greenFees: (revenue._sum.greenFeeTotal ?? 0) / 100,
     },
     bookings30d,
@@ -185,8 +191,8 @@ export async function GET(req: NextRequest) {
     relationship: {
       feed: buildRelationshipFeed({ timeline, messages: recentMessages, statusEvents: linkedInquiry?.events ?? [], calls }),
       operatorLastLoginAt: course.operator?.lastLoginAt?.toISOString() ?? null,
-      earnedCents: earnedAgg._sum.accessFeeTotal ?? 0,
-      paidRounds: earnedAgg._count.id,
+      earnedCents: earnedAgg ? earnedAgg._sum.accessFeeTotal ?? 0 : null,
+      paidRounds: earnedAgg ? earnedAgg._count.id : null,
       firstWentLiveAt: course.firstWentLiveAt?.toISOString() ?? null,
     },
     // A-05 items 4/5: course-timeline events (settings edits, reminders,
