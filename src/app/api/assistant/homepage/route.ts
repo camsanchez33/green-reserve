@@ -3,7 +3,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { clientIp } from '@/lib/rate-limit';
 import { platformAllows, publicIpAllows } from '@/lib/assistant/caps';
 import { assistantClient, systemBlocks, logAssistant, personaOff, ASSISTANT_MODEL, ASSISTANT_EFFORT, FALLBACK_BETA } from '@/lib/assistant/prompt';
-import { HOMEPAGE_PERSONA, HOMEPAGE_MAX_TOKENS, HOMEPAGE_UNSURE, sanitizeHomepageHistory } from '@/lib/assistant/homepage';
+import { HOMEPAGE_PERSONA, HOMEPAGE_MAX_TOKENS, HOMEPAGE_UNSURE, sanitizeHomepageHistory, homepageReply } from '@/lib/assistant/homepage';
+import { shopFeeVersionLive } from '@/lib/shop-fee';
 
 // ASSIST-5 (Cam 2026-11-24): "Ask about GreenReserve" on greenreserve.app. Public, no sign-in, no tools, no account or
 // course data: the whole prompt is the frozen persona plus the approved site copy, so it caches as one block.
@@ -49,7 +50,8 @@ export async function POST(req: NextRequest) {
       betas: [FALLBACK_BETA], fallbacks: 'default',
     }, { timeout: 12_000, maxRetries: 0 });
   } catch (err) {
-    console.error('[assistant] homepage call failed:', err instanceof Anthropic.APIError ? `${err.status} ${err.name}` : err instanceof Error ? err.name : 'error');
+    const kind = err instanceof Anthropic.APIConnectionTimeoutError ? 'timeout' : err instanceof Anthropic.APIConnectionError ? 'connection' : err instanceof Anthropic.APIError ? `api ${err.status ?? ''}` : 'error';
+    console.error('[assistant] homepage call failed:', kind);
     return NextResponse.json({ reply: HOMEPAGE_UNSURE });
   }
   const text = msg.content.filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === 'text').map(b => b.text).join('').trim();
@@ -59,5 +61,6 @@ export async function POST(req: NextRequest) {
     stopReason: msg.stop_reason, ms: Date.now() - started,
   });
   if (msg.stop_reason !== 'end_turn' || !text) return NextResponse.json({ reply: HOMEPAGE_UNSURE });
-  return NextResponse.json({ reply: text.slice(0, 1500) });
+  // Fee wording is written by the server, never the model; anything off-copy about money gets Book a call.
+  return NextResponse.json({ reply: homepageReply(text, await shopFeeVersionLive().catch(() => false)) });
 }

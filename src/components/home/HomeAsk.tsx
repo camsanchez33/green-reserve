@@ -77,7 +77,7 @@ export default function HomeAsk() {
           </form>
           <div className="flex items-center gap-3 px-4 pb-3 text-[12px] text-ink-muted">
             <span className="flex-1">Answers about GreenReserve only. For a tee time, contact your course.</span>
-            <a href="#demo" onClick={() => setOpen(false)} className="shrink-0 font-semibold text-pine underline underline-offset-2">Book a call</a>
+            <a href="#demo" onClick={() => setOpen(false)} className="shrink-0 font-semibold !text-pine underline underline-offset-2">Book a call</a>
           </div>
         </div>
       )}

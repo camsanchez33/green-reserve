@@ -79,3 +79,18 @@ export const FEATURE_PAGES: FeaturePage[] = [
 ];
 
 export const featurePage = (slug: string) => FEATURE_PAGES.find(p => p.slug === slug);
+
+/**
+ * The Payments page's cost list (legal/LQ-2_FEE_COPY.md sentences only), in one place: the page renders it and the
+ * homepage bot answers fee questions with exactly these lines (ASSIST-5), so the two can never differ. The shop line
+ * shows only once Agreement v2026-12 is in effect (lib/shop-fee shopFeeVersionLive).
+ */
+export function paymentsCostLines(shopFee: boolean): string[] {
+  return [
+    'Golfers pay $1.50 per player on each online booking, added to your price.',
+    'Membership dues collected through GreenReserve carry 1% of the dues (and any initiation fee), added to what the member pays.',
+    ...(shopFee ? ['Pro-shop items paid by card carry a GreenReserve service fee of 1% of the items; cash carries none.'] : []),
+    'Your green fee and our fee are collected in one card payment to your own Stripe account; our $1.50 per player is then passed to GreenReserve.',
+    "Stripe's standard card-processing fee applies to the payment, the same as any card you take today. GreenReserve charges you nothing on top of it.",
+  ];
+}
