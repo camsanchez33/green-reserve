@@ -22,7 +22,7 @@
 .banner a { color: var(--g-acc); font-weight: 600; }
 
 /* Course information box (tee times screen only) */
-.cinfo { margin: 14px 18px 0; padding: 12px 14px; border: 1px solid var(--g-line); border-radius: 12px; background: var(--g-card); font-size: 14px; }
+.cinfo { margin: 0; padding: 12px 14px; border: 1px solid var(--g-line); border-radius: 12px; background: var(--g-card); font-size: 14px; }
 .alert { margin: 0 0 10px; padding: 8px 10px; border-radius: 8px; background: var(--g-acc-soft); display: flex; gap: 8px; align-items: center; }
 .crow { display: flex; flex-wrap: wrap; gap: 6px 20px; }
 .crow a { display: inline-flex; gap: 8px; align-items: center; min-height: 44px; color: var(--g-ink); text-decoration: none; }
@@ -43,6 +43,7 @@
 
 /* Calendar */
 .cal { background: var(--g-card); border: 1px solid var(--g-line); border-radius: 12px; padding: 8px; }
+.calPhone { display: none; margin-bottom: 12px; }
 .calh { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; padding: 2px 4px 6px; }
 .calh button { min-width: 44px; min-height: 44px; border: 0; background: none; cursor: pointer; font-size: 18px; color: var(--g-acc); }
 .calh button:disabled { opacity: .35; cursor: default; }
@@ -118,7 +119,7 @@
 .recap b { display: block; font-size: 17px; }
 .recap span { display: block; font-size: 14px; color: var(--g-soft); }
 .inp { margin-bottom: 10px; }
-.inp input { width: 100%; min-height: 44px; border: 1px solid var(--g-line); border-radius: 10px; background: var(--g-paper); padding: 0 12px; }
+.inp input { width: 100%; min-height: 44px; border: 1px solid var(--g-field-edge); border-radius: 10px; background: var(--g-field); padding: 0 12px; }
 .inp input[readonly] { background: var(--g-acc-soft); }
 .inp input[aria-invalid="true"] { border-color: var(--g-bad); border-width: 2px; background: var(--g-bad-soft); }
 .err { color: var(--g-bad); font-size: 13px; margin-top: 4px; }
@@ -143,23 +144,25 @@
 .feed p { margin: 0 0 4px; font-size: 13px; color: var(--g-soft); }
 .promo { font-size: 13px; min-height: 44px; margin-top: 4px; padding: 0; }
 .promoRow { display: flex; gap: 8px; margin-top: 6px; }
-.promoRow input { flex: 1; min-width: 0; min-height: 44px; border: 1px solid var(--g-line); border-radius: 10px; background: var(--g-paper); padding: 0 12px; }
+.promoRow input { flex: 1; min-width: 0; min-height: 44px; border: 1px solid var(--g-field-edge); border-radius: 10px; background: var(--g-field); padding: 0 12px; }
 .promoRow button { min-height: 44px; padding: 0 14px; border: 1px solid var(--g-line); border-radius: 10px; background: var(--g-card); cursor: pointer; font-weight: 600; }
 .promoRow button:disabled { opacity: .5; cursor: default; }
 .pol { font-size: 12.5px; color: var(--g-soft); margin: 0 0 12px; }
 .pol span + span::before { content: " "; }
 .agree { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; line-height: 1.4; margin: 4px 0 12px; cursor: pointer; }
 .agree input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--g-acc); flex: none; }
-.agree a { color: var(--g-acc); }
+.agree a { color: var(--g-acc); text-decoration: underline; text-underline-offset: 2px; }
 .sms { display: flex; gap: 10px; align-items: flex-start; font-size: 12.5px; color: var(--g-soft); line-height: 1.4; margin: -2px 0 12px; cursor: pointer; }
 .sms input { width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--g-acc); flex: none; }
-.sms a { color: var(--g-acc); }
-.cardbox { width: 100%; padding: 13px 12px; border: 1px solid var(--g-line); border-radius: 10px; background: var(--g-paper); }
+.sms a { color: var(--g-acc); text-decoration: underline; text-underline-offset: 2px; }
+.cardbox { width: 100%; padding: 13px 12px; border: 1px solid var(--g-field-edge); border-radius: 10px; background: var(--g-field); }
 .small { font-size: 12.5px; color: var(--g-soft); margin: 6px 0 0; }
 .or { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--g-muted); margin: 10px 0; }
 .or::before, .or::after { content: ""; height: 1px; flex: 1; background: var(--g-line); }
 .btn { width: 100%; min-height: 50px; border: 0; border-radius: 12px; background: var(--g-acc); color: var(--g-on-acc); font-weight: 700; font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
 .btn:hover { background: var(--g-acc-h); }
+/* `.root button { color: inherit }` outranks `.btn`, which left button text in ink on the accent (axe, 2026-11-26). */
+.root button.btn { color: var(--g-on-acc); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .bookbtn { min-height: 60px; font-size: 19px; }
 .btn.sdone { display: none; }
@@ -200,7 +203,7 @@
 .dgrid button[aria-pressed="true"] { background: var(--g-acc); border-color: var(--g-acc); color: var(--g-on-acc); }
 .dgrid button[aria-pressed="true"] small { color: var(--g-on-acc); }
 .dgrid[aria-invalid="true"], .todrow[aria-invalid="true"] { outline: 2px solid var(--g-bad); outline-offset: 3px; border-radius: 10px; }
-.pol a { color: var(--g-acc); }
+.pol a { color: var(--g-acc); text-decoration: underline; text-underline-offset: 2px; }
 .altrow { display: flex; justify-content: center; margin: 4px 0 18px; }
 .tapRow { min-height: 44px; align-items: center; }
 
@@ -217,7 +220,6 @@
   .sheet { top: auto; left: 0; width: 100%; max-height: 88vh; border-radius: 12px 12px 0 0; box-shadow: 0 -10px 30px rgba(0, 0, 0, .25); padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
   .dgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .bookbar { position: sticky; bottom: 0; margin: 0 -16px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: var(--g-paper); border-top: 1px solid var(--g-line); z-index: 5; }
-  .cinfo { margin: 12px 16px 0; }
   .wrap { padding: 14px 16px 20px; }
   .top { padding: 12px 16px; }
 }
@@ -268,3 +270,42 @@
 .toplogo { width: 36px; height: 36px; border-radius: 8px; background: #FFFFFF; object-fit: contain; padding: 2px; flex: none; }
 .confphoto { height: 140px; background-color: var(--g-band); background-size: cover; background-position: center; }
 .loading { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 40vh; color: var(--g-soft); font-size: 14px; }
+
+/* UI style overhaul (Cam 2026-11-26): every panel wears the look's material. Dark = glass (blur, hairline, top highlight,
+   soft shadow), Light = solid (white on neutral grey, a hairline shadow). The values are --g-blur / --g-shadow (look.ts). */
+.cinfo, .cal, .card, .tc, .empty, .yrow, .modal, .seg, .todrow button, .rnd button, .stepper button, .ctabs {
+  -webkit-backdrop-filter: var(--g-blur, none); backdrop-filter: var(--g-blur, none); box-shadow: var(--g-shadow, none);
+}
+
+/* The course page's two tabs (Cam 2026-11-24 threads b0a8979a, 1b111e7b): a centred sliding "Tee times | Course
+   information" control under the header. The two panels never show together, on any width. */
+.ctabsWrap { display: flex; justify-content: center; padding: 14px 18px 0; }
+.ctabs { position: relative; display: grid; grid-template-columns: 1fr 1fr; width: min(440px, 100%); padding: 3px; border: 1px solid var(--g-line); border-radius: 12px; background: var(--g-card); }
+.ctabs button { position: relative; z-index: 1; min-height: 44px; border: 0; border-radius: 9px; background: none; cursor: pointer; font-weight: 500; font-size: 14.5px; color: var(--g-soft); padding: 0 10px; }
+.ctabs button[aria-selected="true"] { color: var(--g-on-acc); font-weight: 600; }
+.cthumb { position: absolute; z-index: 0; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 9px; background: var(--g-acc); transition: transform .22s ease; }
+.cthumb.info { transform: translateX(100%); }
+@media (prefers-reduced-motion: reduce) { .cthumb { transition: none; } }
+.ipanel { padding: 16px 18px 24px; }
+.ipanel .cinfo + .cinfo { margin-top: 12px; }
+.notice { margin: 0 0 12px; }
+
+/* Phone Filters: the next seven days beside the picked date, so the day can change without closing the sheet. */
+.dayrow { display: flex; align-items: center; gap: 10px; }
+.dayrow > b { flex: none; font-size: 14px; min-width: 64px; }
+.strip { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 4px; scrollbar-width: none; }
+.strip button { flex: none; width: 52px; min-height: 56px; border: 1px solid var(--g-line); border-radius: 10px; background: var(--g-card); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11.5px; color: var(--g-soft); }
+.strip button b { font-size: 17px; color: var(--g-ink); }
+.strip button[aria-pressed="true"] { background: var(--g-acc); border-color: var(--g-acc); color: var(--g-on-acc); }
+.strip button[aria-pressed="true"] b { color: var(--g-on-acc); }
+.strip button[aria-disabled="true"] { opacity: .45; cursor: default; }
+.phoneOnly { display: none; }
+
+@media (max-width: 860px) {
+  .ctabsWrap { padding: 12px 16px 0; }
+  .ipanel { padding: 14px 16px 20px; }
+  /* On a phone the calendar stays on the Tee times tab; the Filters sheet keeps the rest, with the seven-day row. */
+  .calPhone { display: block; }
+  .side .deskOnly { display: none; }
+  .phoneOnly { display: block; }
+}
