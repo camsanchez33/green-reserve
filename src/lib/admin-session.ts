@@ -167,7 +167,7 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
   // session"; its catch must NOT extend over the DB read below.
   let claims: (AdminSession & { type: string }) | null = null;
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
     claims = payload as unknown as AdminSession & { type: string };
   } catch { return null; }
   if (!claims || claims.type !== 'admin_session') return null;
@@ -214,7 +214,7 @@ export async function signAdminSetPasswordToken(payload: { adminId: string; emai
 
 export async function verifyAdminSetPasswordToken(token: string) {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
     const p = payload as { adminId: string; email: string; type: string };
     if (p.type !== 'admin_set_password') return null;
     return p;

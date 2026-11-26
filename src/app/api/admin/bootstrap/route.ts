@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { passwordChanged } from '@/lib/admin-password';
+import { secretEquals } from '@/lib/secret-compare';
 
 export async function POST(req: NextRequest) {
   const secret = req.headers.get('x-admin-key');
-  if (!secret || secret !== process.env.ADMIN_SECRET)
+  if (!secretEquals(secret, process.env.ADMIN_SECRET))
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const count = await prisma.adminUser.count();

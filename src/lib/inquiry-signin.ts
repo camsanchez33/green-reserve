@@ -95,7 +95,7 @@ export async function signChallenge(c: SigninChallenge): Promise<string> {
 export async function readChallenge(token: string | undefined): Promise<SigninChallenge | null> {
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
     if (payload.type !== 'signin_challenge') return null;
     const { inquiryId, cid, codeMac } = payload as Record<string, unknown>;
     if (typeof inquiryId !== 'string' || typeof cid !== 'string' || typeof codeMac !== 'string') return null;

@@ -34,7 +34,7 @@ export async function signStaffToken(payload: { staffId: string; courseId: strin
 
 export async function verifyToken(token: string) {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
     return payload;
   } catch { return null; }
 }
@@ -143,7 +143,7 @@ export async function signStaffResetToken(staff: { id: string; password: string 
 /** The staffId if the link is genuine, unexpired and the password has not changed since it was sent. */
 export async function verifyStaffResetToken(token: string, currentHash: (staffId: string) => Promise<string | null>): Promise<string | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
     const p = payload as { staffId?: string; pf?: string; type?: string };
     if (p.type !== 'staff_reset' || !p.staffId || !p.pf) return null;
     const hash = await currentHash(p.staffId);
