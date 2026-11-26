@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { memberPricingOn, residentPricingOn } from '@/lib/pricing-switch';
-import { dealPct, dealRateSeat } from '@/lib/last-minute';
+import { dealPct } from '@/lib/last-minute';
+import { pickOwnSeat, memberGivesMore } from '@/lib/two-groups';
+import { cartRuleOf } from '@/lib/cart-pricing';
 import { demandPctAt, onlinePublicSeat, dealWins, loadDemand } from '@/lib/demand-pricing';
 import { todayIn, clockIn } from '@/lib/course-time';
 import { prisma } from '@/lib/prisma';
@@ -38,7 +40,7 @@ export async function GET(
   const pricingTier = live && memberPricingOn(course) ? tier : null;
 
   // RES-1: a resident card good on the date (Resident pricing on). It gives the resident window (GOLFER-LOGIN-1 2b),
-  // and the resident rate below when no membership price applies.
+  // and the resident rate below — for a member too where it is the lower own seat (TWO-GROUPS-PRICE).
   const residentCard = residentPricingOn(course) ? await residentOn(course.id, session.email, date) : null;
 
   // BOOKING WINDOWS: a member sees as far ahead as their tier allows (the
@@ -74,7 +76,8 @@ export async function GET(
   // resident rate when no membership price applied and their resident card is
   // good on the date (api/bookings: loggedInResident, groupGreenFee). Same lookup
   // here, so the list can show it; the page adds it up the same way.
-  const resident = !pricingTier ? residentCard : null;
+  // TWO-GROUPS-PRICE (Cam 2026-11-24, lib/two-groups): a member who is also a resident gets, time by time, the lower
+  // own seat after deals (the member rate on a tie), as booking charges it; never both.
 
   // Memberships item 3: a membership priced by the price list has a member price wherever one of its green lines is set.
   const lines = pricingTier ? readLineRates(pricingTier.lineRates) : null;
@@ -89,7 +92,7 @@ export async function GET(
       const open = t.playersAvailable - t.playersBooked; // how full it really is
       const slotStatus =
         open <= 1 ? 'almost_full' : open <= 2 ? 'limited' : 'available';
-      const rates = pricingTier ? applyTierRates(t, pricingTier) : null;
+      const tierRates = pricingTier ? applyTierRates(t, pricingTier) : null;
       // On line rates: a member price exactly where this time's green line is set (blank = public, as booking charges).
       const hasMemberRate = !!pricingTier && (lines ? !!lines[lineKey('green', t.productId ?? '', isWeekend(t.date) ? 'we' : 'wd')] : (hasTierPrice || t.memberRateCents != null));
       // PRICE-2: inside a last-minute window, priced as POST /api/bookings prices it (lib/last-minute).
@@ -97,8 +100,12 @@ export async function GET(
       const pct = dealPct(course, t, 'online');
       const dem = demandPctAt(course, demand, t);
       const pub = onlinePublicSeat(t.greenFeeCents, pct, dem);
-      const rated = (c: number) => Math.min(pub, dealRateSeat(pct, c, t.greenFeeCents, course.lastMinuteStack));
       const dealShown = dealWins(t.greenFeeCents, pct, dem);
+      const pick = pickOwnSeat(tierRates ? tierRates.greenFeeCents : null, residentCard && t.residentRateCents != null ? t.residentRateCents : null,
+        { pubSeat: pub, dealPct: pct, publicCents: t.greenFeeCents, stack: course.lastMinuteStack },
+        !!pricingTier && !!tierRates && memberGivesMore(pricingTier, tierRates.cartFeeCents, t.cartFeeCents, cartRuleOf(course.cartPricing) === 'per_cart'));
+      // The member's prices hold at this time only when the member seat won; a resident seat leaves the rest public.
+      const rates = pick.group === 'member' ? tierRates : null;
 
       return {
         id: t.id,
@@ -112,19 +119,22 @@ export async function GET(
         green_fee: centsToDollarsOr0(pub),
         list_green_fee: dealShown ? centsToDollarsOr0(t.greenFeeCents) : null,
         deal_pct: dealShown ? pct : 0,
-        member_green_fee: centsToDollarsOr0(rates ? rated(rates.greenFeeCents) : pub),
+        member_green_fee: centsToDollarsOr0(rates && pick.memberSeat != null ? pick.memberSeat : pub),
         cart_fee: centsToDollarsOr0(rates?.cartFeeCents ?? t.cartFeeCents),
         walking_allowed: walkingAllowedAt(t),
         cart_required: !walkingAllowedAt(t),
         min_players: rules.minPlayers,
         max_players: rules.maxPlayers,
         status: slotStatus,
-        has_member_rate: hasMemberRate,
+        has_member_rate: !!rates && hasMemberRate,
         // Cam 2026-10-29: whether the rest of the group pays the member rate too (else the public green_fee).
-        guests_member_rate: !!pricingTier?.guestsPayMemberRate,
+        guests_member_rate: !!rates && !!pricingTier?.guestsPayMemberRate,
         // What the signed-in golfer pays for their own spot as a resident (one
         // player); null when the resident rate doesn't apply to this time.
-        resident_green_fee: resident && t.residentRateCents != null ? centsToDollarsOr0(rated(t.residentRateCents)) : null,
+        resident_green_fee: pick.group === 'resident' && pick.residentSeat != null ? centsToDollarsOr0(pick.residentSeat) : null,
+        // TWO-GROUPS-PRICE: which group prices the golfer's own seat here ('member', 'resident' or null = public), and that seat.
+        own_rate: pick.group,
+        own_green_fee: centsToDollarsOr0(pick.seat ?? pub),
       };
     })
   );
