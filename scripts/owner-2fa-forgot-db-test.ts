@@ -103,7 +103,7 @@ const post2fa = (body: unknown) => twoFactor(req('/api/admin/two-factor', body),
   ok('M6 right after signing in with a recovery code, the app can be moved (no lockout)', (await post2fa({ action: 'start' })).status === 200);
   await session(new Date(Date.now() - 10 * 60_000), false, 'recovery');
   const late = await post2fa({ action: 'start' });
-  ok('M6 …but not 10 minutes later, and the answer says how to get back in', late.status === 403 && /Sign in again at \/cam with a recovery code/.test(((await late.json()) as { error?: string }).error ?? ''));
+  ok('M6 …but not 10 minutes later, and the answer says how to get back in', late.status === 403 && /another recovery code/.test(((await late.json()) as { error?: string }).error ?? ''));
   await session(new Date(), false, 'recovery', new Date(Date.now() - 10 * 60_000));
   ok('M6 …and a later confirm does not reopen it (the 5 minutes run from the sign-in)', (await post2fa({ action: 'start' })).status === 403);
 

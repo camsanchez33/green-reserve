@@ -69,7 +69,7 @@ async function enrolGate(session: AdminSession, replacing: boolean): Promise<Nex
     if (refused && session.ownerSessionId) {
       const s = await prisma.ownerSession.findUnique({ where: { id: session.ownerSessionId }, select: { method: true } });
       // Say why, so an owner who spent their last recovery code knows the way back.
-      if (s?.method === 'recovery') return NextResponse.json({ error: 'Confirm it’s you to move the app. No passkey, app or recovery code left? Sign in again at /cam with a recovery code and come straight here: for 5 minutes after that, moving the app needs nothing more.', code: 'step_up' }, { status: 403 });
+      if (s?.method === 'recovery') return NextResponse.json({ error: 'Confirm it’s you to move the app: a passkey, the app or another recovery code. With none of those left, the account is recovered from the database (RUNBOOK, “Owner 2FA recovery”).', code: 'step_up' }, { status: 403 });
     }
     return refused;
   }
