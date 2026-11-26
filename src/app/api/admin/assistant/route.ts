@@ -25,7 +25,8 @@ async function ownerOnly() {
   const session = await resolveAdminSession();
   if (!session) return { res: NextResponse.json({ error: 'Your session ended — sign in again.' }, { status: 401 }) } as const;
   if (session.role !== 'owner' || !session.ownerSessionId) return { res: NextResponse.json({ error: 'Owner only.' }, { status: 403 }) } as const;
-  const gate = areaGate(session, 'company'); if (gate) return { res: gate } as const;
+  const gate = areaGate(session, 'company');
+  if (gate) return { res: gate };
   return { session } as const;
 }
 
