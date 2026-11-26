@@ -6,6 +6,7 @@
 // My profile re-skin (Cam approved the mockup 2026-11-15): full width, an "Authenticator app" row with "Move to a new
 // phone" (or "Set up") and a "Recovery codes" row with "Make new codes"; the flows, calls and errors are as before.
 import { useEffect, useState } from 'react';
+import { stepUpFetch } from '@/lib/step-up-client';
 import { shortDay, codesLow } from '@/app/admin/profile/logic';
 import { ProfileCard, ProfileRow, Msg, profileStyles as s } from './ProfileCard';
 
@@ -32,7 +33,8 @@ export default function OwnerTwoFactorCard({ mfaSession }: { mfaSession: boolean
   useEffect(() => { if (mfaSession) load(); }, [mfaSession]);
 
   const post = async (body: Record<string, unknown>) => {
-    const r = await fetch('/api/admin/two-factor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    // Audit 2026-11-24 M6: moving to a new phone asks "Confirm it’s you" first (the dialog, then the same request again).
+    const r = await stepUpFetch('/api/admin/two-factor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.error || `Failed (${r.status})`);
     return d;

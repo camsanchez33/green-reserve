@@ -499,6 +499,18 @@ export function ownerPasskeyChangedEmail(d: { change: 'added' | 'removed'; passk
   });
 }
 
+// Audit 2026-11-24 M6: the owner's authenticator app or recovery codes changed — like a passkey change,
+// it alters how the account signs in, so it is always announced. No link in it.
+export function ownerTwoFactorChangedEmail(d: { change: 'set_up' | 'replaced' | 'recovery_codes'; device: string; when: string }): BuiltEmail {
+  const what = d.change === 'set_up' ? 'An authenticator app was set up' : d.change === 'replaced' ? 'The authenticator app was moved to a new phone' : 'New recovery codes were made';
+  return gr(d.change === 'recovery_codes' ? 'GreenReserve recovery codes replaced' : 'GreenReserve authenticator app changed', {
+    line: `${what}.`,
+    paragraphs: [`${what} for the GreenReserve owner account.${d.change === 'recovery_codes' ? ' The old codes no longer work.' : ' The old app’s codes no longer work.'}`],
+    rows: deviceRows({ device: d.device, when: d.when }, 'From'),
+    after: ['Not you? Sign in, go to My profile and choose “Sign out everywhere”, set up the authenticator again, then change your password.'],
+  });
+}
+
 // ---------- Outreach to new courses (plain, personal, with the CAN-SPAM footer) ----------
 
 /** The footer's one line: "<postal address> · Reply “no thanks” to stop." Throws while the address is empty. */
