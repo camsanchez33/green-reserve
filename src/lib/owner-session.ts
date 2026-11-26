@@ -36,7 +36,8 @@ const secure = process.env.NODE_ENV === 'production';
 /** Where the request came from, for the session row and the sign-in email. */
 export async function requestContext(): Promise<{ ip: string; userAgent: string; place: string }> {
   const h = await headers();
-  const ip = (h.get('x-forwarded-for') ?? '').split(',')[0].trim() || h.get('x-real-ip') || '';
+  // Audit 2026-11-24 L14: the platform's header first, as rate-limit.ts clientIp().
+  const ip = (h.get('x-vercel-forwarded-for') || h.get('x-real-ip') || h.get('x-forwarded-for') || '').split(',')[0].trim();
   const city = decodeURIComponent(h.get('x-vercel-ip-city') ?? '');
   const region = h.get('x-vercel-ip-country-region') ?? '';
   const country = h.get('x-vercel-ip-country') ?? '';

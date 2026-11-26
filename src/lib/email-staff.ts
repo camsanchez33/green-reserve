@@ -94,6 +94,17 @@ export function staffResetLinkEmail(d: { to: string; personName: string; ownerNa
   });
 }
 
+// Audit 2026-11-24 L7: the admin "resend staff login" email, which was built by hand from the course-chosen
+// name (unescaped) and sent with its own Resend client. Now through letterEmail(), which escapes every string.
+export function staffLoginLinkEmail(d: { personName: string; courseName: string; to: string }): BuiltEmail {
+  return gr(`Your GreenReserve staff login${d.courseName ? ` for ${d.courseName}` : ''}`, {
+    line: 'Your staff login.',
+    paragraphs: [`Hi ${first(d.personName)}, here is the link to sign in to ${d.courseName || 'your course'}’s tee sheet. Your login email is ${d.to}.`],
+    button: { label: 'Sign in', url: `${site()}/dashboard/login` },
+    after: ['Forgot your password? Use the reset link on the sign-in page.', STAFF_QUESTIONS],
+  });
+}
+
 export function operatorPasswordResetEmail(d: { operatorEmail: string; resetLink: string }): BuiltEmail {
   return gr('Reset your GreenReserve password', {
     preheader: 'This link expires in 1 hour.',

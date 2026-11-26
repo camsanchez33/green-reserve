@@ -46,7 +46,8 @@ export async function POST(req: NextRequest) {
   const hp = body.hp || body._website;
   if (hp) {
     const clean = (v: unknown) => String(v ?? '').replace(/[\r\n\t]+/g, ' ').slice(0, 80);
-    console.warn(`[inquiries] honeypot hit — submission discarded: email=${clean(body.email)} course=${clean(body.courseName)}`);
+    // Audit 2026-11-24 L13: no email address in the log; the course name is enough to spot a real course caught by it.
+    console.warn(`[inquiries] honeypot hit — submission discarded: course=${clean(body.courseName)}`);
     return NextResponse.json({ success: true });
   }
 

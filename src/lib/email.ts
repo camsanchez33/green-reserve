@@ -16,7 +16,7 @@ import {
   shopPayLinkEmail, shopReceiptEmail, type BuiltEmail,
 } from './email-golfer';
 import {
-  operatorBookingEmail, courseClosedEmail, staffWelcomeEmail, staffResetLinkEmail, operatorPasswordResetEmail, operatorVerifyEmail,
+  operatorBookingEmail, courseClosedEmail, staffWelcomeEmail, staffResetLinkEmail, staffLoginLinkEmail, operatorPasswordResetEmail, operatorVerifyEmail,
   twoFactorCodeEmail, passwordChangedEmail, messageNotificationEmail, announcementEmail, monthlyReviewEmail, lowStockEmail,
   signedAgreementsEmail, agreementBumpEmail, inquiryConfirmationEmail, inquiryAlreadyBuiltEmail, inquirySigninCodeEmail,
   detailsSheetConfirmationEmail, detailsRequestEmail, callReminderEmail, callScheduledEmail, onboardingChaseEmail,
@@ -360,6 +360,11 @@ export async function sendStaffWelcomeEmail(data: WelcomeInput & { to: string; s
 // The owner sent it, so it says so; the link is the staff reset link (1 hour, one use).
 export async function sendStaffResetLinkEmail(data: { to: string; personName: string; ownerName: string; courseName: string; resetLink: string; courseId: string }) {
   await getResend().emails.send({ meta: { kind: 'staff_reset_link_email', courseId: data.courseId }, from: FROM_NOREPLY, to: data.to, ...mail(staffResetLinkEmail(data)) });
+}
+
+// Audit 2026-11-24 L7: Admin → a course's staff → "Resend login". From admin@, so a reply reaches Cam.
+export async function sendStaffLoginLinkEmail(data: { to: string; personName: string; courseName: string; courseId: string }) {
+  await getResend().emails.send({ meta: { kind: 'staff_setup_email', courseId: data.courseId }, from: FROM_ADMIN, to: data.to, ...mail(staffLoginLinkEmail(data)) });
 }
 
 export async function sendAdminPasswordResetEmail(data: {
