@@ -21,6 +21,8 @@ import { prisma } from '../src/lib/prisma';
 import { hashToken, tokenMatches } from '../src/lib/token-hash';
 import { issueSetupLink } from '../src/lib/operator-setup';
 import { signAdminSetPasswordToken } from '../src/lib/admin-session';
+import { signStaffResetToken } from '../src/lib/auth';
+import { securityEvent, BURST_PER_IP } from '../src/lib/security-events';
 import { GET as resetGet, POST as resetPost } from '../src/app/api/auth/reset-password/route';
 import { POST as opForgot } from '../src/app/api/auth/forgot-password/route';
 import { POST as adminForgot } from '../src/app/api/admin/forgot-password/route';
@@ -34,8 +36,10 @@ const read = (p: string) => readFileSync(p, 'utf8');
 const isSha = (v: string | null) => !!v && /^[a-f0-9]{64}$/.test(v);
 
 async function cleanup() {
-  await prisma.rateLimit.deleteMany({ where: { OR: [{ key: { contains: TAG } }, { key: { contains: '198.18.0.' } }] } });
+  await prisma.rateLimit.deleteMany({ where: { OR: [{ key: { contains: TAG } }, { key: { contains: '198.18.' } }] } });
   await prisma.securityEvent.deleteMany({ where: { OR: [{ email: { startsWith: TAG } }, { ip: { startsWith: '198.18.' } }] } }).catch(() => {});
+  await prisma.courseStaff.deleteMany({ where: { email: { startsWith: TAG } } });
+  await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
   await prisma.courseOperator.deleteMany({ where: { email: { startsWith: TAG } } });
   await prisma.adminUser.deleteMany({ where: { email: { startsWith: TAG } } });
 }
@@ -61,6 +65,7 @@ const get = (token: string) => resetGet(new NextRequest(`http://localhost/api/au
   ok('setup link: the emailed token still opens the page', (await get(token)).status === 200);
   const set = await post(resetPost, '/api/auth/reset-password', { token, password: PW, setup: true });
   ok('setup link: and sets the password once', set.status === 200 && (await prisma.courseOperator.findUniqueOrThrow({ where: { id: op.id } })).resetToken === null);
+  ok('setup link: the new password is recorded', (await prisma.securityEvent.count({ where: { accountId: op.id, kind: 'password_changed', detail: 'owner, set-your-password link' } })) === 1);
   ok('setup link: a second use is refused', (await post(resetPost, '/api/auth/reset-password', { token, password: PW, setup: true })).status === 400);
   ok('reset-password refuses a token that is not a string', (await post(resetPost, '/api/auth/reset-password', { token: { not: '' }, password: PW })).status === 400);
 
@@ -133,6 +138,24 @@ const get = (token: string) => resetGet(new NextRequest(`http://localhost/api/au
   const badStaff = await bodyOf(await anon('198.18.1.2')({ token: 'aaa.bbb.ccc', password: PW }));
   ok('staff reset: a bad link → same reply, and recorded', badStaff.status === 400 && badStaff.body.error === INVALID
     && (await events({ ip: '198.18.1.2', kind: 'signin_failed', surface: 'course', detail: 'staff reset password, bad or expired link' })) === 1, badStaff);
+
+  const course = await prisma.course.create({ data: { name: 'Hash Course', slug: `${TAG}-course`, operatorId: op.id, city: 'X', state: 'NY' } as never });
+  const staffRow = await prisma.courseStaff.create({ data: { courseId: course.id, email: `${TAG}+staff@t.local`, password: await (await import('bcryptjs')).default.hash('Old-password-42!', 4), name: 'Hash Staff' } });
+  const staffLink = await signStaffResetToken(staffRow);
+  const staffRace = await Promise.all([1, 2].map(() => post(resetPost, '/api/auth/reset-password', { token: staffLink, password: PW }).then(r => r.status)));
+  ok('staff reset: one link twice at once lands once', staffRace.filter(s => s === 200).length === 1 && staffRace.filter(s => s === 400).length === 1, staffRace);
+  const staffLoser = await prisma.securityEvent.count({ where: { accountId: staffRow.id, detail: 'staff reset password, link used by another submit at the same moment' } });
+  const staffBad = await prisma.securityEvent.count({ where: { email: '', detail: 'staff reset password, bad or expired link', ip: { startsWith: '198.18.0.' } } });
+  // Both submits pass the link check before either hashes its password, so the loser is refused by the conditional write.
+  ok('staff reset: the race loser is recorded', staffLoser === 1 && staffBad === 0, { staffLoser, staffBad });
+
+  // ── A flood of junk links cannot spend the address's event cap and hide what it does next ──
+  const FLOOD = '198.18.2.1';
+  const flood = anon(FLOOD);
+  for (let i = 0; i < 210; i += 30) await Promise.all(Array.from({ length: 30 }, (_, j) => flood({ token: (i + j).toString(16).padStart(64, '0'), password: PW })));
+  ok('flood: link refusals from one address stop at the burst size', (await events({ ip: FLOOD, kind: 'signin_failed' })) === BURST_PER_IP);
+  await securityEvent(new Request('http://localhost/', { headers: { 'x-forwarded-for': FLOOD } }), { kind: 'locked_out', surface: 'admin', email: `${TAG}+flood@t.local`, detail: 'after the flood' });
+  ok('flood: a lockout from that address afterwards is still recorded', (await events({ ip: FLOOD, kind: 'locked_out', detail: 'after the flood' })) === 1);
 
   for (const f of ['src/app/api/admin/login/route.ts', 'src/app/api/cam/login/route.ts', 'src/app/api/admin/forgot-password/route.ts']) {
     ok(`${f.split('/').slice(-2, -1)[0]}: stores only the hash of the set-password link`, read(f).includes('setPasswordToken: hashToken(token)') && !read(f).includes('setPasswordToken: token,'));

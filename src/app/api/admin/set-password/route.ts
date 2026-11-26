@@ -6,7 +6,7 @@ import { sendAdminPasswordChangedNotification } from '@/lib/email';
 import bcrypt from 'bcryptjs';
 import { passwordChanged } from '@/lib/admin-password';
 import { tokenMatches, hashToken } from '@/lib/token-hash';
-import { securityEvent } from '@/lib/security-events';
+import { linkRefusalEvent } from '@/lib/security-events';
 
 export async function POST(req: NextRequest) {
   const { token, password } = ((await req.json().catch(() => null)) ?? {}) as { token?: unknown; password?: unknown };
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
   const payload = await verifyAdminSetPasswordToken(token);
   if (!payload) {
-    await securityEvent(req, { kind: 'signin_failed', surface: 'admin', detail: 'set password, bad or expired link' });
+    await linkRefusalEvent(req, { surface: 'admin', detail: 'set password, bad or expired link' });
     return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 });
   }
 
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   // A genuinely signed link whose account is gone (deleted since it was sent). The link itself
   // carried the email, so recording it reveals nothing the caller did not already send.
   if (!admin) {
-    await securityEvent(req, { kind: 'signin_failed', surface: 'admin', email: payload.email, accountId: payload.adminId, detail: 'set password, account no longer exists' });
+    await linkRefusalEvent(req, { surface: 'admin', email: payload.email, accountId: payload.adminId, detail: 'set password, account no longer exists' });
     return NextResponse.json({ error: 'Account not found' }, { status: 404 });
   }
 
@@ -36,19 +36,19 @@ export async function POST(req: NextRequest) {
   // "check your email" because it refuses inactive accounts by design. Three
   // false confirmations and no way out. Say the true thing instead.
   if (!admin.active) {
-    await securityEvent(req, { kind: 'signin_failed', surface: admin.role === 'owner' ? 'owner' : 'admin', email: admin.email, accountId: admin.id, detail: 'set password, account deactivated' });
+    await linkRefusalEvent(req, { surface: admin.role === 'owner' ? 'owner' : 'admin', email: admin.email, accountId: admin.id, detail: 'set password, account deactivated' });
     return NextResponse.json({ error: 'This account has been deactivated — contact an owner to have it re-enabled.' }, { status: 403 });
   }
 
   // Single-use: the hash stored in the DB must match (audit 2026-11-24 M9: hashed, and compared in constant time).
   if (!tokenMatches(token, admin.setPasswordToken)) {
-    await securityEvent(req, { kind: 'signin_failed', surface: admin.role === 'owner' ? 'owner' : 'admin', email: admin.email, accountId: admin.id, detail: 'set password, link already used or replaced' });
+    await linkRefusalEvent(req, { surface: admin.role === 'owner' ? 'owner' : 'admin', email: admin.email, accountId: admin.id, detail: 'set password, link already used or replaced' });
     return NextResponse.json({ error: 'Token already used or invalid' }, { status: 400 });
   }
 
   const now = new Date();
   if (admin.setPasswordTokenExpiry && admin.setPasswordTokenExpiry < now) {
-    await securityEvent(req, { kind: 'signin_failed', surface: admin.role === 'owner' ? 'owner' : 'admin', email: admin.email, accountId: admin.id, detail: 'set password, link expired' });
+    await linkRefusalEvent(req, { surface: admin.role === 'owner' ? 'owner' : 'admin', email: admin.email, accountId: admin.id, detail: 'set password, link expired' });
     return NextResponse.json({ error: 'Token expired' }, { status: 400 });
   }
 
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     },
   });
   if (count === 0) {
-    await securityEvent(req, { kind: 'signin_failed', surface: admin.role === 'owner' ? 'owner' : 'admin', email: admin.email, accountId: admin.id, detail: 'set password, link used by another submit at the same moment' });
+    await linkRefusalEvent(req, { surface: admin.role === 'owner' ? 'owner' : 'admin', email: admin.email, accountId: admin.id, detail: 'set password, link used by another submit at the same moment' });
     return NextResponse.json({ error: 'Token already used or invalid' }, { status: 400 });
   }
 
