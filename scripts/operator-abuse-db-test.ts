@@ -45,6 +45,10 @@ const patch = async (h: (r: NextRequest) => Promise<Response | undefined>, url: 
 
 (async () => {
   process.env.RESEND_API_KEY = '';
+  // Placeholder Twilio keys so the text routes get past "texts not set up" to the consent ask and the caps. No
+  // check here reaches Twilio: each text stops at the ask or a cap (the not-set-up answer is checked on its own below).
+  const twilioEnv = { TWILIO_ACCOUNT_SID: 'ACtest', TWILIO_AUTH_TOKEN: 'test', TWILIO_FROM_NUMBER: '+12025550100' };
+  Object.assign(process.env, twilioEnv);
   await cleanup();
   const op = await prisma.courseOperator.create({ data: { name: 'Abuse Owner', email: `${TAG}+op@t.local`, password: 'x', emailVerified: true } });
   const course = await prisma.course.create({ data: { name: 'Abuse GC', slug: `${TAG}-c`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '9', holes: 18, timezone: 'UTC' } });
@@ -101,6 +105,14 @@ const patch = async (h: (r: NextRequest) => Promise<Response | undefined>, url: 
   const today = new Date().toISOString().slice(0, 10);
   const tToday = await prisma.teeTime.create({ data: { courseId: course.id, date: today, time: '23:50', playersAvailable: 4, greenFeeCents: 4000, cartFeeCents: 0 } });
   const due = await prisma.booking.create({ data: { teeTimeId: tToday.id, courseId: course.id, golferName: 'Ray', golferEmail: `${TAG}+ray@t.local`, golferPhone: '+12025550273', players: 1, greenFeeTotal: 4000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 4150, status: 'confirmed', paymentStatus: 'no_payment_method' } });
+  // Texts not set up (no Twilio keys, as in CI): the route says so (502, PAY-1) before it asks for consent or counts.
+  for (const k of Object.keys(twilioEnv)) delete process.env[k];
+  const notSetUp = await patch(bookingsPatch, '/api/operator/bookings', { id: due.id, action: 'send_pay_link', via: 'sms' });
+  const notSetUpBody = await notSetUp.json() as { needsConsent?: boolean };
+  ok('M11 without texts set up, a pay-link text says so and counts nothing', notSetUp.status === 502 && !notSetUpBody.needsConsent && !(await prisma.rateLimit.findUnique({ where: { key: `send:pay_link:sms:booking:${due.id}` } })), { s: notSetUp.status, notSetUpBody });
+  const receiptNotSetUp = await patch(bookingsPatch, '/api/operator/bookings', { id: fresh.id, action: 'send_receipt', via: 'sms', to: '+1 202 555 0288', smsConsent: 'verbal' });
+  ok('M11 without texts set up, a receipt text says so, records no consent and counts nothing', receiptNotSetUp.status === 502 && !(await prisma.rateLimit.findUnique({ where: { key: `send:receipt:sms:booking:${fresh.id}` } })) && (await prisma.smsConsent.count({ where: { phone: { contains: '2025550288' } } })) === 0, receiptNotSetUp.status);
+  Object.assign(process.env, twilioEnv);
   const ask = await patch(bookingsPatch, '/api/operator/bookings', { id: due.id, action: 'send_pay_link', via: 'sms' });
   const askBody = await ask.json() as { needsConsent?: boolean };
   const counted = await prisma.rateLimit.findUnique({ where: { key: `send:pay_link:sms:booking:${due.id}` } });
