@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   const stored = readStoredCode(storedCode);
   const valid = await bcrypt.compare(code, stored.hash);
   if (!valid) {
-    const clearCode = await spendSecondFactorIfOut('operator', operator.id);
+    const clearCode = await spendSecondFactorIfOut('operator', operator.id, { storedCode });
     // Logged after the attempt counter moves, never before it (security audit).
     await securityEvent(req, { kind: 'second_factor_failed', surface: 'course', email: operator.email, accountId: operator.id, detail: 'sign-in code' });
     return NextResponse.json({ error: clearCode ? 'Too many incorrect attempts. Please sign in again to get a new code.' : 'Invalid or expired code.' }, { status: 400 });
@@ -62,7 +62,10 @@ export async function POST(req: NextRequest) {
     // A texted code does not — that owner still confirms by link.
     ...(confirmsEmail ? { emailVerified: true, verificationToken: null, onboardingStep: Math.max(operator.onboardingStep, 1) } : {}),
   });
-  if (!used) return NextResponse.json({ error: 'Invalid or expired code.' }, { status: 400 });
+  if (!used) {
+    await securityEvent(req, { kind: 'second_factor_failed', surface: 'course', email: operator.email, accountId: operator.id, detail: 'sign-in code, already used' });
+    return NextResponse.json({ error: 'Invalid or expired code.' }, { status: 400 });
+  }
 
   await securityEvent(req, { kind: 'signin_ok', surface: 'course', email: operator.email, accountId: operator.id, detail: confirmsEmail ? 'owner, email confirmed by sign-in code' : 'owner' });
   const token = await signToken({ operatorId: operator.id, email: operator.email, sv: operator.sessionVersion });

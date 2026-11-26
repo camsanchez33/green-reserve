@@ -29,6 +29,16 @@ async function setTotpPending(admin: { id: string; twoFactorCode: string | null;
 
 
 
+/**
+ * M8 review: what a spent pending marker leaves behind — the still-live used authenticator step it
+ * carried ("totp-pending:<step>"), so running out of tries never makes a seen code replayable.
+ */
+function keepUsedStep(marker: string): Record<string, unknown> | undefined {
+  if (!marker.startsWith(TOTP_PENDING)) return undefined;
+  const carried = marker.slice(TOTP_PENDING.length + 1);
+  return carried ? { twoFactorCode: TOTP_USED_PREFIX + carried, twoFactorCodeExpiry: new Date(Date.now() + 2 * TOTP_STEP_SECONDS * 1000) } : undefined;
+}
+
 /** Signed in: the session, the cookie, and the alert email (a failed email never blocks the sign-in). */
 async function signIn(req: Request, admin: { id: string; email: string; name: string }, deviceId: string, method: string) {
   await securityEvent(req, { kind: 'signin_ok', surface: 'owner', email: admin.email, accountId: admin.id, detail: method });
@@ -40,7 +50,7 @@ async function signIn(req: Request, admin: { id: string; email: string; name: st
   return res;
 }
 import { securityEvent } from '@/lib/security-events';
-import { failUnknownLogin, unknownLoginLockedUntil, claimPasswordAttempt, clearPasswordAttempts, dummyPasswordCheck, LOGIN_MAX_ATTEMPTS, claimSecondFactorAttempt, spendSecondFactorIfOut, useSecondFactorCode, mayIssueSecondFactor } from '@/lib/login-guard';
+import { failUnknownLogin, unknownLoginLockedUntil, claimPasswordAttempt, clearPasswordAttempts, dummyPasswordCheck, lockoutMinutes, LOGIN_MAX_ATTEMPTS, claimSecondFactorAttempt, spendSecondFactorIfOut, useSecondFactorCode, mayIssueSecondFactor } from '@/lib/login-guard';
 import { totpMatchStep, matchRecoveryCode, looksLikeRecoveryCode, TOTP_PENDING, TOTP_USED_PREFIX, TOTP_STEP_SECONDS } from '@/lib/owner-totp';
 
 function gen6DigitCode(): string {
@@ -48,7 +58,7 @@ function gen6DigitCode(): string {
 }
 
 function lockoutResponse(lockoutUntil: Date) {
-  const minutes = Math.ceil((lockoutUntil.getTime() - Date.now()) / 60000);
+  const minutes = lockoutMinutes(lockoutUntil);
   return NextResponse.json({ error: `Too many attempts, try again in ${minutes} minute${minutes === 1 ? '' : 's'}` }, { status: 429 });
 }
 
@@ -74,12 +84,14 @@ export async function POST(req: NextRequest) {
     // Audit 2026-11-24 M8: the try is claimed before the check, against this pending marker (lib/login-guard).
     const marker = admin.twoFactorCode;
     if (!(await claimSecondFactorAttempt('admin', admin.id, marker))) {
-      if (!(await spendSecondFactorIfOut('admin', admin.id))) return startOver();
+      const out = await spendSecondFactorIfOut('admin', admin.id, { keep: keepUsedStep(marker) });
+      await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: out ? 'passkey, no tries left' : 'passkey, sign-in step no longer current' });
+      if (!out) return startOver();
       await prisma.adminUser.update({ where: { id: admin.id }, data: { passkeyChallenge: null, passkeyChallengeExpiry: null } });
       return NextResponse.json({ error: 'Too many incorrect attempts. Please start over.' }, { status: 400 });
     }
     if (!(await verifyPasskeySignIn(admin.id, body.response))) {
-      const clear = await spendSecondFactorIfOut('admin', admin.id);
+      const clear = await spendSecondFactorIfOut('admin', admin.id, { storedCode: marker, keep: keepUsedStep(marker) });
       await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: 'passkey' });
       return NextResponse.json({ error: clear ? 'Too many incorrect attempts. Please start over.' : 'That passkey didn’t check out — start over and try again, or use your authenticator app.' }, { status: 400 });
     }
@@ -90,7 +102,10 @@ export async function POST(req: NextRequest) {
       ...(carried ? { twoFactorCode: TOTP_USED_PREFIX + carried, twoFactorCodeExpiry: new Date(Date.now() + 2 * TOTP_STEP_SECONDS * 1000) } : { twoFactorCode: null, twoFactorCodeExpiry: null }),
       lastLoginAt: new Date(),
     });
-    if (!used) return startOver();
+    if (!used) {
+      await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: 'passkey, sign-in step already used' });
+      return startOver();
+    }
     return signIn(req, admin, device.id, 'passkey');
   }
 
@@ -124,8 +139,9 @@ export async function POST(req: NextRequest) {
     const storedCode = admin.twoFactorCode;
     if (admin.twoFactorSecret && !storedCode.startsWith(TOTP_PENDING)) return startOver();
     if (!(await claimSecondFactorAttempt('admin', admin.id, storedCode))) {
-      if (!(await spendSecondFactorIfOut('admin', admin.id))) return startOver();
-      await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: 'no tries left' });
+      const out = await spendSecondFactorIfOut('admin', admin.id, { keep: keepUsedStep(storedCode) });
+      await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: out ? 'no tries left' : 'sign-in step no longer current' });
+      if (!out) return startOver();
       return NextResponse.json({ error: 'Too many incorrect attempts. Please start over.' }, { status: 400 });
     }
 
@@ -163,23 +179,29 @@ export async function POST(req: NextRequest) {
         }
       }
       if (!ok) {
-        const clear = await spendSecondFactorIfOut('admin', admin.id);
+        const clear = await spendSecondFactorIfOut('admin', admin.id, { storedCode, keep: keepUsedStep(storedCode) });
         await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: method === 'recovery' ? 'recovery code' : 'authenticator code' });
         return NextResponse.json({ error: clear ? 'Too many incorrect attempts. Please start over.' : 'Incorrect code' }, { status: 400 });
       }
       // Used up once: two requests with one code (or one recovery code) can't both sign in.
-      if (!(await useSecondFactorCode('admin', admin.id, storedCode, { ...data, lastLoginAt: new Date() }))) return startOver();
+      if (!(await useSecondFactorCode('admin', admin.id, storedCode, { ...data, lastLoginAt: new Date() }))) {
+        await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: `${method === 'recovery' ? 'recovery code' : 'authenticator code'}, already used` });
+        return startOver();
+      }
       return signIn(req, admin, device.id, method);
     }
 
     const valid = await bcrypt.compare(String(code).trim(), storedCode);
     if (!valid) {
-      const clearCode = await spendSecondFactorIfOut('admin', admin.id);
+      const clearCode = await spendSecondFactorIfOut('admin', admin.id, { storedCode });
       await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: 'emailed code' });
       return NextResponse.json({ error: clearCode ? 'Too many incorrect attempts. Please start over.' : 'Incorrect code' }, { status: 400 });
     }
 
-    if (!(await useSecondFactorCode('admin', admin.id, storedCode, { twoFactorCode: null, twoFactorCodeExpiry: null, lastLoginAt: new Date() }))) return startOver();
+    if (!(await useSecondFactorCode('admin', admin.id, storedCode, { twoFactorCode: null, twoFactorCodeExpiry: null, lastLoginAt: new Date() }))) {
+      await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: 'emailed code, already used' });
+      return startOver();
+    }
 
     // The only path that has seen a second factor makes the owner session.
     return signIn(req, admin, device.id, 'email');

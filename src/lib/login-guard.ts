@@ -30,18 +30,36 @@ export async function unknownLoginLockedUntil(door: string, email: string, now =
 }
 
 /**
- * A wrong password for an email with no usable account: the same bcrypt work
- * as a real check, then the same counting as a real account. Returns the lock
+ * A wrong password for an email with no usable account: the same counting as a
+ * real account, then the same bcrypt work as a real check. Returns the lock
  * to answer with (on the 5th failure and every one after), or null for the
  * plain "invalid" answer.
+ *
+ * Audit 2026-11-24 M3 (review): counted and locked BEFORE the bcrypt, in the
+ * same order as a real account's claim (claimPasswordAttempt), so a try sent
+ * while the 5th is still being compared finds the lock already there for both
+ * — the same instant refusal, not a fast one for a real email and a slow one
+ * for an unknown one.
  */
 export async function failUnknownLogin(door: string, email: string, password: string, now = new Date()): Promise<Date | null> {
-  await bcrypt.compare(String(password), DUMMY_HASH);
   const { used } = await rateLimitCount(`login-unknown:${door}:${keyEmail(email)}`, LOGIN_MAX_ATTEMPTS, UNKNOWN_MEMORY_SECONDS);
-  if (used < LOGIN_MAX_ATTEMPTS) return null;
-  const key = `login-unknown-lock:${door}:${keyEmail(email)}`;
-  await prisma.rateLimit.upsert({ where: { key }, create: { key, count: 1, windowStart: now }, update: { count: 1, windowStart: now } }).catch(() => {});
-  return new Date(now.getTime() + LOGIN_LOCKOUT_MS);
+  let lock: Date | null = null;
+  if (used >= LOGIN_MAX_ATTEMPTS) {
+    const key = `login-unknown-lock:${door}:${keyEmail(email)}`;
+    await prisma.rateLimit.upsert({ where: { key }, create: { key, count: 1, windowStart: now }, update: { count: 1, windowStart: now } }).catch(() => {});
+    lock = new Date(now.getTime() + LOGIN_LOCKOUT_MS);
+  }
+  await bcrypt.compare(String(password), DUMMY_HASH);
+  return lock;
+}
+
+/**
+ * The minutes a lockout answer names, always 1 to 15. The database's clock sets a real account's lock and
+ * the server's reads it, so a small skew could say "16 minutes" or "0 minutes" — answers an unknown email
+ * (one clock) never gives (M3 review).
+ */
+export function lockoutMinutes(until: Date, now = Date.now()): number {
+  return Math.min(LOGIN_LOCKOUT_MS / 60000, Math.max(1, Math.ceil((until.getTime() - now) / 60000)));
 }
 
 /** The same bcrypt work as a real check, for a refusal that must take as long as one. */
@@ -106,9 +124,14 @@ export async function claimSecondFactorAttempt(kind: SecondFactorAccount, id: st
   return r.count === 1;
 }
 
-/** After a wrong code: if that was the last try, the code is thrown away. True when it was. */
-export async function spendSecondFactorIfOut(kind: SecondFactorAccount, id: string): Promise<boolean> {
-  const r = await updateMany(kind, { id, twoFactorAttempts: { gte: MAX_SECOND_FACTOR_ATTEMPTS } }, { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0 });
+/**
+ * After a wrong code: if that was the last try, the code is thrown away. True when it was.
+ * `storedCode`: only that code (a fresh one sent in the meantime is kept). `keep`: what to leave in its
+ * place, e.g. /cam's still-live used authenticator step, so running out never re-opens a replay (M8 review).
+ */
+export async function spendSecondFactorIfOut(kind: SecondFactorAccount, id: string, opts: { storedCode?: string; keep?: Data } = {}): Promise<boolean> {
+  const where: Where = { id, twoFactorAttempts: { gte: MAX_SECOND_FACTOR_ATTEMPTS }, ...(opts.storedCode ? { twoFactorCode: opts.storedCode } : {}) };
+  const r = await updateMany(kind, where, { twoFactorCode: null, twoFactorCodeExpiry: null, ...(opts.keep ?? {}), twoFactorAttempts: 0 });
   return r.count > 0;
 }
 

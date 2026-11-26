@@ -5,7 +5,7 @@ import { issueTwoFactorCode, TooManyCodesError, TOO_MANY_CODES_MESSAGE } from '@
 import bcrypt from 'bcryptjs';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { securityEvent } from '@/lib/security-events';
-import { failUnknownLogin, unknownLoginLockedUntil, claimPasswordAttempt, clearPasswordAttempts, dummyPasswordCheck, LOGIN_MAX_ATTEMPTS } from '@/lib/login-guard';
+import { failUnknownLogin, unknownLoginLockedUntil, claimPasswordAttempt, clearPasswordAttempts, dummyPasswordCheck, lockoutMinutes, LOGIN_MAX_ATTEMPTS } from '@/lib/login-guard';
 
 // SEC-3 audit: an email with no usable login (none, or a staff login turned
 // off) answers, takes as long and locks exactly like a real one — so nothing
@@ -23,7 +23,7 @@ async function unknownLogin(req: NextRequest, email: string, password: string, a
 }
 
 function lockoutResponse(lockoutUntil: Date) {
-  const minutes = Math.ceil((lockoutUntil.getTime() - Date.now()) / 60000);
+  const minutes = lockoutMinutes(lockoutUntil);
   return NextResponse.json({ error: `Too many attempts, try again in ${minutes} minute${minutes === 1 ? '' : 's'}` }, { status: 429 });
 }
 

@@ -7,8 +7,29 @@
 //      Now a try is claimed against the exact code, a right code is used once, and new codes are capped.
 // Real database. Run: npx tsx scripts/login-race-db-test.ts
 import { readFileSync } from 'fs';
+import { createHash } from 'crypto';
 import bcrypt from 'bcryptjs';
 import { NextRequest } from 'next/server';
+
+// /cam reads cookies() and headers(), which only work inside a real request: here they read this jar.
+let jar: Record<string, string> = {};
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const nextHeaders = require('next/headers');
+nextHeaders.cookies = async () => ({ get: (n: string) => (jar[n] ? { name: n, value: jar[n] } : undefined), getAll: () => [], has: (n: string) => n in jar, set: () => {} });
+nextHeaders.headers = async () => new Headers({ 'user-agent': 'test-browser' });
+
+// Every bcrypt compare is counted, and can be held at a gate, to see which request does one and when.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const bcryptModule = require('bcryptjs');
+const realCompare = bcryptModule.compare.bind(bcryptModule);
+let compares = 0;
+let gate: Promise<void> | null = null;
+let entered: (() => void) | null = null;
+bcryptModule.compare = async (a: string, b: string) => {
+  compares++;
+  if (gate) { const g = gate; entered?.(); await g; }
+  return realCompare(a, b);
+};
 import { prisma } from '../src/lib/prisma';
 import { signPendingTwoFactorToken } from '../src/lib/auth';
 import { claimSecondFactorAttempt, spendSecondFactorIfOut, useSecondFactorCode, mayIssueSecondFactor, SECOND_FACTOR_ISSUES_PER_HOUR, claimPasswordAttempt } from '../src/lib/login-guard';
@@ -16,6 +37,10 @@ import { issueTwoFactorCode, TooManyCodesError } from '../src/lib/two-factor';
 import { POST as opLogin } from '../src/app/api/auth/login/route';
 import { POST as adminLogin } from '../src/app/api/admin/login/route';
 import { POST as opVerify } from '../src/app/api/auth/2fa/verify/route';
+import { POST as camLogin } from '../src/app/api/cam/login/route';
+import { authenticator } from 'otplib';
+import { generateTotpSecret, TOTP_USED_PREFIX } from '../src/lib/owner-totp';
+import { DEVICE_COOKIE } from '../src/lib/owner-session';
 
 const TAG = 'loginracetest';
 let failed = 0;
@@ -29,7 +54,31 @@ async function cleanup() {
   await prisma.courseStaff.deleteMany({ where: { email: { startsWith: TAG } } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
   await prisma.courseOperator.deleteMany({ where: { email: { startsWith: TAG } } });
+  await prisma.rateLimit.deleteMany({ where: { key: { startsWith: 'login-unknown' }, AND: { key: { contains: TAG } } } });
   await prisma.adminUser.deleteMany({ where: { email: { startsWith: TAG } } });
+}
+
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+/**
+ * The reviewer's case (M3 review): 4 wrong, then a 5th held inside its bcrypt, then a 6th. How many
+ * compares does the 6th do while the 5th is still comparing? Must be the same for a real and an unknown email.
+ */
+async function staggeredSixth(send: () => Promise<Response>): Promise<{ sixthCompares: number; sixthStatus: number | null }> {
+  for (let i = 0; i < 4; i++) await send();
+  let release!: () => void;
+  gate = new Promise<void>(r => { release = r; });
+  const inFifth = new Promise<void>(r => { entered = r; });
+  const fifth = send();
+  await inFifth;
+  entered = null;
+  const before = compares;
+  const sixth = send();
+  const sixthStatus = await Promise.race([sixth.then(r => r.status), sleep(1500).then(() => null)]);
+  const sixthCompares = compares - before;
+  gate = null;
+  release();
+  await fifth; await sixth;
+  return { sixthCompares, sixthStatus };
 }
 
 let ipN = 0;
@@ -72,6 +121,18 @@ const burst = async (n: number, f: () => Promise<Response>) => (await Promise.al
   const adminRow = await prisma.adminUser.findUniqueOrThrow({ where: { id: admin.id } });
   ok('M3 admin: locks after exactly 5, and an unknown email answers alike', sorted(adminWrong) === '401,401,401,401,429,429,429,429' && sorted(adminUnknown) === sorted(adminWrong) && adminRow.failedLoginAttempts === 5, { adminWrong, adminUnknown, n: adminRow.failedLoginAttempts });
 
+  // The reviewer's timing case: the 6th while the 5th is still inside its bcrypt.
+  const realOp = await prisma.courseOperator.create({ data: { name: 'Stagger Owner', email: `${TAG}+stagger@t.local`, password: hash, emailVerified: true } });
+  const realStag = await staggeredSixth(() => post(opLogin, '/api/auth/login', { email: realOp.email, password: 'wrong-guess' }));
+  const unknownStag = await staggeredSixth(() => post(opLogin, '/api/auth/login', { email: `${TAG}+stagger-nobody@t.local`, password: 'wrong-guess' }));
+  ok('M3 a 6th sent while the 5th is comparing: same work and answer for a real and an unknown email', realStag.sixthCompares === unknownStag.sixthCompares && realStag.sixthStatus === 429 && unknownStag.sixthStatus === 429, { realStag, unknownStag });
+  const adminStag = await staggeredSixth(() => post(adminLogin, '/api/admin/login', { email: `${TAG}+stagger-admin@t.local`, password: 'wrong-guess' }));
+  const stagAdmin = await prisma.adminUser.create({ data: { name: 'Stagger Admin', email: `${TAG}+stagger-real-admin@t.local`, passwordHash: hash, role: 'viewer', active: true } });
+  const adminRealStag = await staggeredSixth(() => post(adminLogin, '/api/admin/login', { email: stagAdmin.email, password: 'wrong-guess' }));
+  ok('M3 the same at the admin door', adminStag.sixthCompares === adminRealStag.sixthCompares && adminStag.sixthStatus === adminRealStag.sixthStatus, { adminStag, adminRealStag });
+  const { lockoutMinutes } = await import('../src/lib/login-guard');
+  ok('M3 a lockout always names 1 to 15 minutes, whatever the clocks', lockoutMinutes(new Date(Date.now() + 15 * 60000 + 5000)) === 15 && lockoutMinutes(new Date(Date.now() - 2000)) === 1 && lockoutMinutes(new Date(Date.now() + 61000)) === 2);
+
   // The lock runs out: the next wrong one relocks at once; the right one clears everything.
   await prisma.courseOperator.update({ where: { id: op.id }, data: { lockoutUntil: new Date(Date.now() - 1000) } });
   const relock = await burst(3, () => post(opLogin, '/api/auth/login', { email: op.email, password: 'wrong-guess' }));
@@ -108,9 +169,11 @@ const burst = async (n: number, f: () => Promise<Response>) => (await Promise.al
 
   await setCode();
   await prisma.courseOperator.update({ where: { id: op.id }, data: { twoFactorAttempts: 3 } });
-  await prisma.courseOperator.update({ where: { id: op.id }, data: { twoFactorCode: `email:${await bcrypt.hash('135790', 4)}` } });
+  const codeBefore = (await prisma.courseOperator.findUniqueOrThrow({ where: { id: op.id } })).twoFactorCode;
+  // The send fails here (no email key) after the new code is stored; that is all this needs.
+  await issueTwoFactorCode(await prisma.courseOperator.findUniqueOrThrow({ where: { id: op.id } })).catch(() => {});
   const afterNewCode = await prisma.courseOperator.findUniqueOrThrow({ where: { id: op.id } });
-  ok('M8 a new code does not give the tries back (only a right code or running out does)', afterNewCode.twoFactorAttempts === 3);
+  ok('M8 a new code (issueTwoFactorCode) does not give the tries back', afterNewCode.twoFactorCode !== codeBefore && afterNewCode.twoFactorAttempts === 3, afterNewCode.twoFactorAttempts);
 
   // Codes per account are capped.
   await prisma.rateLimit.deleteMany({ where: { key: `2fa-issue:operator:${op.id}` } });
@@ -133,6 +196,39 @@ const burst = async (n: number, f: () => Promise<Response>) => (await Promise.al
   ok('M8 /cam: a try against a step that was replaced is refused', !(await claimSecondFactorAttempt('admin', owner.id, 'totp-pending:123')));
   const uses = await Promise.all([1, 2].map(() => useSecondFactorCode('admin', owner.id, 'totp-pending', { twoFactorCode: null, twoFactorCodeExpiry: null })));
   ok('M8 /cam: a right code used twice at once is used once', uses.filter(Boolean).length === 1, uses);
+
+  // ── M8: /cam itself, as a route ──
+  const secret = generateTotpSecret();
+  const camOwner = await prisma.adminUser.create({ data: { name: 'Cam Route', email: `${TAG}+camroute@t.local`, passwordHash: hash, role: 'owner', active: true, twoFactorSecret: secret } });
+  const rawDevice = `${TAG}-device-token`;
+  await prisma.ownerDevice.create({ data: { adminId: camOwner.id, tokenHash: createHash('sha256').update(rawDevice).digest('hex'), approvedAt: new Date() } });
+  jar = { [DEVICE_COOKIE]: rawDevice };
+  const camPassword = () => post(camLogin, '/cam', { email: camOwner.email, password: 'right-password-1' });
+  const camCode = (code: string) => post(camLogin, '/cam', { step: 'verify', email: camOwner.email, code });
+  const wrongCode = () => { const right = authenticator.generate(secret); return right === '000000' ? '111111' : '000000'; };
+  const pw1 = await camPassword();
+  ok('M8 /cam route: the right password asks for the authenticator', pw1.status === 200 && (await pw1.json()).method === 'totp');
+  const four = [];
+  for (let i = 0; i < 4; i++) four.push((await camCode(wrongCode())).status);
+  await camPassword();
+  const fifth = await camCode(wrongCode());
+  const fifthBody = await fifth.json() as { error?: string };
+  ok('M8 /cam route: 4 wrong, the password again, then 1 more runs out (the password no longer gives tries back)', four.every(s => s === 400) && /Too many incorrect attempts/.test(fifthBody.error ?? ''), { four, fifthBody });
+  const pw3 = await camPassword();
+  const step = authenticator.generate(secret);
+  const signedIn = pw3.status === 200 ? await camCode(step) : pw3;
+  ok('M8 /cam route: after running out, the password and a right code sign in', signedIn.status === 200, signedIn.status);
+  // Replay: the code just used is carried on the next pending marker; running out must not drop it.
+  await camPassword();
+  for (let i = 0; i < 5; i++) await camCode(wrongCode());
+  const afterOut = await prisma.adminUser.findUniqueOrThrow({ where: { id: camOwner.id } });
+  ok('M8 /cam route: running out keeps the used step (not null)', !!afterOut.twoFactorCode?.startsWith(TOTP_USED_PREFIX), afterOut.twoFactorCode);
+  await camPassword();
+  const replay = await camCode(step);
+  ok('M8 /cam route: the code already used cannot be replayed into a new sign-in after running out', replay.status === 400, replay.status);
+  const evDetails = (await prisma.securityEvent.findMany({ where: { accountId: camOwner.id, kind: 'second_factor_failed' }, select: { detail: true } })).map(e => e.detail);
+  ok('M8 /cam route: every refused code is a security event', evDetails.length >= 11, evDetails.length);
+  jar = {};
 
   const cam = read('src/app/api/cam/login/route.ts');
   const pendingFn = cam.slice(cam.indexOf('async function setTotpPending'), cam.indexOf('/** Signed in'));

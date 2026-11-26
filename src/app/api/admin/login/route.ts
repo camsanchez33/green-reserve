@@ -4,10 +4,10 @@ import { signAdminToken, signAdminSetPasswordToken } from '@/lib/admin-session';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 import { securityEvent } from '@/lib/security-events';
-import { failUnknownLogin, unknownLoginLockedUntil, claimPasswordAttempt, clearPasswordAttempts, dummyPasswordCheck, LOGIN_MAX_ATTEMPTS } from '@/lib/login-guard';
+import { failUnknownLogin, unknownLoginLockedUntil, claimPasswordAttempt, clearPasswordAttempts, dummyPasswordCheck, lockoutMinutes, LOGIN_MAX_ATTEMPTS } from '@/lib/login-guard';
 
 function lockoutResponse(lockoutUntil: Date) {
-  const minutes = Math.ceil((lockoutUntil.getTime() - Date.now()) / 60000);
+  const minutes = lockoutMinutes(lockoutUntil);
   return NextResponse.json({ error: `Too many attempts, try again in ${minutes} minute${minutes === 1 ? '' : 's'}` }, { status: 429 });
 }
 
