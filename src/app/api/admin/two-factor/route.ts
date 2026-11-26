@@ -30,11 +30,17 @@ import { withAudit } from '@/lib/admin-audit';
 // Audit 2026-11-24 M6: a stolen gr_owner cookie could start and confirm a new
 // authenticator, swapping in its own, which then passed every later step-up.
 //   - Replacing the app (start, when one is set up) needs a FRESH "Confirm it's
-//     you" with the current passkey or app (freshStepUpRequired, used up here).
-//     confirm needs the enrolment token only start makes, so it is covered too.
+//     you" with the current passkey, app or a recovery code (freshStepUpRequired,
+//     used up here). confirm needs the enrolment token only start makes.
+//     One exception, so a lost phone never locks the owner out: a session that
+//     signed in with a recovery code may move the app within 5 minutes of that
+//     sign-in (the code it spent IS the fresh second factor; it may have been
+//     the last one, and then nothing is left to confirm with).
 //   - A first set-up needs a second factor in the last few minutes
 //     (stepUpRequired: the sign-in's emailed code, as there is nothing else yet).
-//   - regenerate already needs a current authenticator code.
+//   - regenerate (new recovery codes) needs a fresh confirm too. It took a bare
+//     app code, with no per-session cap, no record of a miss and no replay check,
+//     and its new codes then passed the step-up: a way round the gate above.
 // Every change is a security event and emails the owner at once.
 
 /** The record and the alert; neither can undo or fail a change already saved. */
@@ -51,7 +57,14 @@ async function announce(req: NextRequest, admin: { id: string; email: string; na
 
 /** M6: the check before a new authenticator secret is handed out. Called last, so a refusal spends nothing. */
 async function enrolGate(session: AdminSession, replacing: boolean): Promise<NextResponse | null> {
-  if (replacing) return freshStepUpRequired(session);
+  if (replacing) {
+    if (!stepUpRequired(session) && session.ownerSessionId) {
+      // Signed in with a recovery code, and a second factor proved in the last 5 minutes.
+      const s = await prisma.ownerSession.findUnique({ where: { id: session.ownerSessionId }, select: { method: true } });
+      if (s?.method === 'recovery') return null;
+    }
+    return freshStepUpRequired(session);
+  }
   if (!stepUpRequired(session)) return null;
   return NextResponse.json({ error: 'For your safety, set this up within 5 minutes of signing in. Sign in again at /cam, then come straight here.' }, { status: 403 });
 }
@@ -116,8 +129,9 @@ async function twoFactor(req: NextRequest) {
 
   if (action === 'regenerate') {
     if (!admin.twoFactorSecret) return NextResponse.json({ error: 'Set up the authenticator first.' }, { status: 400 });
-    const step = totpMatchStep(String(body.code ?? ''), admin.twoFactorSecret);
-    if (step === null) return NextResponse.json({ error: 'Enter a current code from your authenticator to replace the recovery codes.' }, { status: 400 });
+    // M6 review: a fresh "Confirm it's you" (capped, recorded, replay-guarded in /api/cam/step-up), used up here.
+    const refused = await freshStepUpRequired(g.session);
+    if (refused) return refused;
     const codes = await generateRecoveryCodes();
     await prisma.adminUser.update({ where: { id: admin.id }, data: { twoFactorRecoveryCodes: codes.hashes } });
     await announce(req, admin, 'recovery_codes');

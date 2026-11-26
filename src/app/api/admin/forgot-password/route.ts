@@ -7,7 +7,7 @@ import { securityEvent } from '@/lib/security-events';
 
 // Audit 2026-11-24 M7: an unknown email answered at once while a real one waited on the email send
 // (and could answer 500), so the timing and the answer said which emails are admin logins; and the
-// only cap was per address. Now every request gets the same answer straight away, and the lookup, the
+// only cap was per connection (IP). Now every request gets the same answer straight away, and the lookup, the
 // link and the email happen after the response (after()), so no answer and no timing differs. Each
 // email address gets at most 3 links an hour, and every request is a security event.
 const PER_EMAIL = 3;
@@ -34,11 +34,10 @@ export async function POST(req: NextRequest) {
     try {
       const admin = await prisma.adminUser.findUnique({ where: { email } });
       const usable = !!admin && admin.active;
-      await securityEvent(req, {
-        kind: emailAllowed ? 'reset_requested' : 'rate_limited', surface: admin?.role === 'owner' ? 'owner' : 'admin', email, accountId: admin?.id,
-        detail: !emailAllowed ? 'forgot password, too many links for this address' : usable ? 'forgot password, link sent' : admin ? 'forgot password, account turned off (nothing sent)' : 'forgot password, unknown account (nothing sent)',
-      });
-      if (!usable || !emailAllowed) return;
+      const surface = admin?.role === 'owner' ? 'owner' as const : 'admin' as const;
+      const record = (detail: string) => securityEvent(req, { kind: emailAllowed ? 'reset_requested' : 'rate_limited', surface, email, accountId: admin?.id, detail });
+      if (!emailAllowed) { await record('forgot password, too many links for this address'); return; }
+      if (!usable) { await record(admin ? 'forgot password, account turned off (nothing sent)' : 'forgot password, unknown account (nothing sent)'); return; }
 
       const token = await signAdminSetPasswordToken({ adminId: admin.id, email: admin.email });
       await prisma.adminUser.update({
@@ -46,10 +45,16 @@ export async function POST(req: NextRequest) {
         data: { setPasswordToken: token, setPasswordTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000) },
       });
       const resetLink = `${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/admin/set-password?token=${encodeURIComponent(token)}`;
-      await sendAdminPasswordResetEmail({ adminName: admin.name, adminEmail: admin.email, resetLink });
+      try {
+        await sendAdminPasswordResetEmail({ adminName: admin.name, adminEmail: admin.email, resetLink });
+        await record('forgot password, link sent');
+      } catch (err) {
+        await record('forgot password, the email did not send');
+        throw err;
+      }
     } catch (err) {
-      // Logged by row id only, never the address typed.
-      console.error(JSON.stringify({ ev: 'admin.forgot_password.fail', error: err instanceof Error ? err.message : String(err) }));
+      // Never the address typed: the error's name only (a message can quote the query's values).
+      console.error(JSON.stringify({ ev: 'admin.forgot_password.fail', error: err instanceof Error ? err.name : 'unknown' }));
     }
   });
 

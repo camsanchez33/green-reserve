@@ -27,6 +27,7 @@ import { generateTotpSecret, signEnrolToken } from '../src/lib/owner-totp';
 import { authenticator } from 'otplib';
 import { POST as twoFactor } from '../src/app/api/admin/two-factor/route';
 import { POST as forgot } from '../src/app/api/admin/forgot-password/route';
+import { POST as passkeys } from '../src/app/api/admin/passkeys/route';
 
 const TAG = 'owner2faforgottest';
 let failed = 0;
@@ -52,8 +53,8 @@ const post2fa = (body: unknown) => twoFactor(req('/api/admin/two-factor', body),
   // ── M6 ──
   const owner = await prisma.adminUser.create({ data: { name: 'Two Owner', email: `${TAG}+owner@t.local`, passwordHash: 'x', role: 'owner', active: true } });
   const device = await prisma.ownerDevice.create({ data: { adminId: owner.id, tokenHash: `${TAG}-dev`, approvedAt: new Date() } });
-  const session = async (stepUpAt: Date | null, stepUpFresh = false) => {
-    const s = await prisma.ownerSession.create({ data: { adminId: owner.id, deviceId: device.id, method: 'email', expiresAt: new Date(Date.now() + 3600_000), stepUpAt, stepUpFresh } });
+  const session = async (stepUpAt: Date | null, stepUpFresh = false, method = 'email') => {
+    const s = await prisma.ownerSession.create({ data: { adminId: owner.id, deviceId: device.id, method, expiresAt: new Date(Date.now() + 3600_000), stepUpAt, stepUpFresh } });
     jar = { gr_owner: await signOwnerToken(s.id, owner.id, s.expiresAt) };
     return s;
   };
@@ -88,8 +89,24 @@ const post2fa = (body: unknown) => twoFactor(req('/api/admin/two-factor', body),
   const replaced = await post2fa({ action: 'confirm', enrolToken: replaceBody.enrolToken, code: authenticator.generate(replaceBody.secret) });
   ok('M6 confirming the new app replaces it and is recorded', replaced.status === 200 && (await prisma.adminUser.findUniqueOrThrow({ where: { id: owner.id } })).twoFactorSecret === replaceBody.secret
     && (await prisma.securityEvent.count({ where: { accountId: owner.id, kind: 'second_factor_changed', detail: 'authenticator app replaced' } })) === 1);
-  const regen = await post2fa({ action: 'regenerate', code: authenticator.generate(replaceBody.secret) });
-  ok('M6 new recovery codes still need a current code, and are recorded', regen.status === 200 && (await prisma.securityEvent.count({ where: { accountId: owner.id, kind: 'second_factor_changed', detail: 'recovery codes replaced' } })) === 1);
+  // M6 review: new recovery codes need a fresh confirm too; a bare app code (even a used one) no longer does it.
+  await session(new Date(Date.now() - 60_000), false);
+  const regenBare = await post2fa({ action: 'regenerate', code: authenticator.generate(replaceBody.secret) });
+  ok('M6 new recovery codes without a fresh confirm are refused, even with a right app code', regenBare.status === 403 && ((await regenBare.json()) as { code?: string }).code === 'step_up');
+  await session(new Date(), true);
+  const regen = await post2fa({ action: 'regenerate' });
+  ok('M6 with a fresh confirm they are made, and recorded', regen.status === 200 && (await prisma.securityEvent.count({ where: { accountId: owner.id, kind: 'second_factor_changed', detail: 'recovery codes replaced' } })) === 1);
+
+  // A lost phone: signed in with a recovery code (maybe the last one), nothing else to confirm with.
+  await session(new Date(), false, 'recovery');
+  ok('M6 right after signing in with a recovery code, the app can be moved (no lockout)', (await post2fa({ action: 'start' })).status === 200);
+  await session(new Date(Date.now() - 10 * 60_000), false, 'recovery');
+  ok('M6 …but not 10 minutes later', (await post2fa({ action: 'start' })).status === 403);
+
+  // Adding a passkey needs a fresh confirm too (a new passkey would pass every later confirm).
+  await session(new Date(), false);
+  const pk = await passkeys(req('/api/admin/passkeys', { action: 'options' }), undefined);
+  ok('M6 adding a passkey without a fresh confirm is refused', pk.status === 403 && ((await pk.json()) as { code?: string }).code === 'step_up', pk.status);
   const route = read('src/app/api/admin/two-factor/route.ts');
   ok('M6 every change emails the owner', (route.match(/await announce\(req, admin/g) ?? []).length === 2 && route.includes('sendOwnerTwoFactorChanged('));
   ok('M6 the profile card asks "Confirm it\'s you" when told to', read('src/components/admin/OwnerTwoFactorCard.tsx').includes("stepUpFetch('/api/admin/two-factor'"));
