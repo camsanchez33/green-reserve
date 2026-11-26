@@ -149,3 +149,14 @@ Mockup `lanes/build/emails-texts-mockup.html` (https://claude.ai/artifact/NBRME2
 
 ## Tomorrow (Cam 2026-11-19)
 - UI styles review: 4 styles (Glass light/dark, Solid light/dark) shown on REAL page screenshots; layout and function never change, only backgrounds, panels, buttons and controls.
+
+## UI style overhaul — APPROVED (Cam 2026-11-26, "Approved, build it")
+Mockup https://claude.ai/artifact/EBEC6HE7LWFgPLMLzbN9p8 (v6); prototype layer in `lanes/build/ui-style/` (`themes.css` is the reference for surface tokens; `tag.js` shows the sidebar icons/labels; it was injected at capture time only).
+- LOOK ONLY. No page changes what it does or shows, except the items marked LAYOUT below.
+- Two styles: **Dark = glass** (Apple-style material: flat neutral #141414 page, translucent dark panels with backdrop blur, hairline light edge, soft top highlight, soft shadow, no colour cast, no blurred shapes or gradients behind the page) and **Light = solid** (white cards on neutral grey #F2F2F2, R=G=B, dark sidebar). Supersedes "the Light look is glass too" (LIGHT-PARITY wording) — both looks still get every change.
+- Admin: Dark (glass) only; green tint removed from menu hover/active.
+- Sidebars (dashboard + admin): clear groups with small labels (dashboard: Today / Business / Course), even spacing, one monochrome line icon per item (OperatorSidebar's icon list; matching set for AdminSidebar), active item = lighter fill + left bar + bold. No search in the sidebar.
+- Search fields everywhere match their screen: white field + thin border on Light, dark glass field + faint light edge on Dark. Dashboard golfer search sits at the top of EVERY dashboard page (header band, same colour as the sidebar).
+- LAYOUT: admin Overview stat cards on one row; golfer course page gets a centred sliding tab "Tee times | Course information" (Tee times default; course details move to the second tab) — on phones the calendar stays and the two tabs never overlap; tee sheet on phones defaults to the list view with stat boxes in one row; homepage on phones keeps the hero photo and look, stacked for scrolling.
+- Phone layouts per the mockup's "On a phone" sections (bottom tab bar/More for dashboard and admin, sheets over dialogs, sticky primary action, 44px targets) — same content and actions.
+- After this ships: the UI kit pass (fonts, sliders, switches, buttons, icons, animations) and an automatic guard that blocks hand-made buttons, text sizes and search fields (approved 2026-11-24).
