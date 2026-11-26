@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getOperatorSession } from '@/lib/auth';
-import { ACTIVE_COURSE_COOKIE } from '@/lib/session';
+import { ACTIVE_COURSE_COOKIE, liveOperatorSession } from '@/lib/session';
 
 // Sets which of an operator's courses the dashboard should act on. Always
 // re-validates ownership server-side — the cookie is just a preference, never
 // trusted for authorization.
 export async function POST(req: NextRequest) {
-  const session = await getOperatorSession();
+  const session = await liveOperatorSession(); // audit 2026-11-24 L1: a killed cookie (old sessionVersion) is refused
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.kind !== 'operator') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 

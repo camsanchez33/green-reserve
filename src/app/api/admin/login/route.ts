@@ -4,13 +4,10 @@ import { signAdminToken, signAdminSetPasswordToken } from '@/lib/admin-session';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 import { securityEvent } from '@/lib/security-events';
-import { failUnknownLogin, unknownLoginLockedUntil } from '@/lib/login-guard';
-
-const MAX_ATTEMPTS = 5;
-const LOCKOUT_MS = 15 * 60 * 1000;
+import { failUnknownLogin, unknownLoginLockedUntil, claimPasswordAttempt, clearPasswordAttempts, dummyPasswordCheck, lockoutMinutes, LOGIN_MAX_ATTEMPTS } from '@/lib/login-guard';
 
 function lockoutResponse(lockoutUntil: Date) {
-  const minutes = Math.ceil((lockoutUntil.getTime() - Date.now()) / 60000);
+  const minutes = lockoutMinutes(lockoutUntil);
   return NextResponse.json({ error: `Too many attempts, try again in ${minutes} minute${minutes === 1 ? '' : 's'}` }, { status: 429 });
 }
 
@@ -52,17 +49,23 @@ export async function POST(req: NextRequest) {
     return lockoutResponse(admin.lockoutUntil);
   }
 
+  // Audit 2026-11-24 M3: the try is claimed atomically before the compare (lib/login-guard).
+  const claim = await claimPasswordAttempt('admin', admin.id);
+  if (!claim.claimed) {
+    await dummyPasswordCheck(password);
+    await securityEvent(req, { kind: 'signin_failed', surface: 'admin', email, accountId: admin.id, detail: 'while locked out' });
+    return lockoutResponse(claim.lockoutUntil);
+  }
   const valid = await bcrypt.compare(password, admin.passwordHash);
   if (!valid) {
-    const failedLoginAttempts = admin.failedLoginAttempts + 1;
-    const lockoutUntil = failedLoginAttempts >= MAX_ATTEMPTS ? new Date(Date.now() + LOCKOUT_MS) : null;
-    await prisma.adminUser.update({ where: { id: admin.id }, data: { failedLoginAttempts, ...(lockoutUntil ? { lockoutUntil } : {}) } });
+    const lockoutUntil = claim.attempts >= LOGIN_MAX_ATTEMPTS ? claim.lockoutUntil : null;
     await securityEvent(req, { kind: lockoutUntil ? 'locked_out' : 'signin_failed', surface: 'admin', email, accountId: admin.id, detail: 'wrong password' });
     if (lockoutUntil) return lockoutResponse(lockoutUntil);
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
-  await prisma.adminUser.update({ where: { id: admin.id }, data: { failedLoginAttempts: 0, lockoutUntil: null, lastLoginAt: new Date() } });
+  await clearPasswordAttempts('admin', admin.id);
+  await prisma.adminUser.update({ where: { id: admin.id }, data: { lastLoginAt: new Date() } });
   await securityEvent(req, { kind: 'signin_ok', surface: 'admin', email, accountId: admin.id });
 
   if (admin.mustChangePassword) {
@@ -82,6 +85,7 @@ export async function POST(req: NextRequest) {
     email: admin.email,
     name: admin.name,
     role: admin.role,
+    sv: admin.sessionVersion,
   });
 
   const res = NextResponse.json({ success: true, role: admin.role, name: admin.name });

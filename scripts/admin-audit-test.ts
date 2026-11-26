@@ -20,6 +20,7 @@ const SKIP: Record<string, string> = {
   'src/app/api/admin/set-password/route.ts': 'no session: invite-link password set',
   'src/app/api/admin/bootstrap/route.ts': 'no session: creates the very first admin',
   'src/app/api/admin/ask/route.ts': 'read-only AI answers',
+  'src/app/api/admin/assistant/route.ts': 'read-only AI answers (owner only; no write tool exists)',
   'src/app/api/admin/course-documents/upload/route.ts': 'upload permit only; ../record audits',
   'src/app/api/admin/company-documents/upload/route.ts': 'upload permit only; ../route POST audits',
   'src/app/api/admin/company-documents/[id]/route.ts': 'relabel and rename are audited in lib/company-documents-ops.ts (updateDocument)',

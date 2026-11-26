@@ -9,7 +9,9 @@ import { confirmationPartsOf, CONFIRMATION_PART_SELECT } from '@/lib/confirmatio
 import { ON_REAL_COURSE } from '@/lib/real-courses';
 import { bookingRefLabel } from '@/lib/booking-ref';
 import { ciContains, ciEquals } from '@/lib/like-exact';
-import { golferLines, isListFilter, matchesFilter, matchesQuery, canResendReceipt } from './list';
+import { golferLines, isListFilter, matchesFilter, matchesQuery, canResendReceipt, withoutFailedCharges } from './list';
+import { hasArea } from '@/lib/admin-areas';
+import { MONEY_ONLY_PAYMENT_KINDS } from '@/lib/money-problems';
 
 // MP-6d: the Golfers record page. Search finds accounts AND guest bookings by
 // name / email / phone; the record is identity + a trust strip (rounds,
@@ -51,7 +53,7 @@ type BookingRow = {
 
 function todayStr() { return new Date().toISOString().split('T')[0]; }
 
-function shapeBooking(b: BookingRow, today: string) {
+function shapeBooking(b: BookingRow, today: string, seesMoney: boolean) {
   const refunded = b.paymentEvents.filter(e => e.kind === 'refund').reduce((s, e) => s + e.amountCents, 0);
   const isPast = b.teeTime.date < today;
   const noShow = b.status === 'confirmed' && isPast && !b.checkedInAt && b.paymentStatus !== 'paid' && !b.checkInFailReason;
@@ -67,7 +69,8 @@ function shapeBooking(b: BookingRow, today: string) {
     checkedInAt: b.checkedInAt?.toISOString() ?? null,
     cancelledAt: b.cancelledAt?.toISOString() ?? null,
     cancellationFeeChargedAt: b.cancellationFeeChargedAt?.toISOString() ?? null,
-    checkInFailReason: b.checkInFailReason,
+    // M10 / MONEY-VIEW-1: a declined card, its reason and our fee events are the Money area's.
+    checkInFailReason: seesMoney ? b.checkInFailReason : '',
     hasCard: !!b.stripePaymentMethodId,
     isGuest: !b.golferAccountId,
     noShow,
@@ -76,7 +79,7 @@ function shapeBooking(b: BookingRow, today: string) {
     termsAcceptedAt: b.termsAcceptedAt?.toISOString() ?? null, termsVersion: b.termsVersion,
     courseId: b.course.id, courseName: b.course.name, courseSlug: b.course.slug,
     teeDate: b.teeTime.date, teeTime: b.teeTime.time, holes: b.teeTime.holes,
-    events: b.paymentEvents.map(e => ({
+    events: b.paymentEvents.filter(e => seesMoney || !MONEY_ONLY_PAYMENT_KINDS.includes(e.kind)).map(e => ({
       id: e.id, kind: e.kind, amount: e.amountCents / 100, actor: e.actor, actorName: e.actorName, detail: e.detail, at: e.createdAt.toISOString(),
     })),
   };
@@ -89,6 +92,8 @@ export async function GET(req: NextRequest) {
   }
   const noArea = areaGate(session, 'golfers');
   if (noArea) return noArea;
+  // M10 / MONEY-VIEW-1 (Cam 2026-11-26): failed charges only with the Money area.
+  const seesMoney = hasArea(session, 'money');
 
   const { searchParams } = req.nextUrl;
   const golferId = searchParams.get('id');
@@ -119,7 +124,7 @@ export async function GET(req: NextRequest) {
       rows = guests as unknown as BookingRow[];
     }
     rows.sort((a, b) => (b.teeTime.date + b.teeTime.time).localeCompare(a.teeTime.date + a.teeTime.time));
-    const bookings = rows.map(b => shapeBooking(b, today));
+    const bookings = rows.map(b => shapeBooking(b, today, seesMoney));
 
     // Trust strip — the difference between waiving a fee gladly and spotting a serial no-show.
     const trust = {
@@ -127,7 +132,7 @@ export async function GET(req: NextRequest) {
       noShows: bookings.filter(b => b.noShow).length,
       // A late cancel KEPT its fee: a waived fee leaves the timestamp but the booking reads 'refunded' (analytics.ts's rule).
       lateCancels: bookings.filter(b => b.status === 'cancelled' && b.cancellationFeeChargedAt && b.paymentStatus === 'cancellation_fee_charged').length,
-      failedCharges: bookings.filter(b => b.checkInFailReason && !b.checkedInAt).length,
+      failedCharges: seesMoney ? bookings.filter(b => b.checkInFailReason && !b.checkedInAt).length : null,
       upcoming: bookings.filter(b => b.status === 'confirmed' && b.teeDate >= today).length,
       lifetimeCollected: bookings.filter(b => b.paymentStatus === 'paid' || b.paymentStatus === 'refunded').reduce((s, b) => s + b.totalAmount - b.refundedTotal, 0),
       refunded: bookings.reduce((s, b) => s + b.refundedTotal, 0),
@@ -153,6 +158,7 @@ export async function GET(req: NextRequest) {
   if (searchParams.get('list')) {
     const f = searchParams.get('filter') ?? 'all';
     const filter = isListFilter(f) ? f : 'all';
+    if (filter === 'failed' && !seesMoney) return areaGate(session, 'money')!;
     const offset = Math.max(0, Math.min(1_000_000, Number.parseInt(searchParams.get('offset') ?? '0', 10) || 0));
     const lq = q.slice(0, 100);
     const [accounts, rows] = await Promise.all([
@@ -170,10 +176,11 @@ export async function GET(req: NextRequest) {
       }),
     ]);
     const lines = golferLines(accounts, rows.map(r => ({ ...r, courseId: r.course.id, courseName: r.course.name, teeDate: r.teeTime.date })), today)
+      .map(l => (seesMoney ? l : withoutFailedCharges(l)))
       .filter(l => matchesFilter(l, filter) && matchesQuery(l, lq));
     const page = lines.slice(offset, offset + LIST_PAGE);
     return NextResponse.json({
-      filter, q: lq, total: lines.length,
+      filter, q: lq, total: lines.length, seesMoney,
       nextOffset: offset + LIST_PAGE < lines.length ? offset + LIST_PAGE : null,
       golfers: page.map(l => ({
         key: l.key, id: l.id, guestEmail: l.guestEmail, name: l.name, homeCourse: l.homeCourse, rounds: l.rounds, lastPlayed: l.lastPlayed, tone: l.tone,
