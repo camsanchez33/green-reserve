@@ -212,8 +212,7 @@ function MembershipsPageInner() {
             <KV k="Lasts" v={`${open.termMonths} months from joining`} />
             <KV k="Renews itself" v={open.autoRenew ? 'Yes' : 'No'} />
             <KV k="Books online" v={`${open.advanceBookingDays} days ahead`} />
-            {open.guestPassesPerYear > 0 && <KV k="Guest passes" v={`${open.guestPassesPerYear} a year${open.guestsPayMemberRate ? ', at the member rate' : ''}`} />}
-            {open.guestPassesPerYear === 0 && open.guestsPayMemberRate && <KV k="Guests" v="Pay the member rate" />}
+            {open.guestsPayMemberRate && <KV k="Guests" v="Pay the member rate" />}
             {open.accountOn && <KV k="Member account" v={open.accountLimitCents != null ? `Up to ${usd0(open.accountLimitCents)}` : 'No limit'} />}
             {open.notes && <KV k="Notes" v={<span className="font-normal">{open.notes}</span>} />}
             <SubHead>What members pay</SubHead>

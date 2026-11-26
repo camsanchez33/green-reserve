@@ -32,7 +32,7 @@
 // booking holds at cancel), or step past the advance-booking window.
 import { notifyAlertsFor } from './tee-time-alerts';
 import { memberPricingOn, residentPricingOn } from './pricing-switch';
-import type { Prisma } from '@prisma/client';
+import type { Prisma, MembershipTier } from '@prisma/client';
 import { prisma } from './prisma';
 import { applyTierRates } from './tier-rates';
 import { memberPlayers, splitTotal, memberSpot, membershipLive } from './member-rates';
@@ -42,6 +42,7 @@ import { bookingWindowHours, holdsAtCutoff } from './cancel-policy';
 import { todayIn } from './course-time';
 import { promoFits, seatAfter } from './promo-codes';
 import { dealPct, dealRateSeat } from './last-minute';
+import { pickOwnSeat, memberGivesMore } from './two-groups';
 import { demandPctFor, onlinePublicSeat, dealWins } from './demand-pricing';
 import { packPrice } from './round-packs';
 import { recordBookingEvent, teeTimeInstant, type EventActor } from './booking-events';
@@ -116,6 +117,12 @@ export async function moveBooking(opts: {
   /** RES-1: residents to price at the new slot (default: the booking's own).
    *  The golfer's swap re-checks the card for the new slot's date. */
   residentPlayers?: number;
+  /** TWO-GROUPS-PRICE (Cam 2026-11-24, lib/two-groups): the golfer's own swap of a booking that already carries a
+   *  member or resident rate — the groups of the BOOKING's own email at the new time's date: its live membership's
+   *  tier (null = none live) and a resident card good on that date (only when that email is proven: the linked account
+   *  or this course's log-in). Both: the lower own seat at the new time, the member rate on a tie, never both; one:
+   *  that one. Not given (staff moves, frost delay, a public booking): the booking's own pricing, as before. */
+  ownSeatGroups?: { memberTier: MembershipTier | null; resident: boolean };
   /** ALERTS-2: tell tee time alerts the old time has room. Off for a frost delay, which
    *  blocks the times it moves groups off right after (lib/frost-delay). Default on. */
   notifyAlerts?: boolean;
@@ -177,6 +184,8 @@ export async function moveBooking(opts: {
       let spot = memberSpot(null, rate);
       // A member rate whose tier is gone keeps what they paid a player — already after any code.
       let rateIsOwn = false;
+      // The booking's own tier when it still prices the move (TWO-GROUPS-PRICE reads it below).
+      let bookedTier: MembershipTier | null = null;
       if (b.appliedRate !== 'standard' && b.appliedRate !== 'resident' && b.appliedRate !== 'pack') {
         // Tier names aren't unique in the schema: take the oldest ACTIVE tier of
         // that name so the answer is deterministic (a tierId on Booking is the
@@ -201,15 +210,8 @@ export async function moveBooking(opts: {
         memberN = lapsed ? 0 : tier ? memberPlayers(b.players, tier) : b.players;
         rateIsOwn = !lapsed && !tier;
         spot = memberSpot(tier, rate);
+        bookedTier = tier;
       }
-      // PRICE-1: a promo code on the booking carries to the new time when it still fits there
-      // (its dates, days and hours; a use is already counted); otherwise it comes off. Seat by
-      // seat, as when it was booked (lib/promo-codes).
-      // Residents switched off: a repriced move carries no resident seat.
-      const residentN = opts.pricing !== 'keep' && !residentPricingOn(b.course) ? 0 : (opts.residentPlayers ?? b.residentPlayers);
-      const code = b.promoCodeId ? await tx.promoCode.findUnique({ where: { id: b.promoCodeId } }) : null;
-      const promo = code && !promoFits({ ...code, maxUses: null, active: true }, slot, { rateApplied: memberN > 0 || (residentN > 0 && slot.residentRateCents != null) }) ? code : null;
-      const seat = (c: number) => (promo && !rateIsOwn ? seatAfter(promo, c) : c);
       // RES-1: the group's residents pay the new slot's resident rate (none there → the standard rate).
       // PRICE-2: a repriced move into the new time's last-minute window gets its deal (before any code).
       // A counter booking gets the deal only when the course gives it at the counter.
@@ -220,6 +222,35 @@ export async function moveBooking(opts: {
       const dmPct = rateIsOwn || via !== 'online' ? 0 : await demandPctFor({ id: b.courseId, ...b.course }, slot);
       const stack = b.course.lastMinuteStack;
       const pubSeat = onlinePublicSeat(slot.greenFeeCents, lmPct, dmPct);
+      // Residents switched off: a repriced move carries no resident seat.
+      let residentN = opts.pricing !== 'keep' && !residentPricingOn(b.course) ? 0 : (opts.residentPlayers ?? b.residentPlayers);
+      // TWO-GROUPS-PRICE: the golfer's own swap prices their seat by the groups they hold now (lib/two-groups). A tier
+      // whose rate is kept per player (rateIsOwn) and round packs keep their own pricing.
+      let groupRate: string | null = null;
+      // The booking's cart rule, as the cart is priced below (CART-2: a per-cart booking stays per cart).
+      const cartRule = b.cartUnitCents != null ? 'per_cart' : !b.cartSelected ? cartRuleOf(b.course.cartPricing) : 'per_player';
+      const g = opts.ownSeatGroups;
+      if (g && opts.pricing !== 'keep' && !rateIsOwn && b.appliedRate !== 'pack' && !b.packLineId) {
+        const memberTier = bookedTier ?? (memberPricingOn(b.course) ? g.memberTier : null);
+        const memberRates = memberTier ? applyTierRates(slot, memberTier) : null;
+        const residentOk = g.resident && residentPricingOn(b.course) && slot.residentRateCents != null;
+        const pick = pickOwnSeat(memberRates ? memberRates.greenFeeCents : null, residentOk ? slot.residentRateCents : null,
+          { pubSeat, dealPct: lmPct, publicCents: slot.greenFeeCents, stack },
+          !!memberTier && !!memberRates && memberGivesMore(memberTier, memberRates.cartFeeCents, slot.cartFeeCents, cartRule === 'per_cart'));
+        if (pick.group === 'member' && memberTier && memberRates) {
+          rate = memberRates; memberN = memberPlayers(b.players, memberTier); spot = memberSpot(memberTier, rate);
+          residentN = 0; groupRate = memberTier.name;
+        } else if (pick.group === 'resident') {
+          rate = { greenFeeCents: slot.greenFeeCents, cartFeeCents: slot.cartFeeCents }; memberN = 0; spot = memberSpot(null, rate);
+          residentN = 1; groupRate = 'resident';
+        }
+      }
+      // PRICE-1: a promo code on the booking carries to the new time when it still fits there
+      // (its dates, days and hours; a use is already counted); otherwise it comes off. Seat by
+      // seat, as when it was booked (lib/promo-codes).
+      const code = b.promoCodeId ? await tx.promoCode.findUnique({ where: { id: b.promoCodeId } }) : null;
+      const promo = code && !promoFits({ ...code, maxUses: null, active: true }, slot, { rateApplied: memberN > 0 || (residentN > 0 && slot.residentRateCents != null) }) ? code : null;
+      const seat = (c: number) => (promo && !rateIsOwn ? seatAfter(promo, c) : c);
       const ownSeat = rateIsOwn ? rate.greenFeeCents : memberN ? Math.min(pubSeat, dealRateSeat(lmPct, rate.greenFeeCents, slot.greenFeeCents, stack)) : onlinePublicSeat(rate.greenFeeCents, lmPct, dmPct);
       const resSeat = slot.residentRateCents == null ? null : Math.min(pubSeat, dealRateSeat(lmPct, slot.residentRateCents, slot.greenFeeCents, stack));
       const dealSet = dealWins(slot.greenFeeCents, lmPct, dmPct);
@@ -248,7 +279,6 @@ export async function moveBooking(opts: {
       }
       // CART-2: a booking made per cart stays per cart (its riders, the new time's cart price); one taking
       // a cart for the first time here follows the course's rule today; a per-player booking stays per player.
-      const cartRule = b.cartUnitCents != null ? 'per_cart' : !b.cartSelected ? cartRuleOf(b.course.cartPricing) : 'per_player';
       if (b.cartUnitCents != null) coveredSeats = b.players - (b.cartRiders ?? b.players);
       const cartPriced = cartCharge({ rule: cartRule, cart: cartOn, players: b.players, coveredSeats, unitCents: slot.cartFeeCents, perPlayerTotal: newCart });
       newCart = cartPriced.cartFeeTotal;
@@ -290,6 +320,8 @@ export async function moveBooking(opts: {
         if (b.promoCodeId && !rateIsOwn) { data.promoCodeId = promo ? promo.id : null; data.promoDiscountCents = promo ? ratedGreen - newGreen : 0; }
         if (b.appliedRate === 'resident' && residents.residentPlayers === 0) data.appliedRate = 'standard';
         if (memberN === 0 && b.appliedRate !== 'resident' && b.appliedRate !== 'standard' && b.appliedRate !== 'pack') data.appliedRate = residents.residentPlayers > 0 ? 'resident' : 'standard';
+        // TWO-GROUPS-PRICE: the group that priced the golfer's own seat names the booking (a member seat: its tier).
+        if (groupRate) data.appliedRate = groupRate === 'resident' ? (residents.residentPlayers > 0 ? 'resident' : 'standard') : groupRate;
       }
       if (opts.terms) { data.termsAcceptedAt = now; data.termsVersion = opts.terms.version; }
       await tx.booking.update({ where: { id: b.id }, data });

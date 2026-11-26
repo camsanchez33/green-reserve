@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { rateLimit, clientIp } from '@/lib/rate-limit';
+
+/** Every verification token is randomBytes(32) as hex. */
+const VERIFY_TOKEN_RE = /^[a-f0-9]{64}$/;
 
 export async function POST(req: NextRequest) {
-  const { token } = await req.json();
-  if (!token) return NextResponse.json({ error: 'No token' }, { status: 400 });
+  // Audit 2026-11-24 M2: the body went straight into the query, so {"token":{"not":""}} was read
+  // by Prisma as a filter and verified whichever operator had a pending token. A string of the
+  // right shape only, and a cap per connection.
+  if (!(await rateLimit(`verify-email:${clientIp(req)}`, 20, 3600))) {
+    return NextResponse.json({ error: 'Too many attempts, try again later' }, { status: 429 });
+  }
+  const { token } = ((await req.json().catch(() => null)) ?? {}) as { token?: unknown };
+  if (typeof token !== 'string' || !token) return NextResponse.json({ error: 'No token' }, { status: 400 });
+  if (!VERIFY_TOKEN_RE.test(token)) return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
 
   const operator = await prisma.courseOperator.findFirst({
     where: { verificationToken: token },

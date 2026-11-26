@@ -14,8 +14,8 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
   member whose log-in email is on that course's resident list (signedInResident(), after the golfer-sign-in
   retirement). Money and auth: Opus, final-reviewer.
 - Golfer log-in data (`lanes/golfer.md` items 2–4): record the first-log-in terms tick per golfer per course with its
-  version; the two-groups rule (lower price, longer window); guest pass use at checkout (a tick per guest, counted
-  against `guestPassesPerYear`); the header group label; and the group list for the log-in line. Also, after #477:
+  version; the two-groups rule (lower price, longer window); the header group label; and the group list for the log-in line.
+  Guest passes are gone (GUEST-PASS-OFF, Cam 2026-11-24; `docs/DECISIONS.md`). Also, after #477:
   - Rewrite the member emails and pages to "Log in" wording.
   - The member invite goes out only once the membership is active (Build 2026-11-18: no email before the dues are paid). Done in 2c.
   - /api/operator/members allows contact edits on golfer-linked members, since no golfer account signs in now.
@@ -81,7 +81,7 @@ the lane files; merges every PR in dependency order after Cam's review sitting; 
 - AI assistant overhaul — PLAN, mockup waiting for Cam (Cam 2026-11-18: "setting parameters, having it have
   GreenReserve personalized information, a cache it can access specific to each course and the admin's own, as well
   as maybe a little question bot on the homepage and the golfer facing"; "everything has to be done before launch").
-  Mockup: `lanes/build/ai-assistant-mockup.html` (https://claude.ai/artifact/E2uiLWJ2YfBCX7LJmXxUCR). Nothing is built until Cam approves it.
+  Mockup: `lanes/build/ai-assistant-mockup.html` (https://claude.ai/artifact/E2uiLWJ2YfBCX7LJmXxUCR). Cam's decisions 2026-11-24 (golfer bot off by default, current model with caching, 300 golfer questions per course per day) started the build: docs/DECISIONS.md ASSIST-1.
   Today: the dashboard assistant (operator persona, `src/app/api/birdie/chat/route.ts`, `src/lib/birdie/*`) answers
   how-to questions on `claude-haiku-4-5` and runs tool turns on `claude-opus-5-5` (effort low), reads live data
   through `tools.ts`, drafts changes as confirm cards (`proposals.ts`, never writes on its own), with caps and the
@@ -143,9 +143,20 @@ Mockup `lanes/build/emails-texts-mockup.html` (https://claude.ai/artifact/NBRME2
 - Outreach: plain personal email; footer = logo + one line "<postal address> · Reply "no thanks" to stop." (postal address from Cam, still owed).
 - Alert and after-round emails keep a stop link.
 - Remove the 3 dead emails and merge the 4 near-duplicates (78 → 71), and the reminder email's emojis.
-- Texts: every text starts with the course name and ends "Reply STOP to opt out." One segment each (≤160 GSM-7). Opt-in and HELP wording as in the mockup (139 / 119 chars). Short links on our own domain: greenreserve.app/b/<code>, /p/, /r/, /a/ — a short code mapped to the existing token (additive table), never exposing more than the long link did.
+- Texts: every text starts with the course name and ends "Reply STOP to opt out." One segment each (≤160 GSM-7). Opt-in and HELP wording as in the mockup, but since Cam 2026-11-24 (A2P brand) the two opt-in confirmations and HELP open "<Course> via GreenReserve: …" (156 / 156 / 137 chars with a 21-character name; only the course name gives way, never the brand). Short links on our own domain: greenreserve.app/b/<code>, /p/, /r/, /a/ — a short code mapped to the existing token (additive table), never exposing more than the long link did.
 - Policy wording in emails only via describePolicy() (none in the body now); fee wording only from LQ-2.
 - Cam to-do when it ships: update the Twilio A2P campaign sample messages to the new wording.
 
 ## Tomorrow (Cam 2026-11-19)
 - UI styles review: 4 styles (Glass light/dark, Solid light/dark) shown on REAL page screenshots; layout and function never change, only backgrounds, panels, buttons and controls.
+
+## UI style overhaul — APPROVED (Cam 2026-11-26, "Approved, build it")
+Mockup https://claude.ai/artifact/EBEC6HE7LWFgPLMLzbN9p8 (v6); prototype layer in `lanes/build/ui-style/` (`themes.css` is the reference for surface tokens; `tag.js.txt` shows the sidebar icons/labels; it was injected at capture time only).
+- LOOK ONLY. No page changes what it does or shows, except the items marked LAYOUT below.
+- Two styles: **Dark = glass** (Apple-style material: flat neutral #141414 page, translucent dark panels with backdrop blur, hairline light edge, soft top highlight, soft shadow, no colour cast, no blurred shapes or gradients behind the page) and **Light = solid** (white cards on neutral grey #F2F2F2, R=G=B, dark sidebar). Supersedes "the Light look is glass too" (LIGHT-PARITY wording) — both looks still get every change.
+- Admin: Dark (glass) only; green tint removed from menu hover/active.
+- Sidebars (dashboard + admin): clear groups with small labels (dashboard: Today / Business / Course), even spacing, one monochrome line icon per item (OperatorSidebar's icon list; matching set for AdminSidebar), active item = lighter fill + left bar + bold. No search in the sidebar.
+- Search fields everywhere match their screen: white field + thin border on Light, dark glass field + faint light edge on Dark. Dashboard golfer search sits at the top of EVERY dashboard page (header band, same colour as the sidebar).
+- LAYOUT: admin Overview stat cards on one row; golfer course page gets a centred sliding tab "Tee times | Course information" (Tee times default; course details move to the second tab) — on phones the calendar stays and the two tabs never overlap; tee sheet on phones defaults to the list view with stat boxes in one row; homepage on phones keeps the hero photo and look, stacked for scrolling.
+- Phone layouts per the mockup's "On a phone" sections (bottom tab bar/More for dashboard and admin, sheets over dialogs, sticky primary action, 44px targets) — same content and actions.
+- After this ships: the UI kit pass (fonts, sliders, switches, buttons, icons, animations) and an automatic guard that blocks hand-made buttons, text sizes and search fields (approved 2026-11-24).

@@ -15,14 +15,16 @@ import { recordSmsConsent, hasSmsConsent, consentedPhones, optInByReply } from '
 import { createAlert, alertRateKeys, confirmAlert, stopAlertByToken, notifyAlertsFor, sweepTeeTimeAlerts, alertMatches, partOf, endsAtFor, memberAlerts, stopMemberAlert } from '../src/lib/tee-time-alerts';
 import { addDaysStr, todayIn } from '../src/lib/course-time';
 import { WIPED_TABLES } from '../src/lib/data-reset';
+import { ALERT_SMS_CONSENT_VERSION, PAST_SMS_CONSENT_WORDING } from '../src/lib/sms-consent-copy';
 
 const TAG = 'ttalertdbtest';
 let failed = 0;
 const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
 const read = (p: string) => readFileSync(p, 'utf8');
 // 212-555-03xx: outside the fictional 555-01xx block, never texted here (no Twilio creds in tests).
+const P8 = '+12125550308';
 const P1 = '+12125550301', P2 = '+12125550302', P3 = '+12125550303', P4 = '+12125550304', P5 = '+12125550305', P6 = '+12125550306', P7 = '+12125550307';
-const PHONES = [P1, P2, P3, P4, P5, P6, P7];
+const PHONES = [P1, P2, P3, P4, P5, P6, P7, P8];
 
 async function cleanup() {
   const ids = (await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } })).map(c => c.id);
@@ -70,7 +72,7 @@ async function main() {
   ok('an alerts-only number replying YES gets no booking texts', yes.length === 0 && !(await hasSmsConsent(P5)) && !(await consentedPhones([P5])).has(P5), yes);
   await recordSmsConsent(P5, 'opt_out', { method: 'sms_reply' });
   const back = await optInByReply(P5);
-  ok('…stored with the alert wording version', (await prisma.smsConsent.findFirst({ where: { phone: P5, scope: 'alerts', method: 'sms_reply' }, orderBy: { createdAt: 'desc' } }))?.wording === 'alerts-2026-11-18');
+  ok('…stored with the alert wording version', (await prisma.smsConsent.findFirst({ where: { phone: P5, scope: 'alerts', method: 'sms_reply' }, orderBy: { createdAt: 'desc' } }))?.wording === ALERT_SMS_CONSENT_VERSION);
   ok('…STOP then START brings back alert texts only', JSON.stringify(back) === '["alerts"]' && (await hasSmsConsent(P5, 'alerts')) && !(await hasSmsConsent(P5)), back);
   ok('a number with no record replying START gets booking texts, as before', JSON.stringify(await optInByReply(P6)) === '["bookings"]' && (await hasSmsConsent(P6)) && !(await hasSmsConsent(P6, 'alerts')));
   ok('the reply webhook uses optInByReply and answers with the matching confirmation', /optInByReply\(from\)/.test(read('src/app/api/twilio/inbound/route.ts')) && /alertOptInText\(course\?\.name\)/.test(read('src/app/api/twilio/inbound/route.ts')));
@@ -116,6 +118,15 @@ async function main() {
   ok('…and records the alert-text yes (scope alerts) only now', await hasSmsConsent(P1, 'alerts'));
   ok('…which still isn’t a booking-text yes for a new number', !(await hasSmsConsent(P2)));
   ok('a second confirm changes nothing', guest.ok && (await confirmAlert(guest.alert.token)).result === 'already');
+  ok('…and a box ticked now is recorded under the current alert wording', (await prisma.smsConsent.findFirst({ where: { phone: P1, scope: 'alerts', method: 'web_alert' }, orderBy: { createdAt: 'desc' } }))?.wording === ALERT_SMS_CONSENT_VERSION);
+
+  // A2P brand (Cam 2026-11-24): a guest who ticked the old box and confirms after the wording changed is
+  // recorded under the wording they saw, read from the text kept on the alert.
+  const oldBox = await createAlert({ courseId: c.id, dates: [d1], parts: [], players: 1, email: `${TAG}-o@t.local`, phone: P8, textConsent: true }, null);
+  if (oldBox.ok) await prisma.teeTimeAlert.update({ where: { id: oldBox.alert.id }, data: { textConsentWording: PAST_SMS_CONSENT_WORDING['alerts-2026-11-18']('Alert Links') } });
+  const oldConf = oldBox.ok ? await confirmAlert(oldBox.alert.token) : null;
+  ok('an old box confirmed after the change keeps the old version (alerts-2026-11-18)', oldConf?.result === 'confirmed' && (await prisma.smsConsent.findFirst({ where: { phone: P8, scope: 'alerts', method: 'web_alert' }, orderBy: { createdAt: 'desc' } }))?.wording === 'alerts-2026-11-18', oldConf);
+  if (oldBox.ok) await stopAlertByToken(oldBox.alert.token); // out of the way of the matching checks below
 
   // A guest typing the same email can't edit an alert that's on.
   const again = await createAlert({ courseId: c.id, dates: [d1, d2], parts: ['morning'], players: 2, email: `${TAG}-g@t.local`, phone: P4, textConsent: true }, null);
