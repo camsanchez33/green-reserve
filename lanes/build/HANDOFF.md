@@ -14,6 +14,8 @@ Read this, CLAUDE.md, LANES.md, lanes/build.md. Keep this file current; it repla
 - Briefs point to files instead of pasting history. Workers report only the PR number and a one-line verdict.
 
 ## In flight (2026-11-26 ~20:15 UTC)
+- FIRST: main's "Test scripts" check is red since 4e20467 — scripts/assistant-brief-db-test.ts fails "golfer: membership benefits stay — AlphaGold: book 14 days out" (came in with AI part 1 #533). Fix it before merging more code; every code PR inherits it.
+- UI kit v2 mockup used the agent's picks because Cam's answers didn't arrive: main button = text colour, money/big numbers = Libre Franklin, switches green when on, brand green #173B2A (questionable contrast on dark glass). Get Cam's answers.
 - Security fixes for lanes/security/AUDIT-2026-11-24.md (H1, M1–M9, M11 + lows). Merged so far: #530 #531 #534.
 - Security M10: fees/failed charges visible only with the Money area (MONEY-VIEW-1).
 - #532 PWA installable app: conflicts with main; a worker is merging main in.
