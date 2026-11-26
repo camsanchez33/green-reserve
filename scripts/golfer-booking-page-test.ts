@@ -66,7 +66,7 @@ check('the trimmed name and email are sent', book.includes('await book({ name: n
   const lines = describePolicy(policyFrom({ cancellationHours: 24, lateCancellationFeeCents: 1000, lateFeeTiming: 'hold_at_cutoff' })).lines;
   check('describePolicy still opens a late-fee policy with "Free cancellation until…" and then the after-cutoff line', lines[0].startsWith('Free cancellation until') && lines[1] === afterCutoffLine('hold_at_cutoff', '$10'), lines.slice(0, 2));
 }
-check('the card field and wallet button follow the look', book.includes('<CardElement options={cardStyleFor(look)} />') && book.includes("theme: look === 'dark' ? 'light' : 'dark'"));
+check('the card field and wallet button follow the look', book.includes('<CardElement options={cardStyleFor(look)} onChange={e => setCardDone(e.complete)} />') && book.includes("theme: look === 'dark' ? 'light' : 'dark'"));
 check('the agree box sits just above Book', book.indexOf('className={g.agree}') < book.indexOf('className={g.bookbar}') && book.indexOf('{policy}') < book.indexOf('className={g.agree}'));
 
 // Item 5 (RANGE-1): the course's buckets, −/+ from 0, their own price line, sent as rangeBuckets; a 409 'range' reloads them.
@@ -126,6 +126,18 @@ check('a member-only club has no tabs (nothing to book)', course.includes("const
 check('phone: the calendar stays on the Tee times tab and the Filters sheet has the seven days beside the date', course.includes("<div className={g.calPhone}>{calendar('tab')}</div>") && course.includes("<div className={g.deskOnly}>{calendar('side')}</div>") && course.includes('for (let i = 0; i < 7; i++)') && course.includes('<b aria-hidden="true">{shortDay(selectedDate)}</b>'));
 check('picking a day moves the calendar to its month', course.includes('setCalMonth(new Date(d.getFullYear(), d.getMonth(), 1));'));
 check('every day button (calendar and seven-day row) uses the same rules and the same pickDay', (course.match(/const \{ why, membersOnly, label \} = dayInfo\(d\);/g) ?? []).length === 2 && (course.match(/onClick=\{why \? undefined : \(\) => pickDay\(ds\)\}/g) ?? []).length === 2);
+
+// The Book page on a phone (UI style overhaul mockup): the Book bar says what is still needed and a tap goes to it.
+check('Book bar: lists what is still needed (name, email, card, the box) and a tap scrolls to and focuses the first', book.includes("missing.push({ key: 'bk-name', words: 'your name' })") && book.includes("missing.push({ key: 'bk-email', words: 'your email' })") && book.includes("if (needsCard && !cardDone) missing.push({ key: 'bk-card', words: 'card details' })") && book.includes("if (!agreed) missing.push({ key: 'bk-agree', words: 'the box above' })") && book.includes('<button type="button" className={g.hint} onClick={goToMissing}>{missingWords}</button>') && book.includes("el?.scrollIntoView({ block: 'center'"));
+check('Book bar: only points; Book is still greyed until the box is ticked and handleSubmit checks as before', book.includes('disabled={loading || !agreed || (needsCard && !stripe)}') && book.includes("if (!agreed) { setError('Tick the box to agree to the terms before you book.'); return; }") && book.includes('id="bk-agree"') && book.includes('aria-describedby={agreed ? undefined : \'bk-hint\'}'));
+check('Book bar: the Total beside Book is the price box\'s own total (display only)', book.includes('total={total}') && book.includes('<span className={g.bartot}><small>Total</small><b>${total.toFixed(2)}</b></span>'));
+{
+  const css2 = readFileSync('src/components/golfer/golfer.module.css', 'utf8');
+  check('Back and Change are 44px buttons on a phone (Book page only: .chg, not the shared .back)', book.includes('className={`${g.lnk} ${g.back} ${g.chg}`}>‹ Back to tee times') && book.includes('className={`${g.lnk} ${g.chg}`}') && css2.includes('  .chg { padding: 0 14px; border: 1px solid var(--g-line);') && !css2.includes('.back, .chg') && /\.lnk \{[^}]*min-height: 44px/.test(css2));
+  check('the hint is a 44px tap target', css2.includes('.bookbar .hint { display: block; width: 100%; margin: 0 0 6px; padding: 0; min-height: 44px;'));
+}
+check('Book bar: hidden while booking, and the checkbox still points at its hidden #bk-hint', book.includes('{missing.length > 0 && !loading && (') && book.includes('<p className={g.vh} id="bk-hint">Tick the box to agree to the terms before you book{needsCard ? \' (Apple Pay and Google Pay appear once you do)\' : \'\'}.</p>'));
+check('Book bar: always says how to reach Apple Pay / Google Pay at a card course (before the tick, and once the wallet button shows)', book.includes("!agreed ? ' Apple Pay and Google Pay appear once you tick the box.' : walletRequest ? ' Or use Apple Pay or Google Pay above.' : ''") && book.includes(') + walletWords;'));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);
