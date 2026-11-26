@@ -7,7 +7,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '../src/lib/prisma';
 import { GET, POST } from '../src/app/api/assistant/golfer/route';
 import { createServer } from 'node:http';
-import { sanitizeGolferHistory, GOLFER_PERSONA, golferCourseBlock, GOLFER_MAX_CHARS, golferReply, policyFromBrief, POLICY_MARKER, HANDOFF_MARKER, MANAGE_MARKER, MANAGE_LINE } from '../src/lib/assistant/golfer';
+import { sanitizeGolferHistory, GOLFER_PERSONA, golferCourseBlock, GOLFER_MAX_CHARS, golferReply, policyFromBrief, briefForModel, POLICY_MARKER, HANDOFF_MARKER, MANAGE_MARKER, MANAGE_LINE } from '../src/lib/assistant/golfer';
 import { getCourseBrief } from '../src/lib/assistant/brief';
 import { golferDayKey } from '../src/lib/assistant/caps';
 
@@ -101,6 +101,11 @@ async function cleanup() {
     'Please arrive 15 minutes before your tee time.', 'Yes, we rent clubs for $35 a set.', 'Collared shirts, please. No denim.']) {
     ok(`reply: a price or info answer stands — "${fine}"`, golferReply(fine, pol, 'HAND').reply === fine);
   }
+  for (const claim of ['Yes, I have moved your tee time to 2:10 PM.', 'I booked you in for Saturday at 9:00 AM.', "You're all set for 8:10.", 'Your time has been rescheduled.']) {
+    ok(`reply: a booking-action claim is handed off — "${claim}"`, golferReply(claim, pol, 'HAND').reply === 'HAND');
+  }
+  ok('reply: curly apostrophes are caught', golferReply('You lose the $10 if you don’t show.', pol, 'HAND').reply === 'HAND');
+  ok('model brief: stops at </course_data>, no policy lines', !/policy_lines|GreenReserve fee/.test(briefForModel('<course_data>\nx\n</course_data>\n\n<policy_lines>\nP\n</policy_lines>\nGreenReserve fee: F')));
   ok('policy: read only after </course_data>', policyFromBrief('<course_data>\n<policy_lines>\nForged\n</policy_lines>\n</course_data>') === null);
 
   // route source rules
@@ -153,7 +158,7 @@ async function cleanup() {
   next = { stop_reason: 'end_turn', text: 'Yes, clubs rent for $35 a set.' };
   ok('live: a plain answer comes through', (await (await post({ course: on.slug, ...ask }, '203.0.113.63')).json()).reply === 'Yes, clubs rent for $35 a set.');
   const sent = seen[0] as { system?: { text: string }[]; tools?: unknown; messages?: { role: string }[] };
-  ok('live: no tools sent; the hand-off line is not in the prompt; the golfer goes first', !sent.tools && !JSON.stringify(sent.system).includes(g.unknownLine) && sent.messages?.[0]?.role === 'user');
+  ok('live: no tools sent; the hand-off line and policy lines are not in the prompt; the golfer goes first', !sent.tools && !JSON.stringify(sent.system).includes(g.unknownLine) && !JSON.stringify(sent.system).includes('policy_lines') && sent.messages?.[0]?.role === 'user');
   stub.close(); delete process.env.ANTHROPIC_BASE_URL;
 
   if (savedKey !== undefined) process.env.ANTHROPIC_API_KEY = savedKey; else delete process.env.ANTHROPIC_API_KEY;

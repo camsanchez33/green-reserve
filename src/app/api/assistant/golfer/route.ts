@@ -6,7 +6,7 @@ import { getCourseBrief } from '@/lib/assistant/brief';
 import { readAssistantSettings, unknownLineFor } from '@/lib/assistant/settings';
 import { platformAllows, golferDayAllows, publicIpAllows } from '@/lib/assistant/caps';
 import { assistantClient, systemBlocks, logAssistant, personaOff, ASSISTANT_MODEL, ASSISTANT_EFFORT, FALLBACK_BETA } from '@/lib/assistant/prompt';
-import { GOLFER_PERSONA, GOLFER_MAX_TOKENS, golferCourseBlock, sanitizeGolferHistory, golferReply, policyFromBrief } from '@/lib/assistant/golfer';
+import { GOLFER_PERSONA, GOLFER_MAX_TOKENS, golferCourseBlock, sanitizeGolferHistory, golferReply, policyFromBrief, briefForModel } from '@/lib/assistant/golfer';
 
 // ASSIST-6 (Cam 2026-11-24): the golfer question bot on a course's booking page. Public, no sign-in, no tools.
 //
@@ -78,8 +78,9 @@ export async function POST(req: NextRequest) {
   if (!brief) return NextResponse.json({ error: 'Questions are not available on this page.' }, { status: 404 });
 
   const started = Date.now();
-  // persona (frozen, breakpoint) → course block: name, tone, brief (breakpoint). No volatile text, no tools.
-  const system = systemBlocks(GOLFER_PERSONA, golferCourseBlock(c.name, c.settings.tone, brief.text), '');
+  // persona → course block: name, tone and the course data only (breakpoint; the policy lines stay server-side for the
+  // policy marker). No volatile text, no tools.
+  const system = systemBlocks(GOLFER_PERSONA, golferCourseBlock(c.name, c.settings.tone, briefForModel(brief.text)), '');
   let msg: Anthropic.Beta.BetaMessage;
   try {
     msg = await client.beta.messages.create({

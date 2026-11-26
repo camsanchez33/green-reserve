@@ -57,8 +57,18 @@ export function policyFromBrief(briefText: string): string | null {
   return [m[1], fee?.[1]].filter(Boolean).join('\n');
 }
 
+/** First-person claims of a booking action the bot can never take. */
+const ACTION_CLAIM = /\b(I(['’]ve| have| just)? (booked|moved|changed|cancel+ed|rescheduled|reserved|held|refunded|added)|you['’]re (all set|booked|confirmed)|(has|have) been (booked|moved|rescheduled|cancel+ed|reserved|confirmed|refunded))\b/i;
+
+/** The brief the model sees: only the course data. The policy lines stay on the server for the policy marker, so the
+ *  model can't paraphrase what it never reads. */
+export function briefForModel(briefText: string): string {
+  const end = briefText.lastIndexOf('</course_data>');
+  return end < 0 ? briefText : briefText.slice(0, end + '</course_data>'.length);
+}
+
 /** Words that mean the reply talks policy or money; such a reply must be the policy marker, or it is handed off. */
-const POLICY_WORDS = /\b(cancel\w*|refund\w*|deposit\w*|no[- ]show\w*|penalt\w*|charg\w*|forfeit\w*|money back|reimburs\w*|(late|booking|service|cancellation|no-show) fees?|holds?\b(?! a tee)|cards?\b(?! game)|(don'?t|do not|didn'?t|not) show( up)?|miss(es|ed)? your (time|tee time|round)|back out)\b|\$\s?\d[\d.,]*\s+(fee|hold)/i;
+const POLICY_WORDS = /\b(cancel\w*|refund\w*|deposit\w*|no[- ]show\w*|penalt\w*|charg\w*|forfeit\w*|money back|reimburs\w*|(late|booking|service|cancellation|no-show) fees?|holds?\b(?! a tee)|cards?\b(?! game)|(don['’]?t|do not|didn['’]?t|not) (show|turn)( up)?|miss(es|ed)? your (time|tee time|round)|back out)\b|\$\s?\d[\d.,]*\s+(fee|hold)/i;
 
 /**
  * What the golfer sees, from the model's text: the exact policy for ${POLICY_MARKER}, the course's own line for
@@ -72,7 +82,7 @@ export function golferReply(text: string, policy: string | null, unknownLine: st
   if (marker('POLICY')) return policy ? { reply: policy, handOff: false } : { reply: unknownLine, handOff: true };
   if (marker('MANAGE')) return { reply: MANAGE_LINE, handOff: false };
   // Anything still bracketed is a marker gone wrong; anything about policy or money in its own words is not shown.
-  if (/\[\[|\]\]/.test(t) || POLICY_WORDS.test(t)) return { reply: unknownLine, handOff: true };
+  if (/\[\[|\]\]/.test(t) || POLICY_WORDS.test(t) || ACTION_CLAIM.test(t)) return { reply: unknownLine, handOff: true };
   return { reply: t.slice(0, 2000), handOff: false };
 }
 
