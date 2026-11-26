@@ -572,7 +572,7 @@ function BookPageInner({ initial }: { initial?: BookInitial }) {
         {/* The site layout's main element is the page's one main landmark; this is its content. */}
         <div className={g.wrap}>
           <div className={g.bk}>
-            <Link href={backToTimesHref(courseSlug, params, players)} className={`${g.lnk} ${g.back}`}>‹ Back to tee times</Link>
+            <Link href={backToTimesHref(courseSlug, params, players)} className={`${g.lnk} ${g.back} ${g.chg}`}>‹ Back to tee times</Link>
             <h2 id="book-h">Book your tee time</h2>
             <div className={`${g.card} ${g.recap}`}>
               <div>
@@ -845,9 +845,11 @@ function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuc
   if (fieldError('email', email)) missing.push({ key: 'bk-email', words: 'your email' });
   if (needsCard && !cardDone) missing.push({ key: 'bk-card', words: 'card details' });
   if (!agreed) missing.push({ key: 'bk-agree', words: 'the box above' });
-  const missingWords = missing.length === 1 && !agreed
-    ? `Tick the box above to book${needsCard ? ' (Apple Pay and Google Pay appear once you do)' : ''}.`
-    : `Still needed: ${missing.slice(0, -1).map(m => m.words).join(', ')}${missing.length > 1 ? ' and ' : ''}${missing[missing.length - 1]?.words ?? ''}.`;
+  // The wallet takes name, email and card itself, so the bar always says how to reach it (review 2026-11-26).
+  const walletWords = !needsCard ? '' : !agreed ? ' Apple Pay and Google Pay appear once you tick the box.' : walletRequest ? ' Or use Apple Pay or Google Pay above.' : '';
+  const missingWords = (missing.length === 1 && !agreed
+    ? 'Tick the box above to book.'
+    : `Still needed: ${missing.slice(0, -1).map(m => m.words).join(', ')}${missing.length > 1 ? ' and ' : ''}${missing[missing.length - 1]?.words ?? ''}.`) + walletWords;
   function goToMissing() {
     const first = missing[0];
     if (!first) return;
@@ -922,7 +924,7 @@ function CheckoutForm({ onRangeStale, teeTimeId, players, cartSelected, rangeBuc
 
       <div className={g.bookbar}>
         {error && <p className={g.formerr} role="alert">{error}</p>}
-        {!agreed && <p className={g.vh} id="bk-hint">Tick the box to agree to the terms before you book.</p>}
+        {!agreed && <p className={g.vh} id="bk-hint">Tick the box to agree to the terms before you book{needsCard ? ' (Apple Pay and Google Pay appear once you do)' : ''}.</p>}
         {missing.length > 0 && !loading && (
           <button type="button" className={g.hint} onClick={goToMissing}>{missingWords}</button>
         )}
