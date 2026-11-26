@@ -727,6 +727,99 @@ async function main() {
     }
   }
 
+  console.log('\n── M10 / MONEY-VIEW-1: fees and failed charges only with the Money area ──');
+  {
+    // Cam 2026-11-26: GreenReserve's fees and failed charges are visible only to a login with the Money area. Every
+    // admin place that showed them, checked twice: a manager with every other area sees none of it, and the same
+    // login with Money added sees each one (so no check below is vacuous).
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { runAskTool } = await import('../src/lib/admin-ask');
+    const NO_MONEY = ['pipeline', 'courses', 'golfers', 'messages', 'problems', 'company'];
+    const m10 = await prisma.adminUser.create({ data: { name: 'Isol No Money', email: `${TS}-nomoney@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: NO_MONEY, areasSetAt: new Date() } });
+    // The hourly check's own key for a declined card at this course (lib/admin-checks), so the course timeline finds it too.
+    await prisma.adminAlert.deleteMany({ where: { key: `failed:${data.courseA.id}` } });
+    const alert = await prisma.adminAlert.create({ data: { key: `failed:${data.courseA.id}`, kind: 'urgent', title: 'Card declined at check-in — Isol', detail: '1 round, $51.50 not collected.', href: `/admin/courses/${data.courseA.id}`, courseId: data.courseA.id } });
+    await prisma.booking.update({ where: { id: bookingA.id }, data: { checkInFailReason: 'isolation: card declined' } });
+    const declined = await prisma.paymentEvent.create({ data: { bookingId: bookingA.id, kind: 'charge_failed', amountCents: 5150, stripeId: `isol-m10-${TS}:cf`, actor: 'system', detail: 'isolation: card declined' } });
+    const feeGoal = await prisma.adminGoal.create({ data: { metric: 'fees', target: 100_00, dueAt: new Date(Date.now() + 30 * 86_400_000), createdBy: 'isolation' } });
+    try {
+      const c = `admin_session=${await signAdminToken({ adminId: m10.id, email: m10.email, name: m10.name, role: 'manager', mfa: true })}`;
+      type Detail = { money?: unknown; revenue30d?: { gross: unknown; platform: unknown; greenFees: unknown }; relationship?: { earnedCents: unknown; paidRounds: unknown } };
+      type TodayBody = { courses?: { id: string; feesThisMonth: unknown; fees7d: unknown; rows: { id: string }[] }[] | null; problems?: { id: string }[] | null };
+      type Probs = { open?: { id: string }[] };
+      type Msg = { context?: { openItems?: { failedCharges?: unknown } } };
+      type AskRows = { courses?: Record<string, unknown>[] };
+      const look = async () => {
+        const detail = (await api(`/api/admin/course-detail?courseId=${data.courseA.id}`, { cookie: c })).body as Detail;
+        const today = (await api('/api/admin/today', { cookie: c })).body as TodayBody;
+        const list = (await api('/api/admin/courses', { cookie: c })).body as { id: string; revenue30d: unknown }[];
+        const csv = await (await fetch(`${BASE_URL}/api/admin/courses?format=csv`, { headers: { cookie: c } })).text();
+        const probs = (await api('/api/admin/problems', { cookie: c })).body as Probs;
+        const msg = (await api(`/api/admin/messages?courseId=${data.courseA.id}`, { cookie: c })).body as Msg;
+        const areas = (await prisma.adminUser.findUnique({ where: { id: m10.id }, select: { areas: true } }))!.areas;
+        const ask = JSON.parse((await runAskTool('bookings_by_course', {}, 'manager', areas)).content) as AskRows;
+        const header = csv.split(String.fromCharCode(13, 10))[0].split(',');
+        const feeCol = header.indexOf('"fees 30d"');
+        const csvRows = csv.split(String.fromCharCode(13, 10)).slice(1).filter(Boolean);
+        const feed = (await api(`/api/admin/course-feed?courseId=${data.courseA.id}`, { cookie: c })).body as { items?: { id: string }[] };
+        const goals = (await api('/api/admin/goals', { cookie: c })).body as { goals?: { id: string }[] };
+        const badges = (await api('/api/admin/nav-badges', { cookie: c })).body as { openProblems?: number };
+        const ov = (await api('/api/admin/today/overview', { cookie: c })).body as { attention?: { rows: { id: string }[] } | null };
+        const gq = encodeURIComponent(`${TS}-golfera`);
+        const gList = (await api(`/api/admin/golfers?list=1&q=${gq}`, { cookie: c })).body as { seesMoney?: boolean; golfers?: { id: string | null; tone: string }[] };
+        const gFailed = await api(`/api/admin/golfers?list=1&filter=failed&q=${gq}`, { cookie: c });
+        const gRec = (await api(`/api/admin/golfers?id=${data.golferA.id}`, { cookie: c })).body as { golfer?: { trust: { failedCharges: unknown }; bookings: { id: string; checkInFailReason: string; events: { kind: string }[] }[] } };
+        return { feed, goals, badges, ov, gList, gFailed, gRec, gLine: gList?.golfers?.find(x => x.id === data.golferA.id), gBooking: gRec?.golfer?.bookings.find(x => x.id === bookingA.id), detail, today, list, csvFees: csvRows.map(r => r.split('","')[feeCol]?.replace(/"/g, '')), probs, msg, ask, todayA: today?.courses?.find(x => x.id === data.courseA.id) };
+      };
+
+      const a = await look();
+      check('No Money → course page: no money block, fees or gross', a.detail?.money === null && a.detail?.revenue30d?.platform === null && a.detail?.revenue30d?.gross === null && typeof a.detail?.revenue30d?.greenFees === 'number', JSON.stringify({ money: a.detail?.money, r: a.detail?.revenue30d }));
+      check('…and no fees earned all time', a.detail?.relationship?.earnedCents === null && a.detail?.relationship?.paidRounds === null, JSON.stringify(a.detail?.relationship && { e: a.detail.relationship.earnedCents, p: a.detail.relationship.paidRounds }));
+      check('No Money → Home courses: listed, with no fees and no failed-charge row', !!a.todayA && a.todayA.feesThisMonth === null && a.todayA.fees7d === null && !a.todayA.rows.some(r => r.id.startsWith('fc-')), JSON.stringify(a.todayA));
+      check('No Money → Home problems: no declined card', !!a.today?.problems && !a.today.problems.some(p => p.id === alert.id), JSON.stringify(a.today?.problems));
+      check('No Money → Courses list: no fees on any row', Array.isArray(a.list) && a.list.length > 0 && a.list.every(r => r.revenue30d === null), JSON.stringify(a.list?.map(r => r.revenue30d)));
+      check('No Money → Courses CSV: the fees column is empty', a.csvFees.length > 0 && a.csvFees.every(v => v === ''), JSON.stringify(a.csvFees.slice(0, 5)));
+      check('No Money → Problems: no declined card', !!a.probs?.open && !a.probs.open.some(p => p.id === alert.id), JSON.stringify(a.probs?.open?.map(p => p.id)));
+      check('No Money → Messages context: no failed-charge count', a.msg?.context?.openItems?.failedCharges === null, JSON.stringify(a.msg?.context?.openItems));
+      check('No Money → Ask: bookings by course carry no fees', !!a.ask?.courses?.length && a.ask.courses.every(r => !('feesCollected' in r)), JSON.stringify(a.ask?.courses?.slice(0, 2)));
+
+      const feedIds = (x: typeof a) => x.feed?.items?.map(i => i.id) ?? [];
+      check('No Money → course timeline: no declined charge and no declined-card problem', !!a.feed?.items && !feedIds(a).includes(`pe-${declined.id}`) && !feedIds(a).includes(`al-${alert.id}`), JSON.stringify(feedIds(a).slice(0, 20)));
+      check('No Money → Goals: no fees goal', !!a.goals?.goals && !a.goals.goals.some(g => g.id === feeGoal.id), JSON.stringify(a.goals));
+      check('No Money → Overview Needs attention: no declined-card problem', !!a.ov?.attention && !a.ov.attention.rows.some(r => r.id === `p-${alert.id}`), JSON.stringify(a.ov?.attention?.rows.map(r => r.id)));
+      check('No Money → Golfers list: the golfer is listed, not red, and the list says no Money', a.gList?.seesMoney === false && !!a.gLine && a.gLine.tone !== 'bad', JSON.stringify(a.gList));
+      check('No Money → Golfers "Failed charges" filter → 403 (area)', a.gFailed.status === 403 && (a.gFailed.body as { code?: string })?.code === 'area', JSON.stringify(a.gFailed));
+      check('No Money → golfer record: no failed-charge count, decline reason or declined event', a.gRec?.golfer?.trust.failedCharges === null && a.gBooking?.checkInFailReason === '' && !a.gBooking?.events.some(e => e.kind === 'charge_failed'), JSON.stringify({ t: a.gRec?.golfer?.trust, b: a.gBooking }));
+
+      await prisma.adminUser.update({ where: { id: m10.id }, data: { areas: [...NO_MONEY, 'money'] } });
+      const b = await look();
+      check('With Money → course timeline: the declined charge and the declined-card problem', feedIds(b).includes(`pe-${declined.id}`) && feedIds(b).includes(`al-${alert.id}`), JSON.stringify(feedIds(b).slice(0, 20)));
+      check('With Money → Goals: the fees goal', !!b.goals?.goals?.some(g => g.id === feeGoal.id));
+      check('With Money → the rail counts the declined-card problem (badge = list)', typeof a.badges?.openProblems === 'number' && b.badges?.openProblems === a.badges.openProblems + 1, JSON.stringify({ a: a.badges, b: b.badges }));
+      check('With Money → Overview Needs attention: the declined-card problem', !!b.ov?.attention?.rows.some(r => r.id === `p-${alert.id}`));
+      check('With Money → Golfers list: the golfer is red', b.gList?.seesMoney === true && b.gLine?.tone === 'bad', JSON.stringify(b.gLine));
+      check('With Money → Golfers "Failed charges" filter lists them', b.gFailed.status === 200 && !!(b.gFailed.body as { golfers?: { id: string | null }[] })?.golfers?.some(x => x.id === data.golferA.id), JSON.stringify(b.gFailed.body));
+      check('With Money → golfer record: the failed charge, its reason and event', b.gRec?.golfer?.trust.failedCharges === 1 && b.gBooking?.checkInFailReason === 'isolation: card declined' && !!b.gBooking?.events.some(e => e.kind === 'charge_failed'), JSON.stringify({ t: b.gRec?.golfer?.trust, b: b.gBooking }));
+      const failedIds = (b.detail?.money as { failedCharges?: { bookingId: string }[] } | null)?.failedCharges?.map(f => f.bookingId) ?? [];
+      check('With Money → course page: fees, gross and the failed charge', typeof b.detail?.revenue30d?.platform === 'number' && typeof b.detail?.revenue30d?.gross === 'number' && failedIds.includes(bookingA.id), JSON.stringify({ r: b.detail?.revenue30d, failedIds }));
+      check('…and fees earned all time', typeof b.detail?.relationship?.earnedCents === 'number' && typeof b.detail?.relationship?.paidRounds === 'number');
+      check('With Money → Home courses: fees and the failed-charge row', !!b.todayA && typeof b.todayA.feesThisMonth === 'number' && typeof b.todayA.fees7d === 'number' && b.todayA.rows.some(r => r.id === `fc-${data.courseA.id}`), JSON.stringify(b.todayA));
+      check('With Money → Home problems: the declined card', !!b.today?.problems?.some(p => p.id === alert.id));
+      check('With Money → Courses list: fees on every row', Array.isArray(b.list) && b.list.every(r => typeof r.revenue30d === 'number'), JSON.stringify(b.list?.map(r => r.revenue30d)));
+      check('With Money → Courses CSV: the fees column is filled', b.csvFees.length > 0 && b.csvFees.every(v => /^\d+\.\d{2}$/.test(v ?? '')), JSON.stringify(b.csvFees.slice(0, 5)));
+      check('With Money → Problems: the declined card', !!b.probs?.open?.some(p => p.id === alert.id));
+      check('With Money → Messages context: the failed-charge count', typeof b.msg?.context?.openItems?.failedCharges === 'number' && (b.msg.context.openItems.failedCharges as number) >= 1, JSON.stringify(b.msg?.context?.openItems));
+      check('With Money → Ask: bookings by course carry fees', !!b.ask?.courses?.length && b.ask.courses.every(r => typeof r.feesCollected === 'number'), JSON.stringify(b.ask?.courses?.slice(0, 2)));
+    } finally {
+      await prisma.booking.update({ where: { id: bookingA.id }, data: { checkInFailReason: '' } });
+      await prisma.adminAlert.delete({ where: { id: alert.id } }).catch(() => {});
+      await prisma.paymentEvent.delete({ where: { id: declined.id } }).catch(() => {});
+      await prisma.adminGoal.delete({ where: { id: feeGoal.id } }).catch(() => {});
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: m10.id } }).catch(() => {});
+      await prisma.adminUser.delete({ where: { id: m10.id } });
+    }
+  }
+
   console.log('\n── Pipeline: inquiries CSV and expected launch (BOOKING-REF PR) ──');
   {
     const { signAdminToken } = await import('../src/lib/admin-session');

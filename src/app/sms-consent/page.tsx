@@ -49,7 +49,7 @@ export default function SmsConsentPage() {
         <section className="flex flex-col gap-3">
           <h2 className="text-[15px] font-semibold text-ink">Screenshot of the booking form</h2>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/sms-opt-in.png" alt="The GreenReserve booking form, with the unticked text message checkbox and its wording" width={488} height={842} loading="lazy" className="w-full max-w-[488px] h-auto rounded-lg shadow-card" />
+          <img src="/sms-opt-in.png" alt="The GreenReserve booking form, with the unticked text message checkbox and its wording" width={488} height={1147} loading="lazy" className="w-full max-w-[488px] h-auto rounded-lg shadow-card" />
         </section>
       </div>
     </div>

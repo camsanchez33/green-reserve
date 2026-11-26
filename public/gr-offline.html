@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1D1E1D">
+<title>You're offline | GreenReserve</title>
+<!-- PWA install (Cam 2026-11-24): what the installed dashboard or admin shows when a page can't load. Static, no
+     signed-in data, no scripts; the service worker precaches it. "Try again" reloads the page the person wanted. -->
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; }
+  body { background: #1D1E1D; color: #EDEEEB; font-family: "Libre Franklin", system-ui, -apple-system, "Segoe UI", sans-serif;
+         display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
+  main { max-width: 360px; text-align: center; }
+  h1 { font-family: "EB Garamond", Georgia, serif; font-weight: 500; font-size: 30px; margin: 0 0 8px; }
+  p { margin: 0 0 20px; color: #C6C8C3; font-size: 15px; line-height: 1.5; }
+  a { display: inline-block; padding: 10px 18px; border-radius: 8px; background: #EDEEEB; color: #161716;
+      font-size: 14px; font-weight: 600; text-decoration: none; }
+  a:focus-visible { outline: 2px solid #7BD9A4; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>You're offline</h1>
+  <p>GreenReserve needs a connection. Check the Wi-Fi or signal, then try again.</p>
+  <a href="">Try again</a>
+</main>
+</body>
+</html>

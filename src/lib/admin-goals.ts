@@ -34,8 +34,13 @@ export async function goalCurrent(metric: GoalMetric, startsAt: Date, dueAt: Dat
   return (await paidWindow(startsAt, end)).feesCents;
 }
 
-export async function listGoals(now: Date) {
-  const goals = await prisma.adminGoal.findMany({ orderBy: { dueAt: 'asc' } });
+/**
+ * M10 / MONEY-VIEW-1 (Cam 2026-11-26): a fees goal shows GreenReserve's fees, so it is listed only with the Money
+ * area (`money` comes from the asker's areas; required, so no caller forgets it).
+ */
+export async function listGoals(now: Date, opts: { money: boolean }) {
+  const all = await prisma.adminGoal.findMany({ orderBy: { dueAt: 'asc' } });
+  const goals = opts.money ? all : all.filter(g => g.metric !== 'fees');
   return Promise.all(goals.map(async g => {
     const metric = isGoalMetric(g.metric) ? g.metric : 'courses_live';
     const current = await goalCurrent(metric, g.startsAt, g.dueAt, now);

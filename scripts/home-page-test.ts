@@ -84,5 +84,14 @@ ok('the week-ahead link offers demand pricing and lands on it', board.includes('
   ok('…nobody on the course on another day', onCourse(day, '2026-11-07', '11:15').groups === 0);
 }
 
+// Homepage on a phone (UI style overhaul, Cam 2026-11-26): the hero photo stays, sections stack, a sticky Book a demo bar.
+{
+  const home = read('src/app/HomeContent.tsx'), bar = read('src/components/home/StickyDemoBar.tsx'), css = read('src/app/home.module.css');
+  ok('phone: the hero keeps its photo (the same Hero A as the computer)', home.includes('<Image src="/home/hero-coast.jpg"') && home.includes('id="hero-demo">Book a demo</a>'));
+  ok('phone: a sticky Book a demo bar goes to the Book a call block', home.includes('<StickyDemoBar />') && bar.includes('<a className={s.btn} href="#demo">Book a demo</a>'));
+  ok('phone: the bar shows only once the hero button is gone and stays hidden from Book a call on, footer included (never two in view, never over the footer)', bar.includes('hidden={!heroGone || closerReached}') && bar.includes('e.isIntersecting || e.boundingClientRect.top < (e.rootBounds?.height ?? window.innerHeight)') && bar.includes("document.getElementById('hero-demo')") && bar.includes("document.getElementById('demo')") && css.includes('.stickyDemo[hidden] { display: none; }'));
+  ok('the computer never shows the bar (desktop unchanged)', css.includes('.stickyDemo { display: none; }') && /@media \(max-width: 880px\) \{\n  \.stickyDemo \{ display: flex;/.test(css));
+}
+
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

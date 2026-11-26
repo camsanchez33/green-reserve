@@ -15,6 +15,7 @@ import OwnerTwoFactorCard from '@/components/admin/OwnerTwoFactorCard';
 import { ProfileCard, ProfileRow, Msg, profileStyles as s } from '@/components/admin/ProfileCard';
 import g from '../admin-glass.module.css';
 import { ROLE_LABELS, changedOn } from './logic';
+import { SAFARI_INSTALL_TEXT, useInstallApp } from '@/components/pwa/install-store';
 
 // "Request a change" links to the employee contact page, which doesn't exist yet: hidden until it does (Build's
 // default, Cam 2026-11-15). Set the path here when the page lands.
@@ -30,6 +31,10 @@ export default function ProfilePage() {
   const changedIso = (session as { passwordChangedAt?: string | null }).passwordChangedAt ?? null;
   const [changed, setChanged] = useState<string | null>(null);
   useEffect(() => { setChanged(changedOn(changedIso)); }, [changedIso]);
+
+  // PWA install (Cam 2026-11-24): the App card shows only when this browser can install the admin (or is Safari, which
+  // gets its one-line instruction); never once it is running as the installed app.
+  const { state: installState, install } = useInstallApp();
 
   const [pwOpen, setPwOpen] = useState(false);
   const [cpCurrent, setCpCurrent] = useState('');
@@ -97,13 +102,20 @@ export default function ProfilePage() {
     </ProfileCard>
   );
 
+  const app = installState ? (
+    <ProfileCard title="App" labelId="pf-app"
+      top={installState === 'prompt' ? <button type="button" className={s.lnk} onClick={install}>Install app</button> : undefined}>
+      {installState !== 'prompt' && <ProfileRow>{SAFARI_INSTALL_TEXT[installState]}</ProfileRow>}
+    </ProfileCard>
+  ) : null;
+
   return (
     <>
       <AdminSidebar active="profile" />
       <main className={g.main}>
         <div className={g.head}><h1>My profile</h1></div>
         <div className={s.col}>
-          <div className={s.grid}>{account}{password}</div>
+          <div className={s.grid}>{account}{password}{app}</div>
 
           {/* OWNER: passkeys, trusted devices, the authenticator app, sign out everywhere. */}
           {isOwner && (

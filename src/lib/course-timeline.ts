@@ -1,6 +1,8 @@
 // @brain course-events
 import { prisma } from '@/lib/prisma';
 import { FEED_GROUPS, type FeedGroup, type FeedItem } from './course-timeline-groups';
+import { isFailedChargeProblem } from './problems';
+import { MONEY_ONLY_PAYMENT_KINDS } from './money-problems';
 
 // A-05 items 4/5: a per-course event log with NO schema change — rides on
 // the EXISTING InquiryStatusEvent table via a linked CourseInquiry
@@ -208,7 +210,13 @@ function parseCursor(c?: string | null): { at: Date; atIso: string; id: string }
   return Number.isNaN(at.getTime()) ? null : { at, atIso: at.toISOString(), id };
 }
 
-export async function buildCourseFeed(courseId: string, opts: { cursor?: string | null; groups?: FeedGroup[]; limit?: number } = {}): Promise<{ items: FeedItem[]; next: string | null } | null> {
+/**
+ * M10 / MONEY-VIEW-1 (Cam 2026-11-26): GreenReserve's fees and declined charges are the Money area's. Without it
+ * the feed leaves out those payment events (MONEY_ONLY_PAYMENT_KINDS) and the declined-card problems (lib/problems).
+ */
+
+/** `money` is required, so no caller forgets it: it comes from the asker's areas. */
+export async function buildCourseFeed(courseId: string, opts: { cursor?: string | null; groups?: FeedGroup[]; limit?: number; money: boolean }): Promise<{ items: FeedItem[]; next: string | null } | null> {
   const limit = Math.min(opts.limit ?? FEED_PAGE, 200);
   const want = new Set(opts.groups?.length ? opts.groups : FEED_GROUPS.map(g => g.key));
   const cur = parseCursor(opts.cursor);
@@ -236,7 +244,7 @@ export async function buildCourseFeed(courseId: string, opts: { cursor?: string 
         orderBy: { occurredAt: 'desc' }, take,
       }),
       prisma.paymentEvent.findMany({
-        where: { booking: { courseId }, createdAt: lt },
+        where: { booking: { courseId }, createdAt: lt, ...(opts.money ? {} : { kind: { notIn: MONEY_ONLY_PAYMENT_KINDS } }) },
         orderBy: { createdAt: 'desc' }, take,
         select: { id: true, kind: true, amountCents: true, actorName: true, actor: true, detail: true, createdAt: true, booking: { select: { golferName: true } } },
       }),
@@ -349,6 +357,7 @@ export async function buildCourseFeed(courseId: string, opts: { cursor?: string 
       items.push({ id: `call-${c.id}`, at: c.createdAt.toISOString(), group: 'problems', title: `${c.kind === 'checkin' ? 'Check-in' : 'Discovery'} call ${c.outcome === 'scheduled' ? 'booked for' : `on ${when}:`} ${c.outcome === 'scheduled' ? when : c.outcome.replace(/_/g, ' ')}`, detail: c.notes ? c.notes.slice(0, 240) : undefined, who: c.createdBy || undefined });
     }
     for (const a of alerts) {
+      if (!opts.money && isFailedChargeProblem(a.key)) continue;
       if (!cur || a.firstSeenAt <= cur.at) items.push({ id: `al-${a.id}`, at: a.firstSeenAt.toISOString(), group: 'problems', title: `Problem: ${a.title}`, detail: a.detail, tone: 'bad' });
       if (a.resolvedAt && (!cur || a.resolvedAt <= cur.at)) items.push({ id: `alr-${a.id}`, at: a.resolvedAt.toISOString(), group: 'problems', title: `Cleared: ${a.title}`, tone: 'ok' });
     }

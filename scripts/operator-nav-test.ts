@@ -21,7 +21,8 @@ check('the rail lists every visible tab (one list, grouped, none dropped)', /nav
 check('a tall menu scrolls inside the rail, never sideways', /overflow-y-auto/.test(rail) && !/overflow-x-auto/.test(rail));
 check('the rail keeps the course switcher, Course alert, the booking page and sign-out',
   /aria-label="Switch course"/.test(rail) && /Course alert/.test(rail) && /\/courses\/' \+ slug/.test(rail) && /onClick=\{logout\}/.test(rail));
-check('no decorative icons on the desktop menu (TYPE-3)', !/className="w-4 h-4"/.test(rail) && !/item\.icon/.test(rail));
+// UI-STYLE (Cam 2026-11-26, approved; replaces TYPE-3's no-icon rail): one monochrome line icon per item, hidden from screen readers.
+check('one line icon per menu item, hidden from screen readers (UI-STYLE)', /<span aria-hidden="true" className="op-ic shrink-0 flex">\{item\.icon\}<\/span>/.test(rail));
 check('pages make room for the rail only where it renders', /\.op-look:has\(\.op-rail\)\s*\{\s*padding-left:\s*var\(--op-rail-w\)/.test(css) && /min-width:\s*768px/.test(css));
 check('the dashboard layout wraps pages in .op-look', /op-look/.test(layout));
 // SCHEDULE-3: the save bar is a slim pill inside the page (sticky, never fixed), above the phone tab bar.
