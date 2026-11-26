@@ -89,8 +89,11 @@ Twilio setup itself (account, number, campaign registration) is still on Cam's l
   booking, event, verbal and alert consent say texts come "from <Course> via GreenReserve", and the two
   opt-in confirmations and HELP open "<Course> via GreenReserve: …". Agreements under 2026-11-05 and
   alerts-2026-11-18 stay valid; their wording is kept in `PAST_SMS_CONSENT_WORDING`. A guest alert is recorded
-  under the version of the box it ticked (`alertConsentVersionOf`). `public/sms-opt-in.png` still shows the
-  old box and needs a fresh capture before the Twilio campaign update.
+  under the version of the box it ticked (`alertConsentVersionOf`). `public/sms-opt-in.png` was recaptured
+  2026-11-26 from a locally seeded app ("Sample Golf Course", example data) and shows the current box.
+- **Shorter confirmations, whole words (Cam 2026-11-26, SMS-WORDS):** "<Course> via GreenReserve: Booking texts on,
+  up to 4 per booking. …" and "… Alert texts on, 1 per date you picked. …". A course name that would push any
+  text past one segment is shortened by whole words only (`wordsThatFit`), never mid-word.
 - **Record:** `SmsConsent` (append-only; the latest row per phone decides) — `src/lib/sms-consent.ts`
   (`recordSmsConsent`, `hasSmsConsent`, `consentedPhones`, `optInAndConfirm`). Wording and its version:
   `src/lib/sms-consent-copy.ts` (`SMS_CONSENT_VERSION`; change a sentence → bump it).
