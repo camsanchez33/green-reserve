@@ -49,7 +49,10 @@ const IP = '198.51.100.231';
   const ev = await prisma.securityEvent.count({ where: { ip: IP, kind: 'second_factor_failed', detail: 'inquiry sign-in code, wrong code' } });
   ok('L2 a wrong inquiry sign-in code is a security event', r.status === 400 && ev === 1, { s: r.status, ev });
   const code = read('src/app/api/inquiries/signin-code/route.ts');
-  ok('L2 signin-code records a rate limit and an off-file probe (and still answers blind)', code.includes("detail: 'inquiry sign-in code' })") && code.includes("detail: 'inquiry sign-in code asked from an email not on file — nothing sent' });\n    return blind();"));
+  ok('L2 signin-code records a rate limit and an off-file probe, and still answers blind', code.includes("detail: 'inquiry sign-in code' })") && code.includes("detail: 'inquiry sign-in code asked from an email not on file — nothing sent' }));\n    return blind();"));
+  // Review: on the blind branches the record is never awaited (after()), so it adds no time to the answer.
+  const blindBranches = code.slice(code.indexOf('if (!existing || !existing.builtCourseId)'), code.indexOf('const cid = newChallengeId()'));
+  ok('L2 signin-code never awaits a record on a blind answer (no timing tell)', !/await securityEvent/.test(blindBranches) && (blindBranches.match(/after\(securityEvent\(/g) ?? []).length === 2);
 
   await prisma.rateLimit.deleteMany({ where: { key: { contains: IP } } });
   await prisma.securityEvent.deleteMany({ where: { ip: IP } });

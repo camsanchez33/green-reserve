@@ -83,7 +83,10 @@ export async function POST(req: NextRequest) {
   // rows — burying the very trace the 30385cd audit asked for — and, knowing the
   // address, send that many real emails from our domain to a real operator.
   // Declining reads as blind, so the cap itself is not an oracle either.
-  if (!(await rateLimit(`signin-code-inquiry:${existing.id}`, 3, 3600))) return blind();
+  if (!(await rateLimit(`signin-code-inquiry:${existing.id}`, 3, 3600))) {
+    after(securityEvent(req, { kind: 'rate_limited', surface: 'course', detail: 'inquiry sign-in code, per-inquiry cap' })); // after(): no timing tell
+    return blind();
+  }
 
   if (existing.email.trim().toLowerCase() !== email) {
     // Worth a trace — someone naming a real built course from the wrong address
@@ -97,8 +100,9 @@ export async function POST(req: NextRequest) {
         actorName: 'Sign-in code requested from an email that is NOT on file — nothing sent',
       },
     }).catch(err => console.error('signin-code event failed:', err));
-    // L2: the probe is on Admin → Security too (not only the inquiry's timeline). The answer stays blind.
-    await securityEvent(req, { kind: 'signin_failed', surface: 'course', email, detail: 'inquiry sign-in code asked from an email not on file — nothing sent' });
+    // L2: the probe is on Admin → Security too (not only the inquiry's timeline). In after(), like the code
+    // email below: awaited, it made this answer slower than the on-file one (review), which is an oracle.
+    after(securityEvent(req, { kind: 'signin_failed', surface: 'course', email, detail: 'inquiry sign-in code asked from an email not on file — nothing sent' }));
     return blind();
   }
 

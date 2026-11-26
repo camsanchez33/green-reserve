@@ -44,7 +44,8 @@ check('…both kinds stay in the send log', src.includes("kind: data.detailsLink
 
 // The count: 78 in the mockup's inventory, less 3 removed and 3 merged (the 4th pair, "added as member", was already one email).
 const senders = (src.match(/^export async function send\w+\(/gm) ?? []).length;
-check(`email.ts has 74 senders (80 before: 3 removed, 3 merged away)`, senders === 74, senders);
+// +1: sendStaffLoginLinkEmail (audit 2026-11-24 L7: Admin's resend staff login, moved into lib/email from its own Resend client).
+check(`email.ts has 75 senders (80 before: 3 removed, 3 merged away; +1 staff login link)`, senders === 75, senders);
 
 console.log(failed === 0 ? '\nALL PASS' : `\n${failed} FAILED`);
 if (failed) process.exit(1);

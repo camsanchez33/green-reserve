@@ -25,7 +25,10 @@ export async function POST(req: NextRequest) {
   // Expired, forged, or never issued all read the same. A distinct "no
   // challenge" message would tell someone probing the route whether their
   // earlier request had found a real course.
-  if (!challenge) return NextResponse.json({ error: GENERIC }, { status: 400 });
+  if (!challenge) {
+    await securityEvent(req, { kind: 'second_factor_failed', surface: 'course', detail: 'inquiry sign-in code, no valid challenge' });
+    return NextResponse.json({ error: GENERIC }, { status: 400 });
+  }
 
   // REVIEW FIX (cfeb2e1 audit): the attempt counter used to live INSIDE the
   // token, re-signed on each miss. That stops someone editing it down and does
