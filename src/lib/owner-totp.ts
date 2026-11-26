@@ -91,7 +91,7 @@ export async function signEnrolToken(payload: { adminId: string; secret: string 
 
 export async function verifyEnrolToken(token: string): Promise<{ adminId: string; secret: string } | null> {
   try {
-    const { payload } = await jwtVerify(token, jwtSecret);
+    const { payload } = await jwtVerify(token, jwtSecret, { algorithms: ['HS256'] });
     if (payload.type !== 'totp_enrol' || typeof payload.adminId !== 'string' || typeof payload.secret !== 'string') return null;
     return { adminId: payload.adminId, secret: payload.secret };
   } catch { return null; }

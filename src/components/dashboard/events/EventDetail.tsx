@@ -12,7 +12,7 @@
 // or the pairings print survive a tab change.
 import React, { useEffect, useState } from 'react';
 import { useDashboardAccess } from '@/lib/use-dashboard-access';
-import { shotgunLabels, groupStartTime } from '@/lib/course-events';
+import { shotgunLabels, groupStartTime } from '@/lib/event-shared';
 import { StatusDot } from '@/components/ui/StatusDot';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { formatTeeDay, formatTeeTime } from '@/lib/format';

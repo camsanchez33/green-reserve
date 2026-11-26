@@ -42,7 +42,7 @@ export async function signMemberMagicToken(payload: Proven & { membershipId?: st
 
 export async function verifyMemberMagicToken(token: string): Promise<Proven | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
     return readProven(payload, 'member_magic');
   } catch { return null; }
 }
@@ -61,7 +61,7 @@ export async function getMemberSession(): Promise<Proven | null> {
   const token = cookieStore.get('gr_member')?.value;
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
     return readProven(payload, 'member_session');
   } catch { return null; }
 }
@@ -128,7 +128,7 @@ function membershipEmailWhere(courseId: string, email: string): Prisma.CourseMem
 }
 
 /** The membership whose member rates and window apply to this email at this course right now (lib/member-rates), or
- *  null. A member's rate still wins over a resident's; the two-groups rule (lower price, longer window) comes later. */
+ *  null. A golfer who is also a resident gets the lower own seat and the longer window (TWO-GROUPS-PRICE, lib/two-groups). */
 export async function liveMembershipFor(course: { id: string } & LapseRule, email: string) {
   if (!email.trim()) return null;
   return prisma.courseMembership.findFirst({
