@@ -9,7 +9,7 @@ import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
 import {
   LayoutGrid, MapPin, Inbox, ClipboardCheck, Calendar, Users, DollarSign, Receipt, LineChart, BarChart2,
-  MessageSquare, Megaphone, Activity, Settings, UserCheck, Target, ClipboardList, Lock, FileText, LogOut,
+  MessageSquare, Megaphone, Activity, Settings, UserCheck, Target, ClipboardList, Lock, FileText, LogOut, MoreHorizontal,
 } from 'lucide-react';
 
 // UI-STYLE (Cam 2026-11-26): one monochrome line icon per menu item, the same set and size as the course dashboard's.
@@ -196,6 +196,25 @@ export default function AdminSidebar({ active, pendingInquiries = 0 }: {
         )}
       </div>
     </aside>
+
+    {/* UI-STYLE (Cam 2026-11-26, the mockup's "On a phone"): below 900px a bottom tab bar replaces the ☰ menu —
+        Overview, Courses, Bookings and Golfers (each only where this login may open it), and More, which opens the full
+        menu above. Same pages, same gates; nothing new. */}
+    <nav className={g.tabbar} aria-label="Admin sections">
+      {(['overview', 'courses', 'bookings', 'golfers'] as AdminNavKey[]).map(k => {
+        const item = groups.flatMap(grp => grp.items).find(i => i.key === k && i.href);
+        if (!item?.href) return null;
+        return (
+          <Link key={k} href={item.href} aria-current={active === k ? 'page' : undefined} className={g.tab}>
+            <span aria-hidden="true" className={g.ic}>{ICONS[k]}</span>{k === 'courses' ? 'Courses' : item.label}
+          </Link>
+        );
+      })}
+      <button type="button" className={g.tab} aria-expanded={railOpen} aria-current={!['overview', 'courses', 'bookings', 'golfers'].includes(active) ? 'page' : undefined}
+        onClick={() => setRailOpen(o => !o)}>
+        <span aria-hidden="true" className={g.ic}><MoreHorizontal className={IC}/></span>More
+      </button>
+    </nav>
 
     <div className={g.top}>
       <button type="button" className={`${g.ibtn} ${g.menuBtn}`} aria-label="Menu" aria-expanded={railOpen} onClick={() => setRailOpen(o => !o)}>
