@@ -195,7 +195,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     {/* UI-STYLE (Cam 2026-11-26): no search in the sidebar. On a computer the golfer search sits in a header band at the top
         of EVERY dashboard page, in the sidebar's own colour (globals.css .op-band). It is in the page's flow above <main>, so
         it stays put while the page scrolls. On a phone the search stays in the More menu. */}
-    <div className="op-band hidden md:flex items-center px-6 py-2.5 print:hidden">
+    <div className="op-band hidden md:flex shrink-0 items-center px-6 py-2.5 print:hidden">
       <div className="w-[min(420px,100%)]"><OperatorSearch /></div>
     </div>
 

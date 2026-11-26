@@ -215,7 +215,7 @@ body {
 @media screen {
 .op-look:has(.op-rail) :is(.op-rail, .op-band) {
   --color-ink: #F2F2F2; --color-ink-soft: #CCCCCC; --color-ink-muted: #B0B0B0; --color-ink-faint: #B0B0B0;
-  --color-line: #303030; --color-line-soft: #2A2A2A; --color-rail-line: #303030; --color-white: #2C2C2C; --color-page: #2C2C2C; --color-paper: #2C2C2C;
+  --color-line: #303030; --color-line-soft: #2A2A2A; --color-rail-line: #303030; --color-white: #2C2C2C; --color-page: #2C2C2C; --color-paper: #363636;
   --color-pine: #F2F2F2; --color-pine-hover: #FFFFFF; --op-brand-green: #4CC183; --op-well: rgb(255 255 255 / .06);
   --op-panel: #2C2C2C; --op-panel-solid: #2C2C2C; --op-edge: rgb(255 255 255 / .10);
   color-scheme: dark; color: var(--color-ink);
