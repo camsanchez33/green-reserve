@@ -85,7 +85,9 @@ ok('no Open tee sheet button', !page.includes('Open tee sheet'));
 ok('no Action needed count tiles', !page.includes('Cards declined') && !page.includes('No-shows today'));
 ok('Next off is the server\'s next group from now, not the first of six slots', page.includes('home?.nextOff ?? null') && readFileSync('src/lib/operator-home.ts', 'utf8').includes('const nx = slots.find('));
 ok('next payout is its own card', /<Card className="px-5 py-4 flex items-center gap-3 text-\[14px\]">\s*<Link href="\/dashboard\/money\?tab=payouts" className="flex-1[^"]*">Next payout</.test(page));
-ok('the one search sits on Home and the rail leaves it there', page.includes('<OperatorSearch />') && readFileSync('src/components/OperatorSidebar.tsx', 'utf8').includes("{active !== 'home' && <OperatorSearch />}"));
+// UI-STYLE (Cam 2026-11-26, replacing HOME-3's search on Home): the one search is in the header band on every page, none in the rail.
+{ const side = readFileSync('src/components/OperatorSidebar.tsx', 'utf8'); const rail = side.slice(side.indexOf('<aside className="op-rail'), side.indexOf('</aside>', side.indexOf('<aside className="op-rail')));
+  ok('the one search sits in the header band on every page (not on Home, not in the rail)', !page.includes('<OperatorSearch') && side.includes('<div className="op-band hidden md:flex') && !rail.includes('<OperatorSearch')); }
 ok('money numbers only come with money (the route decides)', page.includes('{home.money && <>'));
 ok('no typed colours on Home (tokens only)', !/#[0-9A-Fa-f]{6}\b/.test(page) && !/#[0-9A-Fa-f]{6}\b/.test(readFileSync('src/components/dashboard/home/HomeBoard.tsx', 'utf8')));
 const route = readFileSync('src/app/api/operator/home/route.ts', 'utf8');

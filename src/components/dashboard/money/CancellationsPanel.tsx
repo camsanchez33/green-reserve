@@ -61,7 +61,7 @@ export function CancellationsPanel({ bookings, course, initialQuery = '', canWai
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 pt-3 pb-2 border-b border-line-soft">
           <SlidingTabs value={feesOnly ? 'fee' : 'all'} onChange={k => setFeesOnly(k === 'fee')} tabs={[['all', `All ${cancelled.length}`], ['fee', `Fee kept ${withFee.length}`]] as const} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Find a golfer" aria-label="Find a golfer"
-            className="ml-auto w-48 bg-white border border-line rounded-[7px] px-3 py-1.5 text-sm text-ink placeholder-ink-faint focus:ring-2 focus:ring-pine/10 focus:border-pine/40 outline-none" />
+            className="ui-search ml-auto w-48 bg-white border border-line rounded-[7px] px-3 py-1.5 text-sm text-ink placeholder-ink-faint focus:ring-2 focus:ring-pine/10 focus:border-pine/40 outline-none" />
         </div>
         {rows.length === 0 ? (
           <p className="px-4 py-6 text-[13.5px] text-ink-soft">{q ? `Nobody matches “${search.trim()}”.` : feesOnly ? 'No fees kept.' : 'No cancellations yet.'}</p>

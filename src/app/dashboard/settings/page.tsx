@@ -87,7 +87,7 @@ function Head({ title, onGo, owner, wide }: { title: string; onGo: (area: Area |
       <h1 className="font-serif text-[30px] sm:text-[34px] font-semibold leading-none text-ink">{title}</h1>
       <div className="relative flex items-center gap-1">
         {open && <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') shut(); }} aria-label="Search settings" autoFocus
-          className="text-[14px] text-ink bg-ink/5 border border-line rounded-[10px] px-3 py-2 w-[min(260px,52vw)] outline-none focus:border-ink-soft" />}
+          className="ui-search text-[14px] text-ink bg-ink/5 border border-line rounded-[10px] px-3 py-2 w-[min(260px,52vw)] outline-none focus:border-ink-soft" />}
         <button type="button" onClick={() => (open ? shut() : setOpen(true))} aria-label="Search settings" title="Search" aria-expanded={open}
           className="w-10 h-10 grid place-items-center rounded-[8px] text-ink-soft hover:text-ink hover:bg-ink/5"><SearchIcon /></button>
         {open && q.trim() && (

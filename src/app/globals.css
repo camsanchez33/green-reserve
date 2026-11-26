@@ -213,15 +213,15 @@ body {
 /* UI-STYLE: the sidebar is dark in BOTH looks. In Light it is the solid #1E1E1E rail, so its own text, lines and
    active fill take light-on-dark tokens; in Dark it is the glass rail and the dark tokens already apply. */
 @media screen {
-.op-look:has(.op-rail) .op-rail {
+.op-look:has(.op-rail) :is(.op-rail, .op-band) {
   --color-ink: #F2F2F2; --color-ink-soft: #CCCCCC; --color-ink-muted: #B0B0B0; --color-ink-faint: #B0B0B0;
-  --color-line: #303030; --color-line-soft: #2A2A2A; --color-rail-line: #303030; --color-white: #2C2C2C; --color-page: #2C2C2C; --color-paper: #2C2C2C;
+  --color-line: #303030; --color-line-soft: #2A2A2A; --color-rail-line: #303030; --color-white: #2C2C2C; --color-page: #2C2C2C; --color-paper: #363636;
   --color-pine: #F2F2F2; --color-pine-hover: #FFFFFF; --op-brand-green: #4CC183; --op-well: rgb(255 255 255 / .06);
   --op-panel: #2C2C2C; --op-panel-solid: #2C2C2C; --op-edge: rgb(255 255 255 / .10);
   color-scheme: dark; color: var(--color-ink);
 }
-.op-look:has(.op-rail) .op-rail .op-dark-only { display: inline-block; }
-.op-look:has(.op-rail) .op-rail .op-light-only { display: none; }
+.op-look:has(.op-rail) :is(.op-rail, .op-band) .op-dark-only { display: inline-block; }
+.op-look:has(.op-rail) :is(.op-rail, .op-band) .op-light-only { display: none; }
 }
 
 /* The material, on screen and rail pages only. One rule for both looks; the tokens above say solid (Light) or glass
@@ -258,6 +258,29 @@ body {
 @media screen and (min-width: 1280px) {
   .op-look:has(.op-rail) .fixed .tt-card.bg-white.shadow-card { background-color: var(--op-panel); -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur); }
 }
+}
+/* UI-STYLE (Cam 2026-11-26): the header band at the top of every dashboard page (computer) is the sidebar's own colour
+   and material, with a hairline under it. */
+@media screen {
+.op-look:has(.op-rail) .op-band { background-color: var(--op-rail-bg); -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur); box-shadow: 0 1px 0 var(--op-edge); position: relative; z-index: 20; }
+/* Search fields match their screen (Cam 2026-11-26): ONE shape (8px, 1px edge, no shadow) — a white field with a thin
+   border on Light, a dark glass field with a faint light edge on Dark, and the dark field in the sidebar-coloured band in
+   both. The hook is .ui-search on the field's visible box; the input inside it stays transparent. */
+.op-look:has(.op-rail) .ui-search {
+  background-color: #FFFFFF; border: 1px solid #D4D4D4; border-radius: 8px; box-shadow: none; color: var(--color-ink);
+  -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur);
+}
+.op-look[data-theme="dark"]:has(.op-rail) .ui-search { background-color: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .14); box-shadow: inset 0 1px 0 rgb(255 255 255 / .05); }
+.op-look:has(.op-rail) .op-band .ui-search { background-color: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .14); box-shadow: inset 0 1px 0 rgb(255 255 255 / .05); }
+.op-look:has(.op-rail) .ui-search:focus-within { border-color: var(--color-ink-muted); }
+.op-look:has(.op-rail) .ui-search input { background-color: transparent; }
+/* Admin is dark only: every search takes the dark glass field. */
+[data-admin-shell] .ui-search {
+  background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .14); border-radius: 8px; color: #EDEDED;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .05);
+}
+[data-admin-shell] .ui-search:focus-within { border-color: rgb(255 255 255 / .32); }
+[data-admin-shell] .ui-search input { background: transparent; color: inherit; }
 }
 @media screen and (prefers-reduced-motion: reduce) { .op-look:has(.op-rail) .op-tab { transition: none; } }
 @media screen and (prefers-reduced-transparency: reduce) {
