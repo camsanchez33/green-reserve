@@ -68,6 +68,13 @@ async function cleanup() {
   ok('golfer: no event closed to sign-up', !ga.text.includes('AlphaPrivateOuting') && ga.text.includes('AlphaOpenScramble'));
   ok('golfer: no member or resident rates', !ga.text.includes('$12.34'));
   ok('golfer: no dues', !ga.text.includes('$1200'));
+  // Per-login gates (final-reviewer, part 2): a staff login sees in its brief only what its dashboard pages show it.
+  const narrow = (await buildCourseBrief(a.id, 'staff', new Date(), { schedule: false, members: false, events: false, settings: false }))!;
+  ok('staff without schedule.view: no member or resident rates', sa.text.includes('$12.34') && !narrow.text.includes('$12.34'));
+  ok('staff without members.view: no dues', sa.text.includes('$1200') && !narrow.text.includes('$1200'));
+  ok('staff without events.manage: no event closed to sign-up', !narrow.text.includes('AlphaPrivateOuting') && narrow.text.includes('AlphaOpenScramble'));
+  ok('staff without settings.edit: no staff-only note, no Setup', !narrow.text.includes('AlphaBarn') && !/## Setup/.test(narrow.text) && /## Setup/.test(sa.text));
+  ok('staff: time zone and check-in window lines', /Time zone: /.test(sa.text) && /Check-in window: /.test(sa.text) && !/Check-in window: /.test(ga.text));
   // GUEST-PASS-OFF (#529): guest passes are gone everywhere, so the benefit left to check is the booking window.
   ok('golfer: membership benefits stay', /AlphaGold: .*book 14 days out/.test(ga.text) && !/guest pass/i.test(ga.text), ga.text.match(/AlphaGold.*$/m));
   for (const t of [sa.text, ga.text]) ok('no organiser contact in any brief', !/Pat Organiser|pat@private|999-0000/.test(t));

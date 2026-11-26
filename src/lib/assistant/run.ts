@@ -99,7 +99,8 @@ export function streamAssistant(o: AssistantStreamOptions): Response {
     async start(controller) {
       const send = (t: 'text' | 'status' | 'card' | 'end', d: unknown) => controller.enqueue(encoder.encode(JSON.stringify({ t, d }) + '\n'));
       let reply = '';
-      const say = (d: string) => { reply += d; send('text', d); };
+      let roundText = '';
+      const say = (d: string) => { reply += d; roundText += d; send('text', d); };
       const usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
       const toolNames: string[] = [];
       let stopReason: string | null = null;
@@ -107,6 +108,7 @@ export function streamAssistant(o: AssistantStreamOptions): Response {
       let messages: Anthropic.Beta.BetaMessageParam[] = o.messages.map(m => ({ role: m.role, content: m.content }));
       try {
         for (let round = 0; ; round++) {
+          roundText = '';
           const stream = o.client.beta.messages.stream(assistantRequestParams({ system: o.system, messages, tools: o.tools, maxTokens: o.maxTokens }));
           for await (const event of stream) {
             if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') say(event.delta.text);
@@ -116,10 +118,17 @@ export function streamAssistant(o: AssistantStreamOptions): Response {
           usage.cacheRead += msg.usage.cache_read_input_tokens ?? 0; usage.cacheWrite += msg.usage.cache_creation_input_tokens ?? 0;
           stopReason = msg.stop_reason;
 
-          const fallback = stopFallback(msg.stop_reason, reply, msg.stop_reason === 'refusal' ? o.refusalLine : o.errorLine);
-          if (msg.stop_reason === 'refusal' || msg.stop_reason === 'max_tokens') {
+          if (msg.stop_reason === 'refusal') {
+            // Always a plain line, even after a preamble or an earlier tool round: the person must not be left with
+            // half a sentence and silence.
+            say(`${reply && !/\n\n$/.test(reply) ? '\n\n' : ''}${o.refusalLine}`);
+            ended = 'refusal';
+            break;
+          }
+          if (msg.stop_reason === 'max_tokens') {
+            const fallback = stopFallback(msg.stop_reason, roundText, o.errorLine);
             if (fallback) say(fallback);
-            ended = msg.stop_reason;
+            ended = 'max_tokens';
             break;
           }
           const uses = msg.content.filter((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === 'tool_use');

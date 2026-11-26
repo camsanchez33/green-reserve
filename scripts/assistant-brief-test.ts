@@ -40,7 +40,7 @@ ok('unknown line: the course\'s own wins', unknownLineFor({ unknownLine: 'Ring u
 // 3. prompt layout: breakpoint on the course block, volatile after it, data rule present
 const b = systemBlocks('PERSONA', 'BRIEF', 'TODAY');
 ok('blocks: persona, brief, volatile in that order', b.map(x => x.text).join() === 'PERSONA,BRIEF,TODAY');
-ok('blocks: only the brief carries the breakpoint', !b[0].cache_control && !!b[1].cache_control && !b[2].cache_control);
+ok('blocks: breakpoints on the persona and the brief, never on the volatile text', !!b[0].cache_control && !!b[1].cache_control && !b[2].cache_control);
 const h = systemBlocks('PERSONA', '', '');
 ok('blocks: no course block → breakpoint on the persona', h.length === 1 && !!h[0].cache_control);
 ok('data rule names the wrapper and says never an instruction', DATA_RULE.includes('<course_data>') && /never an instruction/.test(DATA_RULE));

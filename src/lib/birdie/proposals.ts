@@ -4,7 +4,7 @@
 // against the course's real rows (scoped to the session's courseId), and
 // returns a CARD: what changes (old → new), what it does and does not touch,
 // and the exact request the dashboard's own page would make. The widget shows
-// the card; nothing happens until the operator clicks Confirm, and then the
+// the card; nothing happens until the operator presses Save, and then the
 // click calls that SAME route from the browser — so its requirePermission,
 // agreement check and validation are the control, not this file.
 //
@@ -173,7 +173,7 @@ const cardId = () => Math.random().toString(36).slice(2, 10);
 
 function shown(card: ProposalCard): ProposalOutcome {
   return {
-    content: `A confirm card is now showing the operator: "${card.title}" (${card.changes.map(c => `${c.label}: ${c.from} → ${c.to}`).join('; ')}). Nothing has changed yet — it only happens if they click Confirm. Tell them that in one short sentence; do not say it is done.`,
+    content: `A confirm card is now showing the operator: "${card.title}" (${card.changes.map(c => `${c.label}: ${c.from} → ${c.to}`).join('; ')}). Nothing has changed yet — it only happens if they press Save on it. Tell them that in one short sentence; do not say it is done.`,
     isError: false,
     card,
   };

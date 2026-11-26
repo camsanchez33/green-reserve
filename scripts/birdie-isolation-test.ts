@@ -62,7 +62,7 @@ const routeSrc = readFileSync(new URL('../src/app/api/birdie/chat/route.ts', imp
 const reads = [...ctxSrc.matchAll(/prisma\.(\w+)\.(findUnique|findFirst|findMany|count|aggregate)\(\{([\s\S]*?)\n  \}\)|prisma\.(\w+)\.(count)\(\{([^}]*\}[^)]*)\)/g)].map(m => m[0]);
 check('context: every read is scoped', reads.length > 0 && reads.every(r => /courseId|where: \{ id: courseId/.test(r)), `${reads.length} reads`);
 check('context: no unscoped findMany', !/prisma\.\w+\.findMany\(\s*\)/.test(ctxSrc));
-check('route: the course id comes from the session', /getCourseBrief\(session\.courseId, 'staff'\)/.test(routeSrc) && !/getCourseBrief\((?!session\.courseId)/.test(routeSrc));
+check('route: the course id comes from the session', /buildCourseBrief\(session\.courseId, 'staff'/.test(routeSrc) && /knowsFor\(session\.courseId/.test(routeSrc) && !/(get|build)CourseBrief\((?!session\.courseId|courseId)/.test(routeSrc));
 check('route: the request body is only ever read for messages', !/body[?]?\.(courseId|course)\b/.test(routeSrc));
 check('route: the cap is taken before the body is parsed', routeSrc.indexOf('checkCaps(') < routeSrc.indexOf('req.json()'));
 

@@ -10,7 +10,9 @@ import { assistantClient, systemBlocks, DATA_RULE } from '../src/lib/assistant/p
 import { OPERATOR_PERSONA } from '../src/lib/birdie/persona-operator';
 
 let failed = 0;
-const ok = (l: string, c: boolean, d: unknown = '') => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
+// Bound once: the log capture below swaps console.log, and results must still print.
+const print = console.log.bind(console);
+const ok = (l: string, c: boolean, d: unknown = '') => { print(`${c ? 'PASS' : 'FAIL'}  ${l}${c ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
 
 type Final = { stop_reason: string; content: unknown[]; text?: string };
 /** A fake Anthropic client: each stream() call plays the next scripted turn. Records every request. */
@@ -86,10 +88,18 @@ const SECRET_Q = 'My name is Pat Golfer, phone 555-0100. Can I walk?';
   ok('refusal: the plain line', textOf(ev) === 'REFUSED-LINE' && endOf(ev) === 'refusal', textOf(ev));
   f = fakeClient([{ stop_reason: 'refusal', content: [], text: 'Partly' }]);
   ev = await read(streamAssistant({ persona: 'golfer', courseId: 'c1', client: f.client, system: [], messages: [{ role: 'user', content: 'q' }], ...lines }));
-  ok('refusal mid-answer: no line added', textOf(ev) === 'Partly');
+  ok('refusal mid-answer: the plain line still follows', textOf(ev) === 'Partly\n\nREFUSED-LINE', textOf(ev));
   f = fakeClient([{ stop_reason: 'max_tokens', content: [], text: 'Long' }]);
   ev = await read(streamAssistant({ persona: 'golfer', courseId: 'c1', client: f.client, system: [], messages: [{ role: 'user', content: 'q' }], ...lines }));
   ok('max_tokens: says it ran long', /ran long/.test(textOf(ev)) && endOf(ev) === 'max_tokens');
+
+  // A refusal after a tool round (preamble, lookup, then the model declines) still ends with the plain line.
+  f = fakeClient([
+    { stop_reason: 'tool_use', content: [{ type: 'tool_use', id: 't1', name: 'get_tee_sheet', input: {} }], text: 'Let me check the tee sheet.' },
+    { stop_reason: 'refusal', content: [] },
+  ]);
+  ev = await read(streamAssistant({ persona: 'operator', courseId: 'c1', client: f.client, system: [], messages: [{ role: 'user', content: 'q' }], tools: [{ name: 'get_tee_sheet', input_schema: { type: 'object' } }], runTool: async () => ({ content: '{}', isError: false }), ...lines }));
+  ok('refusal after a tool round: the plain line', textOf(ev).endsWith('\n\nREFUSED-LINE') && endOf(ev) === 'refusal', textOf(ev));
 
   // 5. Errors: a rejected key gets its own line; anything else the error line. Never the error's message.
   const authErr = new Anthropic.AuthenticationError(401, { error: { message: 'invalid x-api-key sk-ant-SECRET' } }, 'invalid x-api-key sk-ant-SECRET', new Headers());
@@ -129,7 +139,7 @@ const SECRET_Q = 'My name is Pat Golfer, phone 555-0100. Can I walk?';
   restore();
   // 7. Logs: one assistant.reply line per answer, with sizes; never the question, a reply, a phone or a key.
   const all = logs.join('\n');
-  ok('log: a reply line per answer', logs.filter(l => l.includes('"ev":"assistant.reply"')).length >= 9, logs.length);
+  ok('log: a reply line per answer', logs.filter(l => l.includes('"ev":"assistant.reply"')).length >= 10, logs.length);
   ok('log: no question text, name or phone', !all.includes('Pat Golfer') && !all.includes('555-0100') && !all.includes('block tomorrow'));
   ok('log: no reply text', !all.includes('Walking is allowed') && !all.includes('Nothing changes until'));
   ok('log: no key, no error message', !all.includes('sk-ant') && !all.includes('socket hang up'));
@@ -149,16 +159,18 @@ const SECRET_Q = 'My name is Pat Golfer, phone 555-0100. Can I walk?';
   ok('persona: no clock or course in the frozen text', !/\d{4}-\d{2}-\d{2}/.test(OPERATOR_PERSONA) && !/<course_data course=/.test(OPERATOR_PERSONA));
   ok('persona: drafts only, saved by the operator', /nothing happens unless they press Save/.test(OPERATOR_PERSONA) && /Never say a change is done/.test(OPERATOR_PERSONA));
   const blocks = systemBlocks(OPERATOR_PERSONA, '<course_data course="A">x</course_data>', 'Today (course-local): 2026-11-26');
-  ok('prompt: persona → brief (cached) → today', blocks.length === 3 && !blocks[0].cache_control && !!blocks[1].cache_control && !blocks[2].cache_control && blocks[2].text.startsWith('Today'));
+  ok('prompt: persona (cached) → brief (cached) → today', blocks.length === 3 && !!blocks[0].cache_control && !!blocks[1].cache_control && !blocks[2].cache_control && blocks[2].text.startsWith('Today'));
 
   // 10. The route: course from the session only, caps before the body, the course's staff switch, no message text logged.
   const route = readFileSync(new URL('../src/app/api/birdie/chat/route.ts', import.meta.url), 'utf8');
-  ok('route: the brief is the session course\'s', (route.match(/getCourseBrief\(/g) ?? []).length === (route.match(/getCourseBrief\(session\.courseId, 'staff'\)/g) ?? []).length);
+  ok('route: every brief read is the session course\'s', !/(get|build)CourseBrief\((?!session\.courseId|courseId)/.test(route) && /knowsFor\(session\.courseId/.test(route));
   ok('route: the body is only read for messages', !/body[?]?\.(courseId|course)\b/.test(route));
   ok('route: caps before the body', route.indexOf('checkCaps(') > 0 && route.indexOf('checkCaps(') < route.indexOf('req.json()'));
-  ok('route: honours the course\'s staff switch (GET and POST)', (route.match(/settings\.staffOn/g) ?? []).length >= 2);
+  ok('route: honours the course\'s staff switch (GET and POST)', /assistantStaffOn === false\) return NextResponse\.json\(\{ enabled: false \}\)/.test(route) && /if \(!brief\.settings\.staffOn\) return/.test(route));
   ok('route: fails closed without a client', /if \(!client\) return/.test(route));
   ok('route: no conversation log with text', !/logConversation|question,|reply,/.test(route));
+  ok('route: the applied log carries no card title (it names golfers)', !/title: str\(/.test(route));
+  ok('route: the brief is built for this login\'s permissions', /buildCourseBrief\(session\.courseId, 'staff', new Date\(\), staffSees\(session\)\)/.test(route) && /can\(session, 'members\.view'\)/.test(route) && /can\(session, 'settings\.edit'\)/.test(route));
   ok('route: no model of its own', !/claude-/.test(route));
   const guard = readFileSync(new URL('../src/lib/birdie/guardrails.ts', import.meta.url), 'utf8');
   ok('caps: the dashboard platform cap is the operator persona\'s', guard.includes("platformAllows('operator')"));

@@ -77,7 +77,7 @@ const ovZ = Number(/\.ov \{[^}]*z-index: (\d+)/.exec(css)?.[1]);
 check('this page’s dialogs sit under the shared Modal (z-50), so "Confirm it’s you" opens on top of Publish', ovZ > 30 && ovZ < 50, String(ovZ));
 check('the Sentry test shows the route’s own 503/504 words (raw fetch, d.error)', /fetch\('\/api\/admin\/sentry-test'/.test(page) && page.includes('d.error ||'));
 check('the wipe asks for a reason of 4+ characters, as the route does', page.includes('wipeReason.trim().length < 4'));
-check('no "Birdie" shown to the reader (the log key birdie.reply stays)', !/>[^<]*\bBirdie\b/.test(page));
+check('no "Birdie" shown to the reader (the log key is assistant.reply)', !/>[^<]*\bBirdie\b/.test(page));
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');
 process.exit(failed ? 1 : 0);

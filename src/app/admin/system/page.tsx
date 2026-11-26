@@ -530,9 +530,9 @@ function SystemContent() {
                 : !b.flag ? <>Off — the key is set; flip <Mono>BIRDIE_ENABLED=true</Mono> in Vercel to switch it on.</> : 'Off.'}
             </Row>
             <Row st={capped ? 'warn' : ''}
-              fix={<Fix sev="warn" steps={['Nothing is broken: the platform-wide daily cap is reached, so the assistant stops replying until the count resets tomorrow.', 'Read today’s conversations in the Vercel logs to see where the replies went.', 'If the cap is too low, ask Build to raise it.']}>
+              fix={<Fix sev="warn" steps={['Nothing is broken: the platform-wide daily cap is reached, so the assistant stops replying until the count resets tomorrow.', 'Today’s replies are in the Vercel logs, without the messages.', 'If the cap is too low, ask Build to raise it.']}>
                 <ExtBtn href={links.vercelLogs} pri>Open Vercel logs</ExtBtn></Fix>}>
-              {b.todayReplies.toLocaleString()} of {b.dailyCap.toLocaleString()} replies today (the platform-wide daily cap; 20 per course per hour on top). Conversations are in the Vercel logs as <Mono>birdie.reply</Mono>.
+              {b.todayReplies.toLocaleString()} of {b.dailyCap.toLocaleString()} replies today (the platform-wide daily cap; 20 per course per hour on top). Replies are logged as <Mono>assistant.reply</Mono>.
             </Row>
           </div>
         );

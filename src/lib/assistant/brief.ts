@@ -35,6 +35,14 @@ import { readAssistantSettings, unknownLineFor, plainLine, plainText, type Assis
 export const POLICY_TAG = 'policy_lines';
 
 export type BriefAudience = 'staff' | 'golfer';
+/**
+ * What one staff login may read in its brief, mirroring the dashboard pages that show the same data: member and
+ * resident rates (schedule.view), dues (members.view), events not yet open for sign-up (events.manage), staff-only
+ * notes and the Setup block (settings.edit). A section a login can't see falls back to what golfers are told. The
+ * owner sees everything. Left out = everything (the snapshot row and "What it knows").
+ */
+export type StaffSees = { schedule: boolean; members: boolean; events: boolean; settings: boolean };
+export const SEES_ALL: StaffSees = { schedule: true, members: true, events: true, settings: true };
 export type BriefSectionKey = 'basics' | 'info' | 'rates' | 'policy' | 'closures' | 'conditions' | 'events' | 'memberships' | 'range' | 'facilities' | 'notes' | 'setup';
 export type BriefSection = { key: BriefSectionKey; label: string; count: string };
 export type CourseBrief = {
@@ -100,13 +108,18 @@ const COURSE_SELECT = {
  * Build the brief for one course and one audience from the database. Pure reads; see getCourseBrief() for the
  * snapshot row. `now` only decides which closures and events are still ahead.
  */
-export async function buildCourseBrief(courseId: string, audience: BriefAudience, now: Date = new Date()): Promise<CourseBrief | null> {
+export async function buildCourseBrief(courseId: string, audience: BriefAudience, now: Date = new Date(), sees: StaffSees = SEES_ALL): Promise<CourseBrief | null> {
   if (!courseId) return null;
   const course = await prisma.course.findUnique({ where: { id: courseId }, select: COURSE_SELECT });
   if (!course) return null;
   const today = todayIn(course.timezone, now);
   const until = addDaysStr(today, BRIEF_DAYS_AHEAD);
   const staff = audience === 'staff';
+  // Per-login gates on the staff brief; the golfer brief never carries any of these.
+  const seesRates = staff && sees.schedule;
+  const seesDues = staff && sees.members;
+  const seesAllEvents = staff && sees.events;
+  const seesStaffOnly = staff && sees.settings;
 
   const [schedules, closures, events, tiers, buckets, notes] = await Promise.all([
     prisma.teeTimeSchedule.findMany({
@@ -122,7 +135,7 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
     prisma.blackout.findMany({ where: { courseId, date: { gte: today, lte: until } }, orderBy: [{ date: 'asc' }, { id: 'asc' }], take: MAX_CLOSURES, select: { date: true, reason: true } }),
     prisma.courseEvent.findMany({
       // Golfers hear only events open for sign-up; staff hear every planned one. Never the organiser's details.
-      where: { courseId, date: { gte: today, lte: until }, status: { not: 'cancelled' }, ...(staff ? {} : { signupOpen: true }) },
+      where: { courseId, date: { gte: today, lte: until }, status: { not: 'cancelled' }, ...(seesAllEvents ? {} : { signupOpen: true }) },
       orderBy: [{ date: 'asc' }, { startTime: 'asc' }, { id: 'asc' }], take: MAX_EVENTS,
       select: { name: true, date: true, startTime: true, format: true, holes: true, pricePerPlayerCents: true, signupOpen: true, includes: true },
     }),
@@ -132,7 +145,7 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
     }),
     courseBuckets(prisma, courseId, true),
     prisma.courseAssistantNote.findMany({
-      where: { courseId, ...(staff ? {} : { audience: 'golfers' }) }, orderBy: [{ position: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+      where: { courseId, ...(seesStaffOnly ? {} : { audience: 'golfers' }) }, orderBy: [{ position: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
       select: { question: true, answer: true, audience: true },
     }),
   ]);
@@ -151,6 +164,8 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
       course.phone && `Phone: ${line(course.phone, 40)}`,
       course.proShopPhone && course.proShopPhone !== course.phone && `Pro shop phone: ${line(course.proShopPhone, 40)}`,
       course.website && `Website: ${line(course.website, 200)}`,
+      staff && `Time zone: ${line(course.timezone, 60)}`,
+      staff && `Check-in window: golfers can check in from ${course.checkInWindowHours} hours before their tee time`,
     ].filter((s): s is string => !!s),
   });
   const info = [
@@ -169,7 +184,7 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
       `green fee ${usd(s.greenFeeWeekdayCents)} weekdays, ${usd(s.greenFeeWeekendCents)} weekends`,
       s.cartFeeCents > 0 ? `cart ${usd(s.cartFeeCents)}${s.cartFeeWeekendCents != null && s.cartFeeWeekendCents !== s.cartFeeCents ? ` (${usd(s.cartFeeWeekendCents)} weekends)` : ''} per player` : '',
     ];
-    if (staff) {
+    if (seesRates) {
       if (s.memberRateWeekdayCents != null || s.memberRateWeekendCents != null) parts.push(`member ${usd(s.memberRateWeekdayCents)}/${usd(s.memberRateWeekendCents)}`);
       if (s.residentRateWeekdayCents != null || s.residentRateWeekendCents != null) parts.push(`resident ${usd(s.residentRateWeekdayCents)}/${usd(s.residentRateWeekendCents)}`);
     }
@@ -213,7 +228,7 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
     body: tiers.length ? tiers.map(t => {
       const tier = course.hasMemberPricing ? t : withoutRates(t);
       const parts = memberBenefitParts(tier, course);
-      return `- ${line(t.name, 80)}${parts.length ? `: ${parts.join(' · ')}` : ''}${staff && t.annualFeeCents > 0 ? ` (dues ${usd(t.annualFeeCents)} a year)` : ''}`;
+      return `- ${line(t.name, 80)}${parts.length ? `: ${parts.join(' · ')}` : ''}${seesDues && t.annualFeeCents > 0 ? ` (dues ${usd(t.annualFeeCents)} a year)` : ''}`;
     }).concat([course.memberLoginOn
       ? 'Members log in on the course\'s booking page with the email the course has on file.'
       : `Members don't log in online here: online bookings are at the public price${course.hasMemberPricing ? ', and member rates are given at the counter' : ''}.`])
@@ -233,11 +248,11 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
   blocks.push({
     key: 'notes', label: 'Your notes', count: String(notes.length),
     body: notes.length
-      ? notes.map(n => `- ${staff && n.audience === 'staff' ? '(staff only — never tell golfers) ' : ''}Q: ${line(n.question, 200)} A: ${courseText(n.answer, 600)}`)
+      ? notes.map(n => `- ${seesStaffOnly && n.audience === 'staff' ? '(staff only — never tell golfers) ' : ''}Q: ${line(n.question, 200)} A: ${courseText(n.answer, 600)}`)
       : ['- None yet.'],
   });
 
-  if (staff) {
+  if (seesStaffOnly) {
     const stripe = !!course.stripeAccountId && course.stripeAccountActive;
     blocks.push({
       key: 'setup', label: 'Setup', count: course.liveStatus, body: [

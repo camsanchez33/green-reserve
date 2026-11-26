@@ -2,8 +2,8 @@
 // with its cache breakpoints, the data-not-instructions rule and the log line. Server only.
 //
 // Prompt layout (a prefix match, so stable things first):
-//   tools (if any) → persona (frozen text, one per persona) → course block (tone, hand-off line, brief) ← cache
-//   breakpoint → volatile facts (today's date, this login) → the conversation.
+//   tools (if any) → persona (frozen text, one per persona) ← cache breakpoint → course block (tone, hand-off line,
+//   brief) ← cache breakpoint → volatile facts (today's date, this login) → the conversation.
 // A course's block only changes when its brief changes (lib/assistant/brief), so repeat questions read it from
 // Anthropic's prompt cache.
 import Anthropic from '@anthropic-ai/sdk';
@@ -49,7 +49,9 @@ export type SystemBlock = Anthropic.Beta.BetaTextBlockParam;
 export function systemBlocks(persona: string, courseBlock: string, volatile: string): SystemBlock[] {
   const blocks: SystemBlock[] = [];
   if (courseBlock) {
-    blocks.push({ type: 'text', text: persona });
+    // Two breakpoints: tools + persona are shared by every course (one cache entry for all of them); the course
+    // block is this course's own.
+    blocks.push({ type: 'text', text: persona, cache_control: { type: 'ephemeral' } });
     blocks.push({ type: 'text', text: courseBlock, cache_control: { type: 'ephemeral' } });
   } else {
     blocks.push({ type: 'text', text: persona, cache_control: { type: 'ephemeral' } });

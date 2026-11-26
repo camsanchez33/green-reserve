@@ -18,7 +18,8 @@ import { READ_TOOLS, runReadTool, type ToolContext } from '@/lib/birdie/tools';
 import { PROPOSE_TOOLS, runProposeTool, isProposeTool } from '@/lib/birdie/proposals';
 import { OPERATOR_PERSONA } from '@/lib/birdie/persona-operator';
 import { birdieEnabled, checkCaps, MAX_USER_CHARS, MAX_HISTORY_TURNS } from '@/lib/birdie/guardrails';
-import { getCourseBrief, type CourseBrief } from '@/lib/assistant/brief';
+import { prisma } from '@/lib/prisma';
+import { buildCourseBrief, getCourseBrief, type BriefSection, type StaffSees } from '@/lib/assistant/brief';
 import { assistantClient, systemBlocks } from '@/lib/assistant/prompt';
 import { sanitizeTurns, streamAssistant, type ToolOutput } from '@/lib/assistant/run';
 
@@ -37,32 +38,43 @@ const OPERATOR_CHIPS = [
   'How do I change my weekend rate?',
 ];
 
-
-/** "What it knows" for the panel: the brief's sections and when its text last changed. No brief text. */
-function knowsFor(b: (CourseBrief & { builtAt: Date }) | null) {
-  if (!b) return null;
-  const notes = b.sections.find(s => s.key === 'notes');
-  return { courseName: b.courseName, notes: Number(notes?.count ?? 0), sections: b.sections, builtAt: b.builtAt.toISOString() };
+/** What this login may read in its brief: the same permissions as the dashboard pages that show that data. */
+function staffSees(session: Parameters<typeof can>[0]): StaffSees {
+  return { schedule: can(session, 'schedule.view'), members: can(session, 'members.view'), events: can(session, 'events.manage'), settings: can(session, 'settings.edit') };
 }
 
-/** Off when the platform switch or the key is off, or the course turned its staff assistant off. */
-function staffAssistantOn(brief: CourseBrief | null): boolean {
-  return birdieEnabled() && !!brief && brief.settings.staffOn;
+/**
+ * GET runs on every dashboard page (the widget remounts on navigation), so it reads the stored snapshot's section
+ * list instead of rebuilding the brief; only a course with no snapshot yet builds it once. Sections this login can't
+ * read are left out.
+ */
+async function knowsFor(courseId: string, sees: StaffSees) {
+  let row = await prisma.courseBrief.findUnique({ where: { courseId_audience: { courseId, audience: 'staff' } }, select: { sections: true, builtAt: true } });
+  if (!row) {
+    const b = await getCourseBrief(courseId, 'staff');
+    row = b ? { sections: b.sections, builtAt: b.builtAt } : null;
+  }
+  if (!row || !Array.isArray(row.sections)) return null;
+  const hidden = new Set<string>([...(sees.settings ? [] : ['setup']), ...(sees.members ? [] : ['memberships'])]);
+  const sections = (row.sections as BriefSection[]).filter(s => s && typeof s.key === 'string' && !hidden.has(s.key));
+  const notes = sections.find(s => s.key === 'notes');
+  return { notes: Number(notes?.count ?? 0) || 0, sections, builtAt: row.builtAt.toISOString() };
 }
 
 export async function GET() {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ enabled: false }, { status: 401 });
   if (!birdieEnabled()) return NextResponse.json({ enabled: false });
-  const brief = await getCourseBrief(session.courseId, 'staff');
-  if (!staffAssistantOn(brief)) return NextResponse.json({ enabled: false });
+  const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true, assistantStaffOn: true } });
+  if (!course || course.assistantStaffOn === false) return NextResponse.json({ enabled: false });
+  const knows = await knowsFor(session.courseId, staffSees(session));
   return NextResponse.json({
     enabled: true,
     persona: 'operator',
     greeting: OPERATOR_GREETING,
     chips: OPERATOR_CHIPS,
     helpsWith: 'how to do anything on this dashboard, and what your course is set to',
-    knows: knowsFor(brief),
+    knows: knows ? { courseName: course.name, ...knows } : null,
   });
 }
 
@@ -81,8 +93,8 @@ export async function POST(req: NextRequest) {
   const history = sanitizeTurns(body?.messages, { maxChars: MAX_USER_CHARS, maxTurns: MAX_HISTORY_TURNS });
   if (!history.length) return NextResponse.json({ error: 'Ask something first.' }, { status: 400 });
 
-  // The course is the session's, never the request's.
-  const brief = await getCourseBrief(session.courseId, 'staff');
+  // The course is the session's, never the request's; the brief holds only what this login may read.
+  const brief = await buildCourseBrief(session.courseId, 'staff', new Date(), staffSees(session));
   if (!brief) return NextResponse.json({ error: 'Course not found.' }, { status: 404 });
   if (!brief.settings.staffOn) return NextResponse.json({ error: 'The assistant is turned off for your course. Turn it on in Settings → Assistant.' }, { status: 403 });
 
@@ -129,7 +141,8 @@ export async function PUT(req: NextRequest) {
   const str = (v: unknown, n: number) => (typeof v === 'string' ? v.slice(0, n) : '');
   console.log(JSON.stringify({
     ev: 'birdie.applied', courseId: session.courseId, actor: session.isStaff ? `staff:${session.staffId ?? ''}` : `op:${session.operatorId ?? ''}`,
-    title: str(a.title, 200), method: str(a.method, 10), path: str(a.path, 100), ok: a.ok === true, error: str(a.error, 300),
+    // ASSIST-1: no card title (it names the golfer), only where the change went and how it ended.
+    method: str(a.method, 10), path: str(a.path, 100), ok: a.ok === true, error: str(a.error, 300),
   }));
   return NextResponse.json({ ok: true });
 }
