@@ -150,19 +150,18 @@ export async function signAdminToken(payload: AdminSession, expiresAt?: number) 
  */
 export async function endEmployeeSession(token: string | undefined): Promise<void> {
   if (!token) return;
+  let c: { type?: string; adminId?: string; sv?: unknown };
+  try { c = (await jwtVerify(token, secret, { algorithms: ['HS256'] })).payload as typeof c; }
+  catch { return; } // expired or bad token: nothing to end
+  if (c.type !== 'admin_session' || typeof c.adminId !== 'string') return;
   try {
-    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
-    const c = payload as { type?: string; adminId?: string; sv?: unknown };
-    if (c.type !== 'admin_session' || typeof c.adminId !== 'string') return;
     await prisma.adminUser.updateMany({ where: { id: c.adminId, sessionVersion: typeof c.sv === 'number' ? c.sv : 0 }, data: { sessionVersion: { increment: 1 } } });
-  } catch { /* expired or bad token: nothing to end */ }
+  } catch (err) {
+    // Sign-out still answers success; the failure is logged, since a copied cookie would stay live.
+    console.error(JSON.stringify({ ev: 'admin.logout_revoke.fail', adminId: c.adminId, error: err instanceof Error ? err.message : String(err) }));
+  }
 }
 
-/** Every outstanding employee token for this admin stops working (M5). Returns the new version. */
-export async function bumpAdminSessionVersion(adminId: string): Promise<number> {
-  const r = await prisma.adminUser.update({ where: { id: adminId }, data: { sessionVersion: { increment: 1 } }, select: { sessionVersion: true } });
-  return r.sessionVersion;
-}
 
 /**
  * MP-2 fix-now #9: `active` used to be checked at LOGIN ONLY, so deactivating an

@@ -7,7 +7,7 @@ import { ALL_KEYS } from '@/lib/staff-permissions';
 // (per resolveDashboardSession's cookie logic) — feeds the dashboard's course
 // switcher. Staff belong to exactly one course and never see a switcher.
 export async function GET() {
-  const session = await liveOperatorSession() // audit 2026-11-24 L1: a killed cookie (old sessionVersion) is refused;
+  const session = await liveOperatorSession(); // audit 2026-11-24 L1: a killed cookie (old sessionVersion) is refused
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   // SD-1: the sidebar hides the configuration tabs for staff — no point
   // offering doors that now 403.

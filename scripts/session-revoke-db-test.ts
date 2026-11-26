@@ -1,10 +1,9 @@
-// Audit 2026-11-24 M4, M5, L1, L12: sessions that a password change, reset or sign-out really ends,
+// Audit 2026-11-24 M4, M5, L1: sessions that a password change, reset or sign-out really ends,
 // and a change-password form that can't be used to guess the current password.
 //  M4: operator change-password took a killed cookie (no sessionVersion check) and had no guess limit,
 //      so a stolen cookie could guess the password and mint a fresh live one. Admin had no limit either.
 //  M5: an admin employee's cookie lived its full 12h through a password change, reset or sign-out.
 //  L1: four more operator routes skipped the sessionVersion check.
-//  L12: operator sign-out cleared only the browser's cookie.
 // Real database. Run: npx tsx scripts/session-revoke-db-test.ts
 import { readFileSync } from 'fs';
 import bcrypt from 'bcryptjs';
@@ -15,6 +14,7 @@ import { NextRequest } from 'next/server';
 let jar: Record<string, string> = {};
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const nextHeaders = require('next/headers');
+nextHeaders.headers = async () => new Headers({ 'user-agent': 'test-browser' });
 nextHeaders.cookies = async () => ({
   get: (n: string) => (jar[n] ? { name: n, value: jar[n] } : undefined),
   getAll: () => Object.entries(jar).map(([name, value]) => ({ name, value })),
@@ -33,12 +33,16 @@ import { signAdminToken, resolveAdminSession, endEmployeeSession } from '../src/
 import { CHANGE_PASSWORD_TRIES } from '../src/lib/password-change-guard';
 import { POST as opChangePassword } from '../src/app/api/operator/change-password/route';
 import { POST as adminChangePassword } from '../src/app/api/admin/change-password/route';
-import { POST as opLogout } from '../src/app/api/auth/logout/route';
 import { POST as adminLogout } from '../src/app/api/admin/logout/route';
 import { GET as myCourses } from '../src/app/api/operator/my-courses/route';
 import { POST as onboardingComplete } from '../src/app/api/operator/onboarding-complete/route';
 import { POST as activeCourse } from '../src/app/api/operator/active-course/route';
 import { POST as resendVerification } from '../src/app/api/auth/resend-verification/route';
+import { POST as adminLogin } from '../src/app/api/admin/login/route';
+import { POST as setPassword } from '../src/app/api/admin/set-password/route';
+import { PATCH as employeesPatch } from '../src/app/api/admin/employees/route';
+import { signAdminSetPasswordToken } from '../src/lib/admin-session';
+import { signOwnerToken } from '../src/lib/owner-session';
 
 const TAG = 'sessrevoketest';
 let failed = 0;
@@ -49,7 +53,8 @@ async function cleanup() {
   const admins = (await prisma.adminUser.findMany({ where: { email: { startsWith: TAG } }, select: { id: true } })).map(a => a.id);
   await prisma.rateLimit.deleteMany({ where: { OR: [{ key: { startsWith: 'change-pw:' } }, { key: { contains: '203.0.113.' } }] } });
   await prisma.securityEvent.deleteMany({ where: { email: { startsWith: TAG } } }).catch(() => {});
-  await prisma.adminAuditLog?.deleteMany?.({ where: { adminId: { in: admins } } }).catch(() => {});
+  await prisma.adminAuditLog.deleteMany({ where: { adminId: { in: admins } } });
+  await prisma.ownerSession.deleteMany({ where: { adminId: { in: admins } } });
   await prisma.courseStaff.deleteMany({ where: { email: { startsWith: TAG } } });
   await prisma.course.deleteMany({ where: { slug: { startsWith: TAG } } });
   await prisma.courseOperator.deleteMany({ where: { email: { startsWith: TAG } } });
@@ -107,21 +112,12 @@ const cookieOut = (res: Response, name: string) => {
   ok('M4 …and password_changed is a security event', (await prisma.securityEvent.count({ where: { accountId: op.id, kind: 'password_changed' } })) === 1);
   ok('M4 …and the old cookie is dead', (await (async () => { jar = { gr_operator: tok1 }; return liveOperatorSession(); })()) === null);
 
-  // ── L12: operator and staff sign-out end the session on the server ──
-  const tok2 = newOpTok!;
-  jar = { gr_operator: tok2 };
-  await opLogout(req('/api/auth/logout', {}, { gr_operator: tok1 }));
-  ok('L12 signing out with a dead cookie signs nobody out', (await prisma.courseOperator.findUniqueOrThrow({ where: { id: op.id } })).sessionVersion === 2 && !!(await liveOperatorSession()));
-  await opLogout(req('/api/auth/logout', {}, { gr_operator: tok2 }));
-  ok('L12 signing out bumps the version, so a copy of the cookie dies too', (await prisma.courseOperator.findUniqueOrThrow({ where: { id: op.id } })).sessionVersion === 3 && (await liveOperatorSession()) === null);
+  // L12 (sign-out ending every session) is held for Cam: see the PR. A staff cookie is checked live here.
   const staff = await prisma.courseStaff.create({ data: { courseId: course.id, name: 'Rev Staff', email: `${TAG}+staff@t.local`, password: hash, active: true } });
-  const sTok = await signStaffToken({ staffId: staff.id, courseId: course.id, email: staff.email, sv: 0 });
-  jar = { gr_operator: sTok };
-  ok('L12 a staff cookie is live before sign-out', !!(await liveOperatorSession()));
-  await opLogout(req('/api/auth/logout', {}, { gr_operator: sTok }));
-  ok('L12 staff sign-out ends it on the server', (await liveOperatorSession()) === null && (await prisma.courseStaff.findUniqueOrThrow({ where: { id: staff.id } })).sessionVersion === 1);
-  const noCookie = await opLogout(req('/api/auth/logout', {}, {}));
-  ok('L12 sign-out with no cookie still answers success', noCookie.status === 200);
+  jar = { gr_operator: await signStaffToken({ staffId: staff.id, courseId: course.id, email: staff.email, sv: 0 }) };
+  ok('L1 a live staff cookie is a live session', !!(await liveOperatorSession()));
+  await prisma.courseStaff.update({ where: { id: staff.id }, data: { sessionVersion: 1 } });
+  ok('L1 …and a reset or disable (version bump) kills it', (await liveOperatorSession()) === null);
 
   // ── M5: admin employee sessions ──
   const emp = await prisma.adminUser.create({ data: { name: 'Rev Emp', email: `${TAG}+emp@t.local`, passwordHash: hash, role: 'manager', active: true } });
@@ -134,12 +130,12 @@ const cookieOut = (res: Response, name: string) => {
 
   jar = { admin_session: empTok };
   const adminBody = (current: string) => ({ currentPassword: current, newPassword: 'A-new-password-42!' });
-  const aBurst = await Promise.all(Array.from({ length: 8 }, () => adminChangePassword(req('/api/admin/change-password', adminBody('wrong-guess'), jar), undefined).then(r => r.status)));
+  const aBurst = await Promise.all(Array.from({ length: 8 }, () => adminChangePassword(req('/api/admin/change-password', adminBody('wrong-guess'), jar)).then(r => r.status)));
   ok(`M4 admin: 8 guesses at once, ${CHANGE_PASSWORD_TRIES} compared and the rest refused`, aBurst.filter(s => s === 401).length === CHANGE_PASSWORD_TRIES && aBurst.filter(s => s === 429).length === 8 - CHANGE_PASSWORD_TRIES, aBurst);
   ok('M4 admin: each wrong current password is a security event', (await prisma.securityEvent.count({ where: { accountId: emp.id, kind: 'signin_failed' } })) === CHANGE_PASSWORD_TRIES);
   await prisma.rateLimit.deleteMany({ where: { key: `change-pw:admin:${emp.id}` } });
   const empExp = decodeJwt(empTok).exp;
-  const aChanged = await adminChangePassword(req('/api/admin/change-password', adminBody('right-password-1'), jar), undefined);
+  const aChanged = await adminChangePassword(req('/api/admin/change-password', adminBody('right-password-1'), jar));
   const reissued = cookieOut(aChanged, 'admin_session');
   ok('M5 the right password changes it', aChanged.status === 200 && (await prisma.adminUser.findUniqueOrThrow({ where: { id: emp.id } })).sessionVersion === 1, aChanged.status);
   ok('M5 …every other cookie, including a copy of this one, is dead', (await resolveAdminSession()) === null);
@@ -154,10 +150,47 @@ const cookieOut = (res: Response, name: string) => {
   await endEmployeeSession('not-a-token');
   ok('M5 a bad token on sign-out throws nothing', true);
 
-  ok('M5 the owner resetting an employee bumps their version', /reset_password[\s\S]*sessionVersion: \{ increment: 1 \}/.test(read('src/app/api/admin/employees/route.ts')));
-  const setPw = read('src/app/api/admin/set-password/route.ts');
-  ok('M5 set-password (Forgot password, first password) bumps the version and ends the owner\'s sessions', setPw.includes('sessionVersion: { increment: 1 }') && setPw.includes('revokeAllOwnerSessions(admin.id)'));
-  ok('M5 the employee sign-in puts the version in the token', read('src/app/api/admin/login/route.ts').includes('sv: admin.sessionVersion'));
+  ok('M5 the password change is in the admin audit log (it was lost once the old cookie died)', (await prisma.adminAuditLog.count({ where: { adminId: emp.id, action: 'password_change' } })) === 1);
+
+  // The sign-in puts the version in the token.
+  await prisma.adminUser.update({ where: { id: emp.id }, data: { passwordHash: hash } });
+  const login = await adminLogin(req('/api/admin/login', { email: emp.email, password: 'right-password-1' }, {}));
+  const loginTok = cookieOut(login, 'admin_session');
+  ok('M5 the employee sign-in puts the current version in the token', login.status === 200 && !!loginTok && (decodeJwt(loginTok!) as { sv?: number }).sv === 2, login.status);
+
+  // The owner, with a live OwnerSession, does the rest.
+  const owner = await prisma.adminUser.create({ data: { name: 'Rev Owner', email: `${TAG}+owner@t.local`, passwordHash: hash, role: 'owner', active: true } });
+  const ownerSession = async () => {
+    const s = await prisma.ownerSession.create({ data: { adminId: owner.id, method: 'totp', expiresAt: new Date(Date.now() + 3600_000), stepUpAt: new Date() } });
+    return { s, tok: await signOwnerToken(s.id, owner.id, s.expiresAt) };
+  };
+  const o1 = await ownerSession();
+  jar = { gr_owner: o1.tok };
+  const reset = await employeesPatch(req('/api/admin/employees', { id: emp.id, action: 'reset_password', reason: 'test: locked out of their account' }, jar));
+  jar = { admin_session: loginTok! };
+  ok('M5 the owner resetting an employee ends that employee\'s sessions', reset.status === 200 && (await resolveAdminSession()) === null, reset.status);
+
+  // The owner changes their own password: other owner sessions end, this one stays, no employee cookie is set.
+  const o2 = await ownerSession();
+  jar = { gr_owner: o1.tok };
+  const oc = await adminChangePassword(req('/api/admin/change-password', adminBody('right-password-1'), jar));
+  const o2Row = await prisma.ownerSession.findUniqueOrThrow({ where: { id: o2.s.id } });
+  const o1Row = await prisma.ownerSession.findUniqueOrThrow({ where: { id: o1.s.id } });
+  ok('M5 owner change-password: the other owner session ends, this one stays, no employee cookie', oc.status === 200 && !!o2Row.revokedAt && !o1Row.revokedAt && cookieOut(oc, 'admin_session') === null, oc.status);
+  ok('M5 owner change-password is in the audit log', (await prisma.adminAuditLog.count({ where: { adminId: owner.id, action: 'password_change' } })) === 1);
+
+  // set-password (Forgot password): an employee's cookies die; for the owner, every owner session ends.
+  const empTok2 = await signAdminToken({ adminId: emp.id, email: emp.email, name: emp.name, role: 'manager', sv: (await prisma.adminUser.findUniqueOrThrow({ where: { id: emp.id } })).sessionVersion });
+  jar = { admin_session: empTok2 };
+  ok('M5 (set-up) a fresh employee cookie is live', !!(await resolveAdminSession()));
+  const link = await signAdminSetPasswordToken({ adminId: emp.id, email: emp.email });
+  await prisma.adminUser.update({ where: { id: emp.id }, data: { setPasswordToken: link, setPasswordTokenExpiry: new Date(Date.now() + 3600_000) } });
+  const sp = await setPassword(req('/api/admin/set-password', { token: link, password: 'Another-strong-pw-77!' }, {}));
+  ok('M5 set-password ends the employee\'s cookies', sp.status === 200 && (await resolveAdminSession()) === null, sp.status);
+  const ownerLink = await signAdminSetPasswordToken({ adminId: owner.id, email: owner.email });
+  await prisma.adminUser.update({ where: { id: owner.id }, data: { setPasswordToken: ownerLink, setPasswordTokenExpiry: new Date(Date.now() + 3600_000) } });
+  const osp = await setPassword(req('/api/admin/set-password', { token: ownerLink, password: 'Another-strong-pw-77!' }, {}));
+  ok('M5 the owner\'s set-password ends every owner session', osp.status === 200 && (await prisma.ownerSession.count({ where: { adminId: owner.id, revokedAt: null } })) === 0, osp.status);
 
   jar = {};
   await cleanup();

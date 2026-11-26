@@ -6,7 +6,7 @@ import { ACTIVE_COURSE_COOKIE, liveOperatorSession } from '@/lib/session';
 // re-validates ownership server-side — the cookie is just a preference, never
 // trusted for authorization.
 export async function POST(req: NextRequest) {
-  const session = await liveOperatorSession() // audit 2026-11-24 L1: a killed cookie (old sessionVersion) is refused;
+  const session = await liveOperatorSession(); // audit 2026-11-24 L1: a killed cookie (old sessionVersion) is refused
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.kind !== 'operator') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { resolveAdminSession, signAdminToken, bumpAdminSessionVersion } from '@/lib/admin-session';
+import { resolveAdminSession, signAdminToken } from '@/lib/admin-session';
 import { securityEvent } from '@/lib/security-events';
 import { changePasswordTryAllowed, CHANGE_PASSWORD_LIMITED } from '@/lib/password-change-guard';
 import bcrypt from 'bcryptjs';
-import { withAudit } from '@/lib/admin-audit';
+import { auditAdmin } from '@/lib/admin-audit';
 import { passwordChanged } from '@/lib/admin-password';
 
 async function changePassword(req: NextRequest) {
@@ -33,24 +33,32 @@ async function changePassword(req: NextRequest) {
   }
 
   const passwordHash = await bcrypt.hash(String(newPassword), 12);
-  await prisma.adminUser.update({ where: { id: admin.id }, data: { passwordHash, passwordChangedAt: new Date() } });
-  // Audit 2026-11-24 M5: every other session ends with the old password. An employee's cookies die by
-  // sessionVersion and this one is re-issued with the new version and its original end (no renewal);
+  // Audit 2026-11-24 M5: every other session ends with the old password, in the SAME write as the new
+  // password (a failure can't leave the new password with the old cookies live). An employee's cookies die
+  // by sessionVersion and this one is re-issued with the new version and its original end (no renewal);
   // the owner's other OwnerSession rows are revoked and this one is kept.
-  const sv = await bumpAdminSessionVersion(admin.id);
+  const { sessionVersion: sv } = await prisma.adminUser.update({
+    where: { id: admin.id },
+    data: { passwordHash, passwordChangedAt: new Date(), sessionVersion: { increment: 1 } },
+    select: { sessionVersion: true },
+  });
   if (session.ownerSessionId) {
     await prisma.ownerSession.updateMany({ where: { adminId: admin.id, revokedAt: null, id: { not: session.ownerSessionId } }, data: { revokedAt: new Date() } });
   }
   await passwordChanged(req, admin, 'changed on My profile');
+  // BRAIN-1a: recorded (the password itself never is). Written here with the session in hand: withAudit
+  // re-reads the session after the handler, and by then the old cookie is dead by design.
+  await auditAdmin(session, { action: 'password_change', targetType: 'admin', targetId: 'self', after: {} });
 
   const res = NextResponse.json({ success: true, signedOutElsewhere: true });
-  if (!session.ownerSessionId) {
+  // Without the old token's end there is no safe end to keep, so no new cookie: they sign in again.
+  if (!session.ownerSessionId && session.exp) {
     const token = await signAdminToken({ adminId: session.adminId, email: session.email, name: session.name, role: session.role, mfa: session.mfa, sv }, session.exp);
-    const maxAge = session.exp ? Math.max(0, session.exp - Math.floor(Date.now() / 1000)) : 60 * 60 * 12;
+    const maxAge = Math.max(0, session.exp - Math.floor(Date.now() / 1000));
     res.cookies.set('admin_session', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge, path: '/' });
   }
   return res;
 }
 
-// BRAIN-1a: recorded (the password itself never is).
-export const POST = withAudit(changePassword, () => ({ action: 'password_change', targetType: 'admin', targetId: 'self', after: {} }));
+// Recorded inside the handler (see auditAdmin above), so not wrapped in withAudit.
+export const POST = changePassword;
