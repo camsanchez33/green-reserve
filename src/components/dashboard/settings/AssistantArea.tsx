@@ -44,11 +44,20 @@ export function AssistantArea({ ctx }: { ctx: Ctx }) {
   const [open, setOpen] = useState<Open>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<string | null> => {
     const r = await dfetch<Payload>('/api/operator/assistant');
-    if (r.ok && r.data) { setData(r.data); setError(''); } else if (!r.ok) setError(r.error);
+    if (r.ok && r.data) { setData(r.data); setError(''); return null; }
+    if (!r.ok) { setError(r.error); return r.error; }
+    return null;
   }, []);
-  useEffect(() => { if (ctx.canEdit) load(); }, [ctx.canEdit, load]);
+  // After a write the server accepted: a failed re-read must not pass as a fresh list. The popup still closes (the
+  // write is done, and Save again would add the note twice); the warning says to reload.
+  const reloadAfterWrite = useCallback(async (): Promise<string | null> => {
+    const e = await load();
+    if (e) toast(`Saved, but the list could not be refreshed. Reload the page. (${e})`, 'warn');
+    return null;
+  }, [load]);
+  useEffect(() => { if (ctx.canEdit) void load(); }, [ctx.canEdit, load]);
 
   const patch = useCallback(async (p: Patch): Promise<string | null> => {
     const r = await dfetch<Payload>('/api/operator/assistant', { method: 'PATCH', body: JSON.stringify(p) });
@@ -60,16 +69,14 @@ export function AssistantArea({ ctx }: { ctx: Ctx }) {
   const saveNote = useCallback(async (id: string | null, n: Omit<Note, 'id'>): Promise<string | null> => {
     const r = await dfetch(id ? `/api/operator/assistant/notes/${encodeURIComponent(id)}` : '/api/operator/assistant/notes', { method: id ? 'PATCH' : 'POST', body: JSON.stringify(n) });
     if (!r.ok) return r.error;
-    await load();
-    return null;
-  }, [load]);
+    return reloadAfterWrite();
+  }, [reloadAfterWrite]);
 
   const removeNote = useCallback(async (id: string): Promise<string | null> => {
     const r = await dfetch(`/api/operator/assistant/notes/${encodeURIComponent(id)}`, { method: 'DELETE' });
     if (!r.ok) return r.error;
-    await load();
-    return null;
-  }, [load]);
+    return reloadAfterWrite();
+  }, [reloadAfterWrite]);
 
   async function refresh() {
     setRefreshing(true);
@@ -83,7 +90,7 @@ export function AssistantArea({ ctx }: { ctx: Ctx }) {
   if (!ctx.canEdit) {
     return <Group id="staff" title="Assistant"><p className="mx-3 mb-3 text-[13px] text-ink-soft">Only logins that can edit settings see the assistant.</p></Group>;
   }
-  if (error && !data) return <LoadError message={`${error} Nothing here is your course’s real assistant settings until this loads.`} onRetry={load} />;
+  if (error && !data) return <LoadError message={`${error} Nothing here is your course’s real assistant settings until this loads.`} onRetry={() => { void load(); }} />;
   if (!data) return <p className="py-16 text-center text-[13px] text-ink-muted">Loading…</p>;
 
   const s = data.settings;

@@ -143,7 +143,7 @@
   "src/components/dashboard/onboarding/PageReviewStep.tsx": 264,
   "src/components/dashboard/schedule/HoursPrices.tsx": 216,
   "src/components/dashboard/settings/AccountArea.tsx": 162,
-  "src/components/dashboard/settings/AssistantArea.tsx": 332,
+  "src/components/dashboard/settings/AssistantArea.tsx": 343,
   "src/components/dashboard/settings/BookingArea.tsx": 347,
   "src/components/dashboard/settings/CourseArea.tsx": 596,
   "src/components/dashboard/settings/FinishSetup.tsx": 18,
