@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
       include: { tier: { select: { id: true, name: true, color: true } } },
     });
 
-    // No GolferAccount yet — send a set-password invite link (after paying, when paying first).
+    // The invite link to the member's own email (after paying, when paying first).
     if (!waiting) after(sendWelcome(membership.id).catch(err => console.error('Member invite email error:', err)));
     if (!payFirst) after(maybeSendPayLink(membership.id).catch(err => console.error('Pay link email error:', err)));
 

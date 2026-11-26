@@ -215,7 +215,18 @@ async function main() {
   const unpaidRow = await prisma.courseMembership.create({ data: { courseId: a.id, golferId: acct3.id, tierId: tier.id, membershipType: 'Gold', status: 'awaiting_payment', addedBy: 'counter', inviteEmail: `moved3@${TAG}.test`, inviteName: 'Three', payToken: `${TAG}-three` } });
   const pick = await post(acct3.email, { payFirst: true });
   const unpaidAfter = await prisma.courseMembership.findUniqueOrThrow({ where: { id: unpaidRow.id } });
-  check('…a counter add for an old account email never picks up a row that logs in as another email', pick.status === 409 && unpaidAfter.inviteEmail === `moved3@${TAG}.test` && unpaidAfter.status === 'awaiting_payment', { pick, unpaidAfter: { inviteEmail: unpaidAfter.inviteEmail, status: unpaidAfter.status } });
+  // Audit 2026-11-24 H1: an add no longer links an account, so the old account email (no longer the row's login
+  // email, GOLFER-LOGIN-1) makes a NEW invite of its own; the row that logs in as another email is untouched.
+  check('…a counter add for an old account email never picks up a row that logs in as another email', pick.status === 201 && pick.body?.id !== unpaidRow.id && pick.body?.golferId == null && unpaidAfter.inviteEmail === `moved3@${TAG}.test` && unpaidAfter.status === 'awaiting_payment', { pick, unpaidAfter: { inviteEmail: unpaidAfter.inviteEmail, status: unpaidAfter.status } });
+
+  // H1: the single add never reads golfer accounts — the same answer for a nameless add either way, and a named add
+  // for an account email takes nothing from the account.
+  const h1Acct = await prisma.golferAccount.create({ data: { email: `h1acct@${TAG}.test`, firstName: 'Secret', lastName: 'Golfer', password: 'x', phone: '+15555550142' } });
+  const namelessAcct = await post(h1Acct.email, { name: '' });
+  const namelessNone = await post(`h1none@${TAG}.test`, { name: '' });
+  check('H1 a nameless add answers the same whether or not the email has an account', namelessAcct.status === 400 && namelessNone.status === 400 && JSON.stringify(namelessAcct.body) === JSON.stringify(namelessNone.body), { namelessAcct, namelessNone });
+  const named = await post(h1Acct.email, { name: 'Typed Name' });
+  check('H1 a named add for an account email is a plain invite: nothing from the account', named.status === 201 && named.body?.golferId == null && named.body?.linked === false && !JSON.stringify(named.body).includes('Secret') && !JSON.stringify(named.body).includes('0142'), named);
 
   // The invite and the dues link go to the member's own email (placeholder addresses: logged, never sent).
   // The Resend client needs a key to be made; placeholder addresses are logged and never handed to it.
