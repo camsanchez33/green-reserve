@@ -1,0 +1,263 @@
+<title>GreenReserve UI Styles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Libre+Franklin:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky tab bar and style switch, then numbered sections, each a real screenshot pair (computer + phone). */
+:root{--bg:#F3F4F2;--panel:#FFFFFF;--ink:#16191A;--muted:#5E6462;--line:#DCDFDC;--acc:#173B2A;--acc-ink:#FFFFFF;
+--serif:"EB Garamond",Georgia,serif;--sans:"Libre Franklin",system-ui,-apple-system,Segoe UI,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121413;--panel:#1B1E1D;--ink:#ECEEEC;--muted:#A9AFAC;--line:#2E3331;--acc:#7FD8A5;--acc-ink:#0D1A13;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121413;--panel:#1B1E1D;--ink:#ECEEEC;--muted:#A9AFAC;--line:#2E3331;--acc:#7FD8A5;--acc-ink:#0D1A13;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.wrap{max-width:1500px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 60px}
+h1{font-family:var(--serif);font-weight:600;font-size:32px;margin:0;text-wrap:balance}
+.lead{color:var(--muted);margin:4px 0 0}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.tabs,.styles{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button,.styles button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 14px;border-radius:8px;cursor:pointer;min-height:40px}
+.tabs button[aria-selected="true"]{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.styles button[aria-pressed="true"]{outline:2px solid var(--acc);outline-offset:1px}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.slabel{color:var(--muted);font-size:13px;margin-right:4px;align-self:center}
+section{margin-top:28px}
+.sh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.num{font-family:var(--serif);font-size:26px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+h2{font-family:var(--serif);font-size:24px;font-weight:600;margin:0}
+.sub{color:var(--muted);font-size:13px}
+.pair{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;margin-top:10px;align-items:start}
+@media (max-width:820px){.pair{grid-template-columns:minmax(0,1fr)}.pair .ph{max-width:300px}}
+figure{margin:0;min-width:0}
+figure img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+figcaption{color:var(--muted);font-size:12.5px;margin-top:4px}
+.note{margin-top:14px;padding:12px 14px;border:1px solid var(--line);background:var(--panel);border-radius:8px;color:var(--muted);font-size:13.5px;max-width:75ch}
+
+/* Phone proposals: drawn at phone width with the page's real content, in the chosen style. */
+.pv{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,320px));gap:18px;margin-top:10px;align-items:start}
+.pv figure img{max-height:640px;object-fit:cover;object-position:top}
+.notes{margin:0;padding-left:22px;max-width:62ch;font-size:14px}
+.notes li{margin-bottom:6px}
+.phone.big{max-width:390px;height:780px;font-size:14px}
+.field.srch{border-color:var(--p-srch-edge,#D4D4D4)}.dark .field.srch{--p-srch-edge:rgba(255,255,255,.14);background:rgba(255,255,255,.06)}
+.phone .scroll{overflow-y:auto}
+.cal7{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:12px}.cal7 span{padding:6px 0;border-radius:50%}.cal7 .x{color:var(--p-mut);opacity:.6}.cal7 .on{background:var(--p-band);color:#fff;font-weight:600}
+.ctabs{display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:10px;background:var(--p-line);gap:3px}.ctabs span{text-align:center;padding:9px 0;border-radius:8px;font-weight:500;min-height:38px}.ctabs .on{background:var(--p-card);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.hp{--hp-ground:#F7F6F1;--hp-forest:#173B2A;background:var(--hp-ground);color:#1C1F1D}.hp .scroll{padding:0!important;gap:0!important}.hp .hero{display:block;width:100%;height:470px;object-fit:cover;object-position:top}.hp .sec{padding:22px 18px;display:flex;flex-direction:column;gap:12px}.hp h4{font-family:var(--serif);font-size:26px;line-height:1.12;margin:0;color:var(--hp-forest);font-weight:600}.hp p{margin:0;font-size:14px;line-height:1.55}.hp li{list-style:none;border-top:1px solid #E2E0D8;padding:10px 0 10px 16px;position:relative;font-size:14px}.hp li:before{content:"–";position:absolute;left:0;color:#2E7D55}.phone.hp ul{margin:0!important;padding:0!important;max-width:none}.hp .hc{background:#fff;border:1px solid #E2E0D8;border-radius:10px;padding:16px}.hp .hc b{font-family:var(--serif);font-size:20px;color:var(--hp-forest)}.hp .hc a{font-weight:600;color:#1C1F1D;text-decoration:none;font-size:14px}
+
+.onphone{display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;margin-top:10px;align-items:start}
+@media (max-width:820px){.onphone{grid-template-columns:minmax(0,1fr)}}
+.onphone ul{margin:0;padding-left:20px;font-size:16px;max-width:52ch}.onphone li{margin-bottom:10px}
+.phone{--p-bg:#F2F2F2;--p-card:#FFFFFF;--p-ink:#161616;--p-mut:#5C5C5C;--p-line:#E4E4E4;--p-acc:#1E1E1E;--p-ok:#1A5734;--p-warn:#6C4205;--p-bad:#872C1A;--p-band:#235A3E;
+ width:100%;max-width:320px;height:640px;overflow:hidden;position:relative;border:1px solid var(--line);border-radius:22px;background:var(--p-bg);color:var(--p-ink);font-family:var(--sans);font-size:13px;line-height:1.35;display:flex;flex-direction:column}
+.phone.dark{--p-bg:#141414;--p-card:rgba(38,38,38,.62);--p-ink:#EDEDED;--p-mut:#B0B0B0;--p-line:rgba(255,255,255,.10);--p-acc:#EDEDED;--p-ok:#7BD9A4;--p-warn:#F2C46B;--p-bad:#FF9A8A}
+.phone .scroll{flex:1;overflow:hidden;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.ph-h{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--p-line);background:var(--p-card)}
+.ph-h b{font-family:var(--serif);font-size:16px}
+.ph-band{background:var(--p-band);color:#fff;padding:12px;font-family:var(--serif);font-size:17px}
+.ic{min-width:44px;height:36px;display:grid;place-items:center;border:1px solid var(--p-line);border-radius:8px;background:var(--p-card);font-size:12px;color:var(--p-ink)}
+.card{background:var(--p-card);border:1px solid var(--p-line);border-radius:10px;padding:10px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px}
+.row+.row{border-top:1px solid var(--p-line)}
+.mut{color:var(--p-mut)} .ok{color:var(--p-ok)} .warn{color:var(--p-warn)} .bad{color:var(--p-bad)}
+.chips{display:flex;gap:6px;overflow:hidden}
+.chip{flex:0 0 auto;border:1px solid var(--p-line);background:var(--p-card);border-radius:8px;padding:6px 9px;min-height:44px;display:flex;flex-direction:column;justify-content:center}
+.chip small{color:var(--p-mut);font-size:11px} .chip b{font-size:14px}
+.chip.on{background:var(--p-acc);color:var(--p-bg);border-color:var(--p-acc)} .chip.on small{color:inherit;opacity:.8}
+.seg{display:flex;border:1px solid var(--p-line);border-radius:8px;overflow:hidden} .seg span{flex:1;text-align:center;padding:9px 0;min-height:36px} .seg .on{background:var(--p-acc);color:var(--p-bg)}
+.field{border:1px solid var(--p-line);background:var(--p-card);border-radius:8px;min-height:44px;display:flex;align-items:center;padding:0 10px;color:var(--p-mut)}
+.slot{display:grid;grid-template-columns:52px 1fr;gap:8px;align-items:center;min-height:44px;border-top:1px solid var(--p-line)}
+.grp{border-radius:8px;padding:8px 10px;background:rgba(138,83,9,.12);border-left:3px solid var(--p-warn)}
+.grp.paid{background:rgba(34,104,63,.12);border-left-color:var(--p-ok)}
+.open{color:var(--p-mut);font-size:12px}
+.now{border-top:2px solid var(--p-warn);color:var(--p-warn);font-size:11px;padding-top:2px}
+.tabbar{display:flex;border-top:1px solid var(--p-line);background:var(--p-card)} .tabbar span{flex:1;text-align:center;padding:12px 0 14px;font-size:11.5px;min-height:44px} .tabbar .on{font-weight:600}
+.sticky{border-top:1px solid var(--p-line);background:var(--p-card);padding:10px 12px;display:flex;align-items:center;gap:10px}
+.btn{background:var(--p-acc);color:var(--p-bg);border-radius:10px;min-height:46px;display:grid;place-items:center;font-weight:600;flex:1}
+.btn.g{background:var(--p-band);color:#fff}
+.fab{position:absolute;right:12px;bottom:70px;background:var(--p-acc);color:var(--p-bg);border-radius:12px;padding:12px 16px;font-weight:600;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.mk{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#C9A24A;color:#1E1606;font-size:11px;font-weight:700;margin-right:4px;flex:0 0 auto}
+.tt{display:grid;grid-template-columns:1fr 1fr;gap:6px} .tt .card{padding:8px} .tt b{font-size:16px}
+.dark .card,.dark .ph-h,.dark .tabbar,.dark .sticky,.dark .chip,.dark .field,.dark .ic{-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8)}
+.dark .card{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.28)}
+.dark .grp{background:rgba(242,196,107,.14)}
+.dark .fab{box-shadow:0 6px 16px rgba(0,0,0,.5)}
+.pv{grid-template-columns:repeat(auto-fit,minmax(240px,300px))}
+.pv .notesrow{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+
+
+.pv h3{font-family:var(--serif);font-size:18px;margin:4px 0 6px}
+.pv .col{min-width:0}
+.pv .ph-cap{color:var(--muted);font-size:12.5px;margin-top:4px}
+</style>
+
+<div class="wrap">
+  <h1>Same pages, same layout. Only backgrounds, panels and buttons change.</h1>
+  <p class="lead">Every picture is a screenshot of the real app running on example data. Pick a style, then comment by tab and number, for example "Dashboard 1, light". After the screenshots, each tab shows the new phone design for every page, with a few lines on what is different from today. Only the phone layout changes; the computer stays exactly as shown, and nothing is added or removed.</p>
+  <div class="bar">
+    <div class="tabs" role="tablist" aria-label="Area" id="tabs"></div>
+    <div class="styles" id="styles"><span class="slabel">Style</span></div>
+  </div>
+  <main id="main"></main>
+  <p class="note">Dark is glass the way Apple does it: a clean flat dark page, and panels made of frosted material (a translucent dark fill that blurs and saturates whatever sits behind it, a faint white hairline, a soft inner top highlight and a soft shadow). No shapes, no gradient, no colour cast. Light is solid: white cards on a neutral grey page, with the dark sidebar. There is no search in the sidebar; every page search matches its screen (white on Light, dark glass on Dark). The sidebars have small group labels, one line icon per item and a clearly marked current page. Admin is dark only. The homepage shows its current look and Light (solid). Status colours keep their meaning in every style: green paid, amber owes or soon, red a problem.</p>
+
+</div>
+
+<script>
+const M=n=>'';
+const DASH_TABS=`<div class="tabbar"><span class="on">Tee sheet</span><span>Pro shop</span><span>Revenue</span><span>More</span></div>`;
+const ADMIN_TABS2=`<div class="tabbar"><span>Overview</span><span>Courses</span><span>Bookings</span><span class="on">Golfers</span><span>More</span></div>`;
+const ADMIN_TABS=`<div class="tabbar"><span class="on">Overview</span><span>Courses</span><span>Bookings</span><span>Golfers</span><span>More</span></div>`;
+const PHONE={
+'dash-teesheet':{short:["Opens in the list view on a phone: one row per tee time, with the name, players and what they owe.","The five number boxes stay as they are, just sized to fit across in one row.","Find golfer matches the screen; the other buttons sit on one line under it."],name:'Tee sheet',dark:false,
+html:`<div class="ph-h"><b>GreenReserve Test Course</b><span class="ic">More</span></div>
+<div class="scroll">
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px">
+<div class="card" style="padding:6px"><small class="mut" style="font-size:10px">Players</small><br><b style="font-size:14px">60</b><small class="mut" style="font-size:10px"> of 220</small></div>
+<div class="card" style="padding:6px"><small class="mut" style="font-size:10px">On course</small><br><b style="font-size:14px">0</b><small class="mut" style="font-size:10px"> groups</small></div>
+<div class="card" style="padding:6px"><small class="mut" style="font-size:10px">Checked in</small><br><b style="font-size:14px">0</b><small class="mut" style="font-size:10px"> of 60</small></div>
+<div class="card" style="padding:6px"><small class="mut" style="font-size:10px">Paid</small><br><b class="ok" style="font-size:14px">$0</b></div>
+<div class="card" style="padding:6px"><small class="mut" style="font-size:10px">Not paid</small><br><b class="bad" style="font-size:14px">$3,008</b></div></div>
+<div class="card" style="padding:6px 8px"><div class="row"><span class="ic">‹</span><b>Tue, Nov 24</b><span class="ic">›</span></div><div class="seg"><span>Grid</span><span class="on">List</span><span>Calendar</span></div></div>
+<div class="field srch">Find golfer</div>
+<div class="card row warn" style="padding:4px 10px"><span>7 not checked in</span><span>›</span></div>
+<div class="card" style="padding:0 10px">
+<div class="row"><span><b>7:00 AM</b> Kelly Castellano<br><small class="mut">2 players · 18 holes · Phone</small></span><b class="warn">$104</b></div>
+<div class="row"><span><b>7:50 AM</b> Brian Bell<br><small class="mut">4 players · 18 holes · Walk-in</small></span><b class="warn">$208</b></div>
+<div class="row"><span><b>8:00 AM</b> Brian Fitzgerald<br><small class="mut">2 players · 18 holes · Online</small></span><b class="warn">$107</b></div>
+<div class="row"><span><b>8:20 AM</b> Victor Albright<br><small class="mut">4 players · 18 holes · Phone</small></span><b class="warn">$208</b></div>
+<div class="row"><span><b>10:20 AM</b> Dana Abernathy<br><small class="mut">2 players · 18 holes · Online</small></span><b class="warn">$104</b></div>
+</div></div>
+<div class="fab">+ Time</div>${DASH_TABS}`},
+
+'dash-home':{short:["The four numbers come first.", "Next off, Checked in and Address share one card.", "Finish setting up is one row that opens the steps."],name:'Home',dark:false,
+problems:['The header (course name, type, "Powered by", sign-out) takes about 80px on every page.','An empty search bar sits above everything.','"Next off", "Checked in" and "Address not found" are three separate cards, one line each.','The four numbers are pushed below the first screen by the setup and status cards.','"Finish setting up" shows six buttons in three rows.'],
+fixes:['One-line header; search becomes an icon in it.','The four numbers come first, two by two.','"Open the register" stays as the first action.','Next off, Checked in and Address become one card with three rows.','"Finish setting up · 6" becomes one row that opens the six steps in a sheet.'],
+html:`<div class="ph-h"><b>GreenReserve Test Course</b><span style="display:flex;gap:6px">${M(1)}<span class="ic">Search</span><span class="ic">More</span></span></div>
+<div class="scroll">
+<div class="tt">${M(2)}<div class="card"><small class="mut">Players booked</small><br><b>39</b> <small class="warn">−40 vs last week</small></div><div class="card"><small class="mut">Tee sheet filled</small><br><b>18%</b></div><div class="card"><small class="mut">Collected today</small><br><b class="ok">$0</b></div><div class="card"><small class="mut">Not paid yet</small><br><b class="bad">$1,916</b></div></div>
+<div class="card row">${M(3)}<b class="warn">Open the register</b><span>→</span></div>
+<div class="card" style="padding:0 10px">${M(4)}<div class="row"><span class="mut">Next off</span><b>9:40 AM · Brian Ortega, 4</b></div><div class="row"><span class="mut">Checked in</span><b>0 of 39</b></div><div class="row"><span class="mut">Address</span><span class="warn">Not found</span></div></div>
+<div class="card row">${M(5)}<b>Finish setting up</b><span class="mut">6 ›</span></div>
+<div class="card"><b>Today by hour</b><div class="mut" style="height:90px;display:grid;place-items:center">chart as today</div></div>
+</div>${DASH_TABS}`},
+
+'dash-settings':{short:["Search is a full-width field that matches the screen, above the list.", "The header is one line, like every other page."],name:'Settings',dark:false,
+problems:['Mostly fine already: four clear rows, each a good tap size.','The search is a small icon in the corner (about 32px).','The tall header repeats on every page.'],
+fixes:['One-line header, the same as every dashboard page.','Search becomes a full-width 44px field above the list.','The four rows stay as they are.'],
+html:`<div class="ph-h"><b>Settings</b><span class="ic">More</span></div>
+<div class="scroll">
+<div class="field srch">Search settings</div>
+<div class="card" style="padding:0 10px">${M(3)}
+<div class="row"><span><b>Your course</b><br><small class="mut">Name and location, your booking page, facilities</small></span><span>›</span></div>
+<div class="row"><span><b>Booking</b><br><small class="mut">Booking rules, carts, the confirmation email</small></span><span>›</span></div>
+<div class="row"><span><b>Payments</b><br><small class="mut">Cancellations, sales tax, the register and card readers</small></span><span>›</span></div>
+<div class="row"><span><b>Your account</b><br><small class="mut">Your sign-in and two-step sign-in</small></span><span>›</span></div>
+</div></div>${DASH_TABS}`},
+
+'admin-overview':{short:["A tab bar at the bottom replaces the ☰ menu.", "Day, Week, Month and the rest become bigger buttons you can swipe.", "An empty chart shrinks to one line until there is data."],name:'Overview',dark:true,
+problems:['Every page is behind a ☰ menu, so moving between Overview, Courses, Bookings and Golfers takes two taps and a long list.','The period buttons (Day, Week, Month, Quarter, Year) squeeze into one row at about 36px tall.','The empty chart takes a full screen before Recent activity.'],
+fixes:['A bottom tab bar replaces ☰: Overview, Courses, Bookings, Golfers, and More for the rest.','The period choice becomes a row of 44px chips that scroll sideways.','The empty chart shrinks to one line ("No service fees collected yet") until there is data.','The four tiles stay two by two.'],
+html:`<div class="ph-h"><b>Overview</b><span class="ic">Search</span></div>
+<div class="scroll">
+<div class="tt">${M(4)}<div class="card"><small class="mut">Courses live</small><br><b>1</b></div><div class="card" style="background:var(--p-band);color:#fff"><small>Revenue this month</small><br><b>$0</b></div><div class="card"><small class="mut">Waiting to onboard</small><br><b>0</b></div><div class="card"><small class="mut">Fees missed</small><br><b>$0</b></div></div>
+<div class="card"><b>Service fees collected · last 12 weeks</b>
+<div class="chips" style="margin-top:8px">${M(2)}<div class="chip">Day</div><div class="chip on">Week</div><div class="chip">Month</div><div class="chip">Quarter</div></div>
+<div class="row mut">${M(3)}No service fees collected yet.</div></div>
+<div class="card"><b>Recent activity</b> <small class="mut">Last 7 days</small><div class="row"><span>Course published</span><small class="mut">2d</small></div></div>
+</div><div style="position:relative">${M(1)}</div>${ADMIN_TABS}`},
+
+'admin-golfers':{short:["The same bottom tab bar, with Golfers selected.", "The intro shrinks to one line.", "Search and a bigger Filter button sit together above the list."],name:'Golfers',dark:true,
+problems:['The same ☰ menu problem as Overview.','The intro paragraph takes three lines above the list.','The filter is a bare 24px icon beside the search.'],
+fixes:['The bottom tab bar, with Golfers selected.','The intro shortens to the count line ("597 golfers · sorted by last played"); the sentence moves to an (i).','Search and a 44px Filter button that opens a sheet.','Rows stay as they are; a row opens the golfer page with one back arrow.'],
+html:`<div class="ph-h"><b>Golfers</b><span class="ic">Search</span></div>
+<div class="scroll">
+<div class="mut">${M(2)}597 golfers · sorted by last played ⓘ</div>
+<div style="display:flex;gap:6px">${M(3)}<div class="field srch" style="flex:1">Search</div><span class="ic">Filter</span></div>
+<div class="card" style="padding:0 10px">${M(4)}
+<div class="row"><span>Derek Novak <small class="mut">Guest</small></span><span>›</span></div>
+<div class="row"><span>Tom Price <small class="mut">Guest</small></span><span>›</span></div>
+<div class="row"><span>Brian Fitzgerald <small class="mut">Guest</small></span><span>›</span></div>
+<div class="row"><span>Andre Whitaker <small class="mut">Guest</small></span><span>›</span></div>
+<div class="row"><span><span class="warn">●</span> Wendy Price <small class="mut">Guest</small></span><span>›</span></div>
+<div class="row"><span>Mei Whitfield <small class="mut">Guest</small></span><span>›</span></div>
+</div></div><div>${M(1)}</div>${ADMIN_TABS2}`},
+
+'golfer-course':{short:["Two tabs at the top: Tee times and Course information, so the two never overlap.","Tee times keeps the calendar to pick the day, then the times.","Course information holds the directions, notes and the link to course details and photos."],name:'Course booking page',dark:false,
+html:`<div class="ph-band">GreenReserve Test Course</div>
+<div class="scroll">
+<div class="ctabs"><span class="on">Tee times</span><span>Course information</span></div>
+<div class="card"><div class="row" style="min-height:32px"><span class="mut">‹</span><b>November 2026</b><span>›</span></div>
+<div class="cal7"><span class="x">S</span><span class="x">M</span><span class="x">T</span><span class="x">W</span><span class="x">T</span><span class="x">F</span><span class="x">S</span>
+<span class="x">22</span><span class="x">23</span><span class="x">24</span><span class="x">25</span><span>26</span><span class="on">27</span><span>28</span><span>29</span><span>30</span></div></div>
+<div class="row"><span><b>2 players</b> <span class="mut">· 46 times</span></span><span class="btn g" style="flex:0 0 auto;padding:0 16px">Filters</span></div>
+<b style="font-family:var(--serif);font-size:16px">Morning</b>
+<div class="tt">
+<div class="card"><b>7:00 AM</b><br><small class="mut">18 holes · 4 open</small><br><b>$52</b></div>
+<div class="card"><b>7:10 AM</b><br><small class="mut">18 holes · 4 open</small><br><b>$52</b></div>
+<div class="card"><b>7:20 AM</b><br><small class="mut">18 holes · 2 open</small><br><b>$52</b></div>
+<div class="card"><b>7:30 AM</b><br><small class="mut">18 holes · 4 open</small><br><b>$52</b></div>
+<div class="card" style="opacity:.85"><b class="mut">9:00 AM</b><br><small class="mut">Full</small><br><b>Tell me if it opens</b></div>
+<div class="card"><b>9:30 AM</b><br><small class="mut">18 holes · 4 open</small><br><b>$52</b></div>
+</div></div>`,
+html2:`<div class="ph-band">GreenReserve Test Course</div>
+<div class="scroll">
+<div class="ctabs"><span>Tee times</span><span class="on">Course information</span></div>
+<div class="card" style="padding:0 10px"><div class="row"><span><b>Directions</b><br><span class="mut">400 Brook Road, Warwick, NY</span></span><span>›</span></div>
+<div class="row"><b>Course details and photos</b><span>›</span></div></div>
+<div class="card" style="padding:0 10px"><div class="row"><span><b>Cancellation policy</b><br><span class="mut">Free cancellation until 24 hours before, then $10</span></span></div></div>
+</div>`},
+
+'golfer-book':{short:["The steps run in order: your details, card, the agree box, then the price.", "The Book bar at the bottom shows the total and says what is still missing.", "Back and Change are proper buttons."],name:'Book page',dark:false,
+problems:['The sticky Book button is greyed out, and the box that unlocks it is far below, after the card field, with only a small hint saying so.','The card field and the agree box come after the price, so the order doesn\'t follow the steps.','"‹ Back to tee times" and "Change" are small text links.'],
+fixes:['The steps run top to bottom: your tee time, your details, card, the agree box.','The price summary sits at the bottom, just above the button.','The sticky bar shows the total and Book. Until the box is ticked, it reads "Tick the box above to book" and tapping it scrolls to the box.','Back and Change become 44px buttons.'],
+html:`<div class="ph-band">GreenReserve Test Course</div>
+<div class="scroll">
+<span class="ic" style="justify-self:start;width:max-content;padding:0 12px">${M(4)}‹ Back to tee times</span>
+<div class="card row" style="padding:0 10px"><span><b>7:00 AM · Fri, Nov 20</b><br><small class="mut">18 holes · 2 players</small></span><span class="ic">Change</span></div>
+<b>${M(1)}Your details</b>
+<div class="field">Name</div><div class="field">Email</div><div class="field">Mobile (optional)</div>
+<b>Card details</b><div class="field">Card number</div>
+<div class="card" style="display:flex;gap:8px"><span style="width:20px;height:20px;border:1.5px solid var(--p-ink);border-radius:4px;flex:0 0 auto"></span><small>I agree to GreenReserve's Terms of Service and Privacy Policy and to the course's cancellation policy…</small></div>
+<div class="card">${M(2)}<div class="row"><span>Green fees · 2 players</span><span>$104.00</span></div><div class="row"><span>Fees ⓘ</span><span>$3.00</span></div></div>
+</div><div class="sticky">${M(3)}<span><small class="mut">Total</small><br><b>$107.00</b></span><span class="btn g">Book</span></div>`},
+
+'home':{short:["The hero picture and the look stay exactly as on the computer.","Below it, each section stacks in one readable column; nothing is hidden.","The cards and links are full width, so they are easy to tap while scrolling."],name:'Homepage',dark:false,light:true,
+html:`<div class="scroll"><img class="hero" src="shots/home-current-m.jpg" alt="">
+<div class="sec"><h4>Everything your course needs, in one tee sheet.</h4>
+<p>GreenReserve brings your tee sheet and online booking into one system that your staff run. During setup, we build your course's booking page from your schedule, rates, photos and colors, and you can change any of it whenever you like.</p>
+<ul><li>A booking page with your course's name, colors and photos, linked from your own website</li><li>Online, phone and walk-in bookings on one sheet, with your public, resident and member rates</li><li>Payments at the counter or on the golfer's own phone, with a card on file for late-cancel and no-show fees</li><li>A pro shop register for walk-up sales, with stock counts and an end-of-day close-out</li></ul>
+<div class="hc"><b>See how it works</b><p>Book a time as a golfer and watch it land on the tee sheet.</p><a>Try the demo →</a></div>
+<div class="hc"><b>Learn more about the tee sheet</b><p>Everything your course gets, in detail.</p><a>Read the overview →</a></div></div></div>`},
+};
+
+const TABS=[
+ {id:'dashboard',name:'Course dashboard',styles:['glass-dark','solid-light'],pages:[['dash-teesheet','Tee sheet'],['dash-home','Home'],['dash-settings','Settings']]},
+ {id:'admin',name:'Admin',styles:['glass-dark'],pages:[['admin-overview','Overview'],['admin-golfers','Golfers']]},
+ {id:'golfer',name:'Golfer pages',styles:['glass-dark','solid-light'],pages:[['golfer-course','Course booking page, Tee times tab'],['golfer-info','Course booking page, Course information tab'],['golfer-book','Book page']]},
+ {id:'homepage',name:'Homepage',styles:['current','solid-light'],pages:[['home','Home, top'],['home2','Home, first section']]},
+];
+const STYLES=[['glass-dark','Dark (glass)'],['solid-light','Light (solid)'],['current','Current look']];
+let tab='dashboard', style='glass-dark';
+try{const h=location.hash.slice(1);if(TABS.some(t=>t.id===h))tab=h;const s=localStorage.getItem('ui-style');if(s&&STYLES.some(x=>x[0]===s))style=s;}catch(e){}
+const tabsEl=document.getElementById('tabs'), stEl=document.getElementById('styles'), main=document.getElementById('main');
+TABS.forEach(t=>{const b=document.createElement('button');b.id='tab-'+t.id;b.role='tab';b.textContent=t.name;b.onclick=()=>{tab=t.id;try{history.replaceState(null,'','#'+t.id)}catch(e){location.hash=t.id}render()};tabsEl.appendChild(b)});
+STYLES.forEach(([k,n])=>{const b=document.createElement('button');b.id='st-'+k;b.textContent=n;b.onclick=()=>{style=k;try{localStorage.setItem('ui-style',k)}catch(e){}render()};stEl.appendChild(b)});
+function render(){
+  TABS.forEach(t=>document.getElementById('tab-'+t.id).setAttribute('aria-selected',String(t.id===tab)));
+  const t=TABS.find(x=>x.id===tab);
+  if(!t.styles.includes(style)) style=t.styles[0];
+  STYLES.forEach(([k])=>{const b=document.getElementById('st-'+k);b.hidden=!t.styles.includes(k);b.setAttribute('aria-pressed',String(k===style))});
+  const sn=STYLES.find(x=>x[0]===style)[1];
+  main.innerHTML=t.pages.map(([key,name],i)=>`<section><div class="sh"><span class="num">${i+1}</span><h2>${name}</h2><span class="sub">${t.name} · ${sn}</span></div>
+  <div class="pair"><figure><img src="shots/${key}-${style}-d.jpg" alt="${name}, ${sn}, computer" loading="lazy" width="1280" height="800"><figcaption>Computer</figcaption></figure>
+  <figure class="ph"><img src="shots/${key}-${style}-m.jpg" alt="${name}, ${sn}, phone" loading="lazy" width="390" height="844"><figcaption>Phone</figcaption></figure></div></section>`).join('');
+  const n0=t.pages.length, seen=new Set();
+  const keys=t.pages.map(p=>p[0]==='home2'?'home':p[0]).filter(k=>PHONE[k]&&!seen.has(k)&&seen.add(k));
+  main.innerHTML+=keys.map((key,i)=>{const P=PHONE[key];
+  const dark=!P.light&&(P.dark||style==='glass-dark');
+  return `<section><div class="sh"><span class="num">${n0+i+1}</span><h2>On a phone · ${P.name}</h2><span class="sub">${P.light?'Current look':(dark?'Dark (glass)':'Light (solid)')}</span></div>
+  <div class="onphone"><div style="display:flex;gap:16px;flex-wrap:wrap;min-width:0"><div class="phone big${P.light?' hp':(dark?' dark':'')}">${P.html}</div>${P.html2?`<div class="phone big${dark?' dark':''}">${P.html2}</div>`:''}</div>
+  <div><p class="sub" style="margin:0 0 8px">What is different from today</p><ul>${P.short.map(x=>`<li>${x}</li>`).join('')}</ul></div></div></section>`}).join('');
+}
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(TABS.some(t=>t.id===h)){tab=h;render()}});
+render();
+</script>
