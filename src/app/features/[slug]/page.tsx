@@ -6,7 +6,7 @@ import HomeCloser from '@/components/home/HomeCloser';
 import ProductShot from '@/components/home/ProductShot';
 import ScoreCard from '@/components/home/ScoreCard';
 import TryIt from '@/components/home/TryIt';
-import { FEATURE_PAGES, featurePage } from '@/components/home/feature-pages';
+import { FEATURE_PAGES, featurePage, paymentsCostLines } from '@/components/home/feature-pages';
 import { shopFeeVersionLive } from '@/lib/shop-fee';
 import s from '@/app/home.module.css';
 
@@ -58,11 +58,7 @@ export default async function FeaturePageView({ params }: { params: Promise<{ sl
                 {sec.p.map(p => <p key={p}>{p}</p>)}
                 {sec.media.device === 'costs' && (
                   <ul className={s.costs}>
-                    <li>Golfers pay $1.50 per player on each online booking, added to your price.</li>
-                    <li>Membership dues collected through GreenReserve carry 1% of the dues (and any initiation fee), added to what the member pays.</li>
-                    {shopFee && <li>Pro-shop items paid by card carry a GreenReserve service fee of 1% of the items; cash carries none.</li>}
-                    <li>Your green fee and our fee are collected in one card payment to your own Stripe account; our $1.50 per player is then passed to GreenReserve.</li>
-                    <li>Stripe&apos;s standard card-processing fee applies to the payment, the same as any card you take today. GreenReserve charges you nothing on top of it.</li>
+                    {paymentsCostLines(shopFee).map(l => <li key={l}>{l}</li>)}
                   </ul>
                 )}
               </div>

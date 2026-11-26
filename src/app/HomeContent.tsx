@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import HomeCloser from '@/components/home/HomeCloser';
+import HomeAsk from '@/components/home/HomeAsk';
 import StickyDemoBar from '@/components/home/StickyDemoBar';
 import ScoreCard from '@/components/home/ScoreCard';
 import { FEATURE_GROUPS, featureHref } from '@/components/home/features';
@@ -11,8 +12,8 @@ import s from './home.module.css';
 // with a down arrow and no top-bar buttons), "What GreenReserve does" with a Learn more link to each
 // feature's own page, one compact Free block (no fee list on Home), then the shared bottom block.
 // Copy rules still hold: NO durations, NO contract terms, fee sentences only from legal/LQ-2_FEE_COPY.md.
-// A server component; the only client JS is the shared bottom block's Cal.com calendar (CalEmbed) and Contact us pop-up
-// (ContactDialog), and the phone's sticky Book a demo bar (StickyDemoBar).
+// A server component; the client JS is the shared bottom block's Cal.com calendar (CalEmbed) and Contact us pop-up
+// (ContactDialog), the phone's sticky Book a demo bar (StickyDemoBar) and the "Questions?" bot (HomeAsk, ASSIST-5).
 
 export default function HomeContent() {
   return (
@@ -65,6 +66,7 @@ export default function HomeContent() {
 
       <HomeCloser />
       <StickyDemoBar />
+      <HomeAsk />
     </div>
   );
 }
