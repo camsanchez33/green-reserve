@@ -111,6 +111,8 @@ check('the confirmation note has its own class (not the course page\'s .cnote)',
   check('fields: white with a thin border on Light, dark glass with a faint light edge on Dark', v(L, '--g-field') === '#FFFFFF' && v(L, '--g-field-edge') === '#D4D4D4' && v(D, '--g-field').startsWith('rgb(255 255 255 /') && v(D, '--g-field-edge').startsWith('rgb(255 255 255 /'));
   const css = readFileSync('src/components/golfer/golfer.module.css', 'utf8');
   check('every panel wears --g-blur and --g-shadow; inputs and the card field read --g-field', css.includes('backdrop-filter: var(--g-blur, none); box-shadow: var(--g-shadow, none);') && (css.match(/background: var\(--g-field\)/g) ?? []).length >= 3);
+  check('button text on the accent is the on-accent colour (.root button would otherwise make it ink; axe 2026-11-26)', css.includes('.root button.btn { color: var(--g-on-acc); }'));
+  check('links inside the agree, text-consent and policy lines are underlined, not colour only (axe link-in-text-block)', ['.agree a {', '.sms a {', '.pol a {'].every(sel => { const i = css.indexOf(sel); return i >= 0 && css.slice(i, css.indexOf('}', i)).includes('text-decoration: underline'); }));
 }
 
 // The course page's two tabs (Cam 2026-11-24 threads b0a8979a, 1b111e7b): Tee times | Course information.
@@ -122,6 +124,7 @@ check('Tee times holds the calendar, filters, the times and the alert row', (() 
 check('today\'s notice shows on both tabs', (course.match(/\{notices\}/g) ?? []).length === 2);
 check('a member-only club has no tabs (nothing to book)', course.includes("const hasTabs = course.type !== 'member';"));
 check('phone: the calendar stays on the Tee times tab and the Filters sheet has the seven days beside the date', course.includes("<div className={g.calPhone}>{calendar('tab')}</div>") && course.includes("<div className={g.deskOnly}>{calendar('side')}</div>") && course.includes('for (let i = 0; i < 7; i++)') && course.includes('<b aria-hidden="true">{shortDay(selectedDate)}</b>'));
+check('picking a day moves the calendar to its month', course.includes('setCalMonth(new Date(d.getFullYear(), d.getMonth(), 1));'));
 check('every day button (calendar and seven-day row) uses the same rules and the same pickDay', (course.match(/const \{ why, membersOnly, label \} = dayInfo\(d\);/g) ?? []).length === 2 && (course.match(/onClick=\{why \? undefined : \(\) => pickDay\(ds\)\}/g) ?? []).length === 2);
 
 console.log(failed ? `\n${failed} FAILED` : '\nALL PASS');

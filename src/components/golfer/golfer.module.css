@@ -273,9 +273,12 @@
 
 /* UI style overhaul (Cam 2026-11-26): every panel wears the look's material. Dark = glass (blur, hairline, top highlight,
    soft shadow), Light = solid (white on neutral grey, a hairline shadow). The values are --g-blur / --g-shadow (look.ts). */
-.cinfo, .cal, .card, .tc, .empty, .yrow, .modal, .seg, .todrow button, .rnd button, .stepper button, .ctabs {
+/* The blur goes on the large panels only: on many small tiles (each tee time card) it would cost scrolling on a phone
+   and show nothing over the flat page, so those keep the shadow alone. */
+.cinfo, .cal, .card, .empty, .yrow, .modal, .seg, .ctabs {
   -webkit-backdrop-filter: var(--g-blur, none); backdrop-filter: var(--g-blur, none); box-shadow: var(--g-shadow, none);
 }
+.tc, .todrow button, .rnd button, .stepper button { box-shadow: var(--g-shadow, none); }
 
 /* The course page's two tabs (Cam 2026-11-24 threads b0a8979a, 1b111e7b): a centred sliding "Tee times | Course
    information" control under the header. The two panels never show together, on any width. */
@@ -287,7 +290,6 @@
 .cthumb.info { transform: translateX(100%); }
 @media (prefers-reduced-motion: reduce) { .cthumb { transition: none; } }
 .ipanel { padding: 16px 18px 24px; }
-.ipanel .cinfo + .cinfo { margin-top: 12px; }
 .notice { margin: 0 0 12px; }
 
 /* Phone Filters: the next seven days beside the picked date, so the day can change without closing the sheet. */

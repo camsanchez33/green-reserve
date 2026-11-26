@@ -694,6 +694,9 @@ export default function CourseDetailPage({
 
   function pickDay(ds: string) {
     setSelectedDate(ds);
+    // The calendar shows the picked day's month (a day from the seven-day row or "See <day>" can be in the next one).
+    const d = new Date(ds + 'T12:00:00');
+    setCalMonth(new Date(d.getFullYear(), d.getMonth(), 1));
   }
   function toggleTod(k: TimeOfDay) {
     if (tods.length === 1 && tods[0] === k) { setLiveNote('Keep at least one time of day.'); return; }
