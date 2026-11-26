@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { resolveAdminSession, AdminSessionUnavailable } from '@/lib/admin-session';
 import { AdminSessionProvider, type AdminSessionView } from '@/lib/admin-session-context';
 import { effectiveAreas } from '@/lib/admin-areas';
@@ -8,11 +8,16 @@ import StepUpDialog from '@/components/admin/StepUpDialog';
 import ReasonDialog from '@/components/admin/ReasonDialog';
 import { ADMIN_THEME } from '@/components/admin/admin-theme';
 import glass from './admin-glass.module.css';
+import { PWA_APPS, PWA_SCOPES, PWA_THEME_COLOR, pwaKilled } from '@/lib/pwa';
+import PwaRegister from '@/components/pwa/PwaRegister';
 
 // ADMIN-REDO (Cam 2026-11-11): glass, EB Garamond + Libre Franklin (the root layout's fonts — ADMIN-C's Inter and
 // its .admin-look mapping are gone). UI-STYLE (Cam 2026-11-26): neutral Apple-style glass on a flat page, no ribbons.
 
+// PWA install (Cam 2026-11-24): the admin is an installable app (scope /admin). /cam is outside it on purpose: on an
+// iPad the owner signs in with Safari.
 export const metadata: Metadata = { robots: { index: false, follow: false } };
+export const viewport: Viewport = { themeColor: PWA_THEME_COLOR.admin };
 // Reads the session cookie on every request — never cache this shell.
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +57,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         {/* BRAIN-1a: anyone signed in may be asked why (money, access, deletes). */}
         {session && <ReasonDialog />}
       </div>
+      <PwaRegister scope={PWA_SCOPES.admin} killed={pwaKilled()} manifest={PWA_APPS.admin.manifest} appTitle={PWA_APPS.admin.title} />
       </div>
     </AdminSessionProvider>
   );

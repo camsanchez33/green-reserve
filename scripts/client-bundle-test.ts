@@ -166,7 +166,7 @@ check('every local import in the client graph resolves to a file the walk can re
 check('no client component reaches prisma, Stripe, a server-only package or a secret env var', findings.length === 0, findings.slice(0, 10));
 
 // The pure files split out by this fix stay pure: no imports at all.
-for (const f of ['src/lib/ledger-labels.ts', 'src/lib/event-shared.ts', 'src/lib/blob-url.ts', 'src/lib/demand-pricing-shared.ts']) {
+for (const f of ['src/lib/ledger-labels.ts', 'src/lib/event-shared.ts', 'src/lib/blob-url.ts', 'src/lib/demand-pricing-shared.ts', 'src/lib/pwa-shared.ts']) {
   const p = existsSync(f) ? parsed.get(normalize(f)) : undefined;
   check(`${f} exists and imports nothing`, !!p && p.imports.length === 0 && p.env.length === 0, p);
 }

@@ -15,6 +15,7 @@ import { recordTabVisit } from '@/lib/dashboard-visits';
 import { Toaster, toast } from '@/components/dashboard/Toast';
 import OperatorSearch from '@/components/dashboard/OperatorSearch';
 import ThemeSwitch from '@/components/dashboard/ThemeSwitch';
+import InstallApp from '@/components/pwa/InstallApp';
 
 export type OperatorNavKey =
   | 'home' | 'teesheet' | 'analytics' | 'money' | 'events'
@@ -262,6 +263,8 @@ export default function OperatorSidebar({ active, onAlertClick }: {
             )}
           </button>
         ))}
+        {/* PWA install (Cam 2026-11-24): beside the look switch; shown only when this browser can install. */}
+        <InstallApp buttonClassName="w-full text-left px-5 py-3.5 text-[14px] border-b border-line-soft text-ink" textClassName="px-5 py-3 text-[13px] text-ink-muted border-b border-line-soft" />
         <div className="px-4 py-3"><ThemeSwitch /></div>
       </div>
     )}
@@ -336,6 +339,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
           <a href={'/courses/' + slug} target="_blank" rel="noopener" className="px-2.5 py-2 rounded-md text-ink-soft hover:bg-white/60 hover:text-ink transition-colors">Your booking page ↗</a>
         )}
         <button onClick={logout} className="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-white/60 hover:text-bad transition-colors">Sign out</button>
+        <InstallApp buttonClassName="text-left px-2.5 py-2 rounded-md text-ink-soft hover:bg-white/60 hover:text-ink transition-colors" textClassName="px-2.5 py-2 text-[12px] leading-snug text-ink-muted" />
         <div className="px-1 pt-2"><ThemeSwitch /></div>
         {/* LOGO-2 (Cam 2026-10-20): "Powered by" and the GreenReserve lockup stay with the course's name. */}
         {/* CHARCOAL-1 (Cam 2026-11-12, the approved Home): "Powered by GreenReserve", GreenReserve in our green. */}
