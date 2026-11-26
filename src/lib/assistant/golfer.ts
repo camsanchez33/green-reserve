@@ -58,7 +58,7 @@ export function policyFromBrief(briefText: string): string | null {
 }
 
 /** First-person claims of a booking action the bot can never take. */
-const ACTION_CLAIM = /\b(I(['’]ve| have| just)? (booked|moved|changed|cancel+ed|rescheduled|reserved|held|refunded|added)|you['’]re (all set|booked|confirmed)|(has|have) been (booked|moved|rescheduled|cancel+ed|reserved|confirmed|refunded))\b/i;
+const ACTION_CLAIM = /\b(I(['’]ve| have| just)? (booked|moved|changed|cancel+ed|rescheduled|reserved|held|refunded|added)|(you['’]re|you are) (all set|booked|confirmed)|(we have|we['’]ve) (booked|moved|changed|reserved|held|added)|(has|have) been (booked|moved|rescheduled|cancel+ed|reserved|confirmed|refunded)|is (now )?(confirmed|booked|reserved))\b/i;
 
 /** The brief the model sees: only the course data. The policy lines stay on the server for the policy marker, so the
  *  model can't paraphrase what it never reads. */
@@ -68,7 +68,7 @@ export function briefForModel(briefText: string): string {
 }
 
 /** Words that mean the reply talks policy or money; such a reply must be the policy marker, or it is handed off. */
-const POLICY_WORDS = /\b(cancel\w*|refund\w*|deposit\w*|no[- ]show\w*|penalt\w*|charg\w*|forfeit\w*|money back|reimburs\w*|(late|booking|service|cancellation|no-show) fees?|holds?\b(?! a tee)|cards?\b(?! game)|(don['’]?t|do not|didn['’]?t|not) (show|turn)( up)?|miss(es|ed)? your (time|tee time|round)|back out)\b|\$\s?\d[\d.,]*\s+(fee|hold)/i;
+const POLICY_WORDS = /\b(cancel\w*|refund\w*|deposit\w*|no[- ]show\w*|penalt\w*|charg\w*|forfeit\w*|money back|reimburs\w*|(late|booking|service|cancellation|no-show) fees?|holds?\b(?! a tee)|cards?\b(?! game)|(don['’]?t|do not|didn['’]?t|not) (show( up)?|turn up)|miss(es|ed)? your (time|tee time|round)|back out)\b|\$\s?\d[\d.,]*\s+(fee|hold)/i;
 
 /**
  * What the golfer sees, from the model's text: the exact policy for ${POLICY_MARKER}, the course's own line for
