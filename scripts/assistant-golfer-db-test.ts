@@ -118,6 +118,7 @@ async function cleanup() {
   ok('route: golfer brief only', /getCourseBrief\(c\.id, 'golfer'\)/.test(src) && !/'staff'/.test(src));
   ok('route: anything but a normal end → hand-off line', /stop_reason !== 'end_turn' \|\| !text\) return NextResponse\.json\(\{ reply: c\.unknownLine/.test(src));
   ok('route: every reply goes through golferReply', /return NextResponse\.json\(golferReply\(text, policyFromBrief\(brief\.text\), c\.unknownLine\)\)/.test(src));
+  ok('route: errors labelled by instanceof, not class name (minified in production)', !/constructor\.name/.test(src));
   ok('route: a time limit on the model call, no retry', /timeout: 12_000, maxRetries: 0/.test(src) && /maxDuration = 30/.test(src));
   ok('route: log has no message text', !/logAssistant\(\{[^}]*(history|text|reply|question)/.test(src));
   const widget = readFileSync(new URL('../src/components/golfer/GolferAsk.tsx', import.meta.url), 'utf8');

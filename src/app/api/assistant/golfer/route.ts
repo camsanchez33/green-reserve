@@ -89,7 +89,9 @@ export async function POST(req: NextRequest) {
       betas: [FALLBACK_BETA], fallbacks: 'default',
     }, { timeout: 12_000, maxRetries: 0 });
   } catch (err) {
-    console.error('[assistant] golfer call failed:', err instanceof Anthropic.APIError ? `${err.status ?? 'no-status'} ${err.constructor.name}` : err instanceof Error ? err.constructor.name : 'error');
+    // Labelled by instanceof: class names are minified in the production build.
+    const kind = err instanceof Anthropic.APIConnectionTimeoutError ? 'timeout' : err instanceof Anthropic.APIConnectionError ? 'connection' : err instanceof Anthropic.APIError ? `api ${err.status ?? ''}` : 'error';
+    console.error('[assistant] golfer call failed:', kind);
     return NextResponse.json({ reply: c.unknownLine, handOff: true });
   }
   const text = msg.content.filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === 'text').map(b => b.text).join('').trim();
