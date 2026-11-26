@@ -33,6 +33,13 @@ import { createCounterBooking, settleAtCounter } from '@/lib/counter-pay';
 import { ringUpCash } from '@/lib/register';
 import { noFeeReason, type CancelRecord } from '@/lib/cancel-fee-reason';
 
+/** Why sendSms() would refuse this number (AUDIT-1: US and Canada only; never the 555-01xx sample block), or null. */
+function untextableNumber(to: string, what: string, instead: string): string | null {
+  if (!isNorthAmericanNumber(to)) return `${what} can only be texted to US and Canadian numbers — ${instead}.`;
+  if (isFictionalNumber(to)) return `That is a sample phone number (555-01xx) — no text was sent. ${instead[0].toUpperCase()}${instead.slice(1)}.`;
+  return null;
+}
+
 // Used by both the Payments tab (all bookings, transaction ledger) and the
 // Cancellations tab (status=cancelled) — one endpoint, filtered by query param.
 /** Payments' played-rounds feed holds this many; the page says so when it is full (until the ledger rework). */
@@ -280,9 +287,13 @@ export async function PATCH(req: NextRequest) {
       // Texts not set up: say so first, as sendSms() would, and count nothing — never ask staff to read the
       // consent script for a text that can't go (PAY-1: the send fails loudly, 502).
       if (!smsConfigured()) return NextResponse.json({ error: 'The text didn’t send (Text messages are not set up (Twilio)) — try email, or take payment at the counter.' }, { status: 502 });
+      // A number sendSms() would refuse (outside the US and Canada, or 555-01xx): say so now, before the consent
+      // ask, any send is counted or any consent is recorded.
+      const badNumber = untextableNumber(to, 'Pay links', 'email it instead, or take payment at the counter');
+      if (badNumber) return NextResponse.json({ error: badNumber }, { status: 400 });
       // No consent yet and none given now: the "ask them" answer, before a send is counted (so the retry with
       // consent isn't counted twice).
-      if (smsConsent !== 'verbal' && isNorthAmericanNumber(to) && !isFictionalNumber(to) && !(await hasSmsConsent(to))) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
+      if (smsConsent !== 'verbal' && !(await hasSmsConsent(to))) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
       // Audit 2026-11-24 M11: capped per booking, per number and per course (lib/send-caps).
       if (!(await golferSendAllowed({ courseId: session.courseId, bookingId: id, kind: 'pay_link', via: 'sms', to }))) return NextResponse.json({ error: SEND_CAP_MESSAGE }, { status: 429 });
       const url = `${process.env.NEXT_PUBLIC_URL}/checkin/${id}?token=${token}`;
@@ -327,7 +338,9 @@ export async function PATCH(req: NextRequest) {
       if (phone.replace(/\D/g, '').length < 10) return NextResponse.json({ error: 'Enter a mobile number for the receipt.' }, { status: 400 });
       const to = normalizePhone(phone);
       if (!smsConfigured()) return NextResponse.json({ error: 'The text didn’t send (Text messages are not set up (Twilio)) — try email or print it.' }, { status: 502 });
-      if (smsConsent !== 'verbal' && isNorthAmericanNumber(to) && !isFictionalNumber(to) && !(await hasSmsConsent(to))) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
+      const badNumber = untextableNumber(to, 'Receipts', 'email it instead or print it');
+      if (badNumber) return NextResponse.json({ error: badNumber }, { status: 400 });
+      if (smsConsent !== 'verbal' && !(await hasSmsConsent(to))) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
       // Audit 2026-11-24 M11: checked before the verbal consent is recorded, so a refused send records nothing.
       if (!(await golferSendAllowed({ courseId: session.courseId, bookingId: id, kind: 'receipt', via: 'sms', to }))) return NextResponse.json({ error: SEND_CAP_MESSAGE }, { status: 429 });
       if (smsConsent === 'verbal') await optInAndConfirm(to, { method: 'verbal', courseId: session.courseId, bookingId: id, recordedBy: session.staffId ?? `operator:${session.operatorId}` });

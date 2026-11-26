@@ -36,6 +36,8 @@ async function cleanup() {
   await prisma.booking.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.teeTime.deleteMany({ where: { courseId: { in: ids } } });
   await prisma.courseStaff.deleteMany({ where: { email: { startsWith: TAG } } });
+  // Only the old code wrote these (a false opt-in for a number that can't be texted); clear them so a rerun starts clean.
+  await prisma.smsConsent.deleteMany({ where: { OR: [{ phone: { contains: '442079460958' } }, { phone: { contains: '2025550142' } }] } });
   await prisma.course.deleteMany({ where: { id: { in: ids } } });
   await prisma.courseOperator.deleteMany({ where: { email: { startsWith: TAG } } });
 }
@@ -80,9 +82,9 @@ const patch = async (h: (r: NextRequest) => Promise<Response | undefined>, url: 
   ok(`M11 one number gets at most ${SENDS_PER_DESTINATION_HOUR} texts an hour from a course, across bookings`, results.filter(Boolean).length === SENDS_PER_DESTINATION_HOUR && results[results.length - 1] === false, results);
 
   const smsCapped = await (async () => {
-    await prisma.rateLimit.upsert({ where: { key: `send:sms:dest:${course.id}:+15555550199` }, create: { key: `send:sms:dest:${course.id}:+15555550199`, count: 100, windowStart: new Date() }, update: { count: 100, windowStart: new Date() } });
+    await prisma.rateLimit.upsert({ where: { key: `send:sms:dest:${course.id}:+12025550299` }, create: { key: `send:sms:dest:${course.id}:+12025550299`, count: 100, windowStart: new Date() }, update: { count: 100, windowStart: new Date() } });
     const before = await prisma.smsConsent.count();
-    const r = await patch(bookingsPatch, '/api/operator/bookings', { id: booking.id, action: 'send_receipt', via: 'sms', to: '+1 555 555 0199', smsConsent: 'verbal' });
+    const r = await patch(bookingsPatch, '/api/operator/bookings', { id: booking.id, action: 'send_receipt', via: 'sms', to: '+1 202 555 0299', smsConsent: 'verbal' });
     const afterCount = await prisma.smsConsent.count();
     return { status: r.status, consentUnchanged: before === afterCount };
   })();
@@ -113,6 +115,22 @@ const patch = async (h: (r: NextRequest) => Promise<Response | undefined>, url: 
   const receiptNotSetUp = await patch(bookingsPatch, '/api/operator/bookings', { id: fresh.id, action: 'send_receipt', via: 'sms', to: '+1 202 555 0288', smsConsent: 'verbal' });
   ok('M11 without texts set up, a receipt text says so, records no consent and counts nothing', receiptNotSetUp.status === 502 && !(await prisma.rateLimit.findUnique({ where: { key: `send:receipt:sms:booking:${fresh.id}` } })) && (await prisma.smsConsent.count({ where: { phone: { contains: '2025550288' } } })) === 0, receiptNotSetUp.status);
   Object.assign(process.env, twilioEnv);
+  // A number sendSms() refuses (outside the US and Canada, or the 555-01xx sample block), marked "They said yes":
+  // refused 400 before the consent ask, before any cap counter and before any consent is recorded.
+  const UNTEXTABLE = [{ label: 'a UK number', phone: '+44 20 7946 0958', digits: '442079460958' }, { label: 'a 555-01xx number', phone: '+1 202 555 0142', digits: '2025550142' }];
+  for (const n of UNTEXTABLE) {
+    const payee = await prisma.booking.create({ data: { teeTimeId: tToday.id, courseId: course.id, golferName: 'Lee', golferEmail: `${TAG}+lee@t.local`, golferPhone: n.phone, players: 1, greenFeeTotal: 4000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 4150, status: 'confirmed', paymentStatus: 'no_payment_method' } });
+    for (const c of [{ what: 'pay-link', id: payee.id, body: { id: payee.id, action: 'send_pay_link', via: 'sms', smsConsent: 'verbal' }, kind: 'pay_link' }, { what: 'receipt', id: fresh.id, body: { id: fresh.id, action: 'send_receipt', via: 'sms', to: n.phone, smsConsent: 'verbal' }, kind: 'receipt' }]) {
+      const courseBefore = (await prisma.rateLimit.findUnique({ where: { key: `send:course:${course.id}` } }))?.count ?? 0;
+      const r = await patch(bookingsPatch, '/api/operator/bookings', c.body);
+      const rBody = await r.json() as { needsConsent?: boolean };
+      const consents = await prisma.smsConsent.count({ where: { phone: { contains: n.digits } } });
+      const bookingKey = await prisma.rateLimit.findUnique({ where: { key: `send:${c.kind}:sms:booking:${c.id}` } });
+      const destKeys = await prisma.rateLimit.count({ where: { key: { startsWith: `send:sms:dest:${course.id}:`, contains: n.digits } } });
+      const courseAfter = (await prisma.rateLimit.findUnique({ where: { key: `send:course:${course.id}` } }))?.count ?? 0;
+      ok(`M11 a ${c.what} text to ${n.label} marked "They said yes" is refused (400), records no consent and counts nothing`, r.status === 400 && !rBody.needsConsent && consents === 0 && !bookingKey && destKeys === 0 && courseAfter === courseBefore, { s: r.status, rBody, consents, bookingKey: !!bookingKey, destKeys, courseBefore, courseAfter });
+    }
+  }
   const ask = await patch(bookingsPatch, '/api/operator/bookings', { id: due.id, action: 'send_pay_link', via: 'sms' });
   const askBody = await ask.json() as { needsConsent?: boolean };
   const counted = await prisma.rateLimit.findUnique({ where: { key: `send:pay_link:sms:booking:${due.id}` } });
