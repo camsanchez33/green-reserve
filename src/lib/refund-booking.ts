@@ -63,8 +63,15 @@ export async function recordRefundEventOnce(
 ): Promise<boolean> {
   return prisma.$transaction(async tx => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${'payment-event:' + e.stripeId}))`;
-    const seen = await tx.paymentEvent.findFirst({ where: { stripeId: e.stripeId }, select: { id: true } });
-    if (seen) return false;
+    const seen = await tx.paymentEvent.findFirst({ where: { stripeId: e.stripeId }, select: { id: true, actor: true } });
+    if (seen) {
+      // The Stripe webhook got there first (it knows no reason or person): this caller's row replaces its words,
+      // and the caller's own follow-ups (the status write, the golfer's email) still happen (review).
+      if (seen.actor !== 'stripe' || e.actor === 'stripe') return false;
+      await tx.paymentEvent.update({ where: { id: seen.id }, data: { kind: e.kind, actor: e.actor, actorName: e.actorName ?? null, detail: e.detail ?? '' } });
+      if (also) await also(tx);
+      return true;
+    }
     await tx.paymentEvent.create({ data: { bookingId: e.bookingId, kind: e.kind, amountCents: e.amountCents, stripeId: e.stripeId, actor: e.actor, actorName: e.actorName ?? null, detail: e.detail ?? '' } });
     if (also) await also(tx);
     return true;
@@ -134,7 +141,7 @@ export async function refundBooking(bookingId: string, opts: {
       },
       {
         stripeAccount: booking.course.stripeAccountId,
-        idempotencyKey: `refund-${bookingId}-${amountCents}-${alreadyRefunded}`,
+        idempotencyKey: `refund-${bookingId}-${booking.roundPaymentIntentId}-${amountCents}-${alreadyRefunded}`, // the round's charge in the key: a refund of a later charge never reuses an earlier key
       },
     );
   } catch (err) {

@@ -13,7 +13,7 @@ import { recordBookingEvent, recordBookingEventSafe, teeTimeInstant, type EventA
 import { liveNoShowCharge, refundNoShowFee, chargeNoShow } from './no-show-fee';
 import { recordMove, feeBackCents, chargeWhat } from './money-ledger';
 import { roundApplicationFeeCents } from './shop';
-import { notBeingCharged, BEING_CHARGED, READER_STALE_MS } from './checkin-booking';
+import { freeToClaim, BEING_CHARGED, READER_STALE_MS } from './checkin-booking';
 
 export type CancellationOptions = {
   /**
@@ -73,7 +73,8 @@ export async function performCancellation(bookingId: string, actor: EventActor, 
   // refuse the round. The claim is let go when the cancel ends, whatever happened.
   const stamp = new Date();
   const claimed = await prisma.booking.updateMany({
-    where: { id: bookingId, status: 'confirmed', AND: [notBeingCharged(stamp.getTime()), { OR: [{ readerStartedAt: null }, { readerStartedAt: { lt: new Date(stamp.getTime() - READER_STALE_MS) } }] }] },
+    // freeToClaim: a paid round's own leftover lock (no later than paidAt) doesn't block its cancel (review).
+    where: { id: bookingId, status: 'confirmed', AND: [freeToClaim(stamp.getTime()), { OR: [{ readerStartedAt: null }, { readerStartedAt: { lt: new Date(stamp.getTime() - READER_STALE_MS) } }] }] },
     data: { shopLockedAt: stamp },
   });
   if (!claimed.count) {

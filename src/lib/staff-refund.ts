@@ -79,7 +79,7 @@ export async function refundRound(courseId: string, bookingId: string, opts: { a
       // Keyed on what was refunded before, not the amount: two refunds started at once from the same
       // state share a key, so Stripe refunds once (a different amount gets its "same key, different
       // request" refusal) — never two that together pass the course's share.
-      { stripeAccount: b.course.stripeAccountId, idempotencyKey: `staff-refund-${bookingId}-${already}` },
+      { stripeAccount: b.course.stripeAccountId, idempotencyKey: `staff-refund-${bookingId}-${b.roundPaymentIntentId}-${already}` },
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
