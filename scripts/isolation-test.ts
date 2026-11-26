@@ -727,6 +727,70 @@ async function main() {
     }
   }
 
+  console.log('\n── M10 / MONEY-VIEW-1: fees and failed charges only with the Money area ──');
+  {
+    // Cam 2026-11-26: GreenReserve's fees and failed charges are visible only to a login with the Money area. Every
+    // admin place that showed them, checked twice: a manager with every other area sees none of it, and the same
+    // login with Money added sees each one (so no check below is vacuous).
+    const { signAdminToken } = await import('../src/lib/admin-session');
+    const { runAskTool } = await import('../src/lib/admin-ask');
+    const NO_MONEY = ['pipeline', 'courses', 'golfers', 'messages', 'problems', 'company'];
+    const m10 = await prisma.adminUser.create({ data: { name: 'Isol No Money', email: `${TS}-nomoney@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: NO_MONEY, areasSetAt: new Date() } });
+    const alert = await prisma.adminAlert.create({ data: { key: `failed:isol-m10-${TS}`, kind: 'urgent', title: 'Card declined at check-in — Isol', detail: '1 round, $51.50 not collected.', href: `/admin/courses/${data.courseA.id}`, courseId: data.courseA.id } });
+    await prisma.booking.update({ where: { id: bookingA.id }, data: { checkInFailReason: 'isolation: card declined' } });
+    try {
+      const c = `admin_session=${await signAdminToken({ adminId: m10.id, email: m10.email, name: m10.name, role: 'manager', mfa: true })}`;
+      type Detail = { money?: unknown; revenue30d?: { gross: unknown; platform: unknown; greenFees: unknown }; relationship?: { earnedCents: unknown; paidRounds: unknown } };
+      type TodayBody = { courses?: { id: string; feesThisMonth: unknown; fees7d: unknown; rows: { id: string }[] }[] | null; problems?: { id: string }[] | null };
+      type Probs = { open?: { id: string }[] };
+      type Msg = { context?: { openItems?: { failedCharges?: unknown } } };
+      type AskRows = { courses?: Record<string, unknown>[] };
+      const look = async () => {
+        const detail = (await api(`/api/admin/course-detail?courseId=${data.courseA.id}`, { cookie: c })).body as Detail;
+        const today = (await api('/api/admin/today', { cookie: c })).body as TodayBody;
+        const list = (await api('/api/admin/courses', { cookie: c })).body as { id: string; revenue30d: unknown }[];
+        const csv = await (await fetch(`${BASE_URL}/api/admin/courses?format=csv`, { headers: { cookie: c } })).text();
+        const probs = (await api('/api/admin/problems', { cookie: c })).body as Probs;
+        const msg = (await api(`/api/admin/messages?courseId=${data.courseA.id}`, { cookie: c })).body as Msg;
+        const areas = (await prisma.adminUser.findUnique({ where: { id: m10.id }, select: { areas: true } }))!.areas;
+        const ask = JSON.parse((await runAskTool('bookings_by_course', {}, 'manager', areas)).content) as AskRows;
+        const header = csv.split(String.fromCharCode(13, 10))[0].split(',');
+        const feeCol = header.indexOf('"fees 30d"');
+        const csvRows = csv.split(String.fromCharCode(13, 10)).slice(1).filter(Boolean);
+        return { detail, today, list, csvFees: csvRows.map(r => r.split('","')[feeCol]?.replace(/"/g, '')), probs, msg, ask, todayA: today?.courses?.find(x => x.id === data.courseA.id) };
+      };
+
+      const a = await look();
+      check('No Money → course page: no money block, fees or gross', a.detail?.money === null && a.detail?.revenue30d?.platform === null && a.detail?.revenue30d?.gross === null && typeof a.detail?.revenue30d?.greenFees === 'number', JSON.stringify({ money: a.detail?.money, r: a.detail?.revenue30d }));
+      check('…and no fees earned all time', a.detail?.relationship?.earnedCents === null && a.detail?.relationship?.paidRounds === null, JSON.stringify(a.detail?.relationship && { e: a.detail.relationship.earnedCents, p: a.detail.relationship.paidRounds }));
+      check('No Money → Home courses: listed, with no fees and no failed-charge row', !!a.todayA && a.todayA.feesThisMonth === null && a.todayA.fees7d === null && !a.todayA.rows.some(r => r.id.startsWith('fc-')), JSON.stringify(a.todayA));
+      check('No Money → Home problems: no declined card', !!a.today?.problems && !a.today.problems.some(p => p.id === alert.id), JSON.stringify(a.today?.problems));
+      check('No Money → Courses list: no fees on any row', Array.isArray(a.list) && a.list.length > 0 && a.list.every(r => r.revenue30d === null), JSON.stringify(a.list?.map(r => r.revenue30d)));
+      check('No Money → Courses CSV: the fees column is empty', a.csvFees.length > 0 && a.csvFees.every(v => v === ''), JSON.stringify(a.csvFees.slice(0, 5)));
+      check('No Money → Problems: no declined card', !!a.probs?.open && !a.probs.open.some(p => p.id === alert.id), JSON.stringify(a.probs?.open?.map(p => p.id)));
+      check('No Money → Messages context: no failed-charge count', a.msg?.context?.openItems?.failedCharges === null, JSON.stringify(a.msg?.context?.openItems));
+      check('No Money → Ask: bookings by course carry no fees', !!a.ask?.courses?.length && a.ask.courses.every(r => !('feesCollected' in r)), JSON.stringify(a.ask?.courses?.slice(0, 2)));
+
+      await prisma.adminUser.update({ where: { id: m10.id }, data: { areas: [...NO_MONEY, 'money'] } });
+      const b = await look();
+      const failedIds = (b.detail?.money as { failedCharges?: { bookingId: string }[] } | null)?.failedCharges?.map(f => f.bookingId) ?? [];
+      check('With Money → course page: fees, gross and the failed charge', typeof b.detail?.revenue30d?.platform === 'number' && typeof b.detail?.revenue30d?.gross === 'number' && failedIds.includes(bookingA.id), JSON.stringify({ r: b.detail?.revenue30d, failedIds }));
+      check('…and fees earned all time', typeof b.detail?.relationship?.earnedCents === 'number' && typeof b.detail?.relationship?.paidRounds === 'number');
+      check('With Money → Home courses: fees and the failed-charge row', !!b.todayA && typeof b.todayA.feesThisMonth === 'number' && typeof b.todayA.fees7d === 'number' && b.todayA.rows.some(r => r.id === `fc-${data.courseA.id}`), JSON.stringify(b.todayA));
+      check('With Money → Home problems: the declined card', !!b.today?.problems?.some(p => p.id === alert.id));
+      check('With Money → Courses list: fees on every row', Array.isArray(b.list) && b.list.every(r => typeof r.revenue30d === 'number'), JSON.stringify(b.list?.map(r => r.revenue30d)));
+      check('With Money → Courses CSV: the fees column is filled', b.csvFees.length > 0 && b.csvFees.every(v => /^\d+\.\d{2}$/.test(v ?? '')), JSON.stringify(b.csvFees.slice(0, 5)));
+      check('With Money → Problems: the declined card', !!b.probs?.open?.some(p => p.id === alert.id));
+      check('With Money → Messages context: the failed-charge count', typeof b.msg?.context?.openItems?.failedCharges === 'number' && (b.msg.context.openItems.failedCharges as number) >= 1, JSON.stringify(b.msg?.context?.openItems));
+      check('With Money → Ask: bookings by course carry fees', !!b.ask?.courses?.length && b.ask.courses.every(r => typeof r.feesCollected === 'number'), JSON.stringify(b.ask?.courses?.slice(0, 2)));
+    } finally {
+      await prisma.booking.update({ where: { id: bookingA.id }, data: { checkInFailReason: '' } });
+      await prisma.adminAlert.delete({ where: { id: alert.id } }).catch(() => {});
+      await prisma.adminAuditLog.deleteMany({ where: { adminId: m10.id } }).catch(() => {});
+      await prisma.adminUser.delete({ where: { id: m10.id } });
+    }
+  }
+
   console.log('\n── Pipeline: inquiries CSV and expected launch (BOOKING-REF PR) ──');
   {
     const { signAdminToken } = await import('../src/lib/admin-session');

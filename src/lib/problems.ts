@@ -21,12 +21,21 @@ export type ProblemView = {
   history: { at: string; kind: string; who: string; text: string }[];
 };
 
-export async function listProblems(now = new Date()): Promise<{ open: ProblemView[]; snoozed: ProblemView[]; cleared: ProblemView[] }> {
-  const rows = await prisma.adminAlert.findMany({
+/**
+ * M10 / MONEY-VIEW-1 (Cam 2026-11-26): failed charges are visible only with the
+ * Money area. The hourly check's keys for a declined card (lib/admin-checks).
+ */
+export const FAILED_CHARGE_PROBLEM_PREFIXES = ['failed:', 'holddeclined:'] as const;
+export const isFailedChargeProblem = (key: string) => FAILED_CHARGE_PROBLEM_PREFIXES.some(p => key.startsWith(p));
+
+/** `money: false` leaves out the failed-charge problems. Required, so no caller forgets: it comes from the asker's areas. */
+export async function listProblems(now: Date, opts: { money: boolean }): Promise<{ open: ProblemView[]; snoozed: ProblemView[]; cleared: ProblemView[] }> {
+  const all = await prisma.adminAlert.findMany({
     where: { kind: 'urgent', OR: [{ resolvedAt: null }, { resolvedAt: { gte: new Date(now.getTime() - CLEARED_DAYS * 86_400_000) } }] },
     include: { events: { orderBy: { createdAt: 'desc' }, take: 30 } },
     orderBy: { firstSeenAt: 'asc' },
   });
+  const rows = opts.money ? all : all.filter(r => !isFailedChargeProblem(r.key));
   const ids = [...new Set(rows.map(r => r.courseId).filter((x): x is string => !!x))];
   const names = new Map((ids.length ? await prisma.course.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } }) : []).map(c => [c.id, c.name]));
   const views = rows.map((r): ProblemView => {
