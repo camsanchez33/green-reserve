@@ -143,7 +143,7 @@ Mockup `lanes/build/emails-texts-mockup.html` (https://claude.ai/artifact/NBRME2
 - Outreach: plain personal email; footer = logo + one line "<postal address> · Reply "no thanks" to stop." (postal address from Cam, still owed).
 - Alert and after-round emails keep a stop link.
 - Remove the 3 dead emails and merge the 4 near-duplicates (78 → 71), and the reminder email's emojis.
-- Texts: every text starts with the course name and ends "Reply STOP to opt out." One segment each (≤160 GSM-7). Opt-in and HELP wording as in the mockup (139 / 119 chars). Short links on our own domain: greenreserve.app/b/<code>, /p/, /r/, /a/ — a short code mapped to the existing token (additive table), never exposing more than the long link did.
+- Texts: every text starts with the course name and ends "Reply STOP to opt out." One segment each (≤160 GSM-7). Opt-in and HELP wording as in the mockup, but since Cam 2026-11-24 (A2P brand) the two opt-in confirmations and HELP open "<Course> via GreenReserve: …" (156 / 156 / 137 chars with a 21-character name; only the course name gives way, never the brand). Short links on our own domain: greenreserve.app/b/<code>, /p/, /r/, /a/ — a short code mapped to the existing token (additive table), never exposing more than the long link did.
 - Policy wording in emails only via describePolicy() (none in the body now); fee wording only from LQ-2.
 - Cam to-do when it ships: update the Twilio A2P campaign sample messages to the new wording.
 

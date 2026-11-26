@@ -85,6 +85,12 @@ STOP and HELP.
 Twilio setup itself (account, number, campaign registration) is still on Cam's list.
 
 ## Built (SMS-1, 2026-11-02)
+- **v2026-11-24 / alerts-2026-11-24 (Cam, A2P brand):** texts open with the course name (#525), so the
+  booking, event, verbal and alert consent say texts come "from <Course> via GreenReserve", and the two
+  opt-in confirmations and HELP open "<Course> via GreenReserve: …". Agreements under 2026-11-05 and
+  alerts-2026-11-18 stay valid; their wording is kept in `PAST_SMS_CONSENT_WORDING`. A guest alert is recorded
+  under the version of the box it ticked (`alertConsentVersionOf`). `public/sms-opt-in.png` still shows the
+  old box and needs a fresh capture before the Twilio campaign update.
 - **Record:** `SmsConsent` (append-only; the latest row per phone decides) — `src/lib/sms-consent.ts`
   (`recordSmsConsent`, `hasSmsConsent`, `consentedPhones`, `optInAndConfirm`). Wording and its version:
   `src/lib/sms-consent-copy.ts` (`SMS_CONSENT_VERSION`; change a sentence → bump it).
