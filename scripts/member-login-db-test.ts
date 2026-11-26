@@ -466,7 +466,7 @@ async function main() {
   await hb(tOther.id, b.id, homeEmail);
   const hs = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
   const up = (hs.body?.upcoming ?? []) as { bookingId: string; manageUrl: string; date: string; time: string; players: number; holes: number; membersOnlyDay: boolean; dueLine: string }[];
-  check('Your <Course>: benefits in one line', hs.body?.benefits === '20% off every round and you can book 9 days out. 6 guest passes a year.', hs.body?.benefits);
+  check('Your <Course>: benefits in one line, no guest passes though the tier still holds 6 (GUEST-PASS-OFF)', hs.body?.benefits === '20% off every round and you can book 9 days out.', hs.body?.benefits);
   check('…renews on the end date when it renews itself', hs.body?.renewsOn === homeEnd && hs.body?.expiresOn === null && hs.body?.autoRenew === true, hs.body);
   check('…renewalFailed false while renewals go through', hs.body?.renewalFailed === false, hs.body);
   check('…inGrace false mid-term', hs.body?.inGrace === false, hs.body);
@@ -502,16 +502,16 @@ async function main() {
   // Members switched off in Settings (lib/pricing-switch): no member rate is charged, so none is promised.
   await prisma.course.update({ where: { id: home.id }, data: { hasMemberPricing: false } });
   const hsOff = await get(`/api/member/${home.slug}/session`, await cookie(home.id, homeEmail));
-  check('…Members pricing off: the line keeps the window and guest passes, not the rate', hsOff.body?.benefits === 'You can book 9 days out. 6 guest passes a year.', hsOff.body?.benefits);
+  check('…Members pricing off: the line keeps the window, not the rate', hsOff.body?.benefits === 'You can book 9 days out.', hsOff.body?.benefits);
   check('…and the session sends no member rate fields for a page to rebuild a price from', hsOff.body?.tier && hsOff.body.tier.discountPct === null && hsOff.body.tier.greenFeeWeekday === null && hsOff.body.tier.greenFeeWeekend === null && hsOff.body.tier.cartFeeWeekday === null && hsOff.body.tier.cartFeeWeekend === null, hsOff.body?.tier);
   check('(with it on, the tier\'s rate is sent)', hs.body?.tier?.discountPct === 20, hs.body?.tier);
-  // withoutRates drops the prices and keeps the window and passes; the invite uses it with Members pricing off.
-  check('withoutRates keeps the window and passes only', memberBenefitsLine(withoutRates({ discountPct: 20, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null, advanceBookingDays: 9, windowPublic: false, guestPassesPerYear: 6 }), {}) === 'book 9 days out · 6 guest passes a year');
+  // withoutRates drops the prices and keeps the window; the invite uses it with Members pricing off.
+  check('withoutRates keeps the window only', memberBenefitsLine(withoutRates({ discountPct: 20, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null, advanceBookingDays: 9, windowPublic: false }), {}) === 'book 9 days out');
   const welcomeSrc = (await import('fs')).readFileSync('src/lib/member-welcome.ts', 'utf8');
   check('…and sendWelcome applies it from the course\'s switch', welcomeSrc.includes('benefits: memberBenefitsLine(m.tier && !memberPricingOn(m.course) ? withoutRates(m.tier) : m.tier, m.course)') && welcomeSrc.includes('memberPricing: memberPricingOn(m.course)') && welcomeSrc.includes('hasMemberPricing: true'));
   const { memberInviteAfter } = await import('../src/lib/email-golfer');
-  check('…the invite reads "with this email address to book. You can book <window> · <passes>." with Members pricing off, "to get your rates: …" with it on',
-    memberInviteAfter({ benefits: 'book 9 days out · 6 guest passes a year', memberPricing: false }) === 'Log in with this email address to book. You can book 9 days out · 6 guest passes a year.'
+  check('…the invite reads "with this email address to book. You can book <window>." with Members pricing off, "to get your rates: …" with it on',
+    memberInviteAfter({ benefits: 'book 9 days out', memberPricing: false }) === 'Log in with this email address to book. You can book 9 days out.'
     && memberInviteAfter({ benefits: '$6 off every round', memberPricing: true }) === 'Log in with this email address to get your rates: $6 off every round.');
   // The dues-history route is gone (no page has used it since #502).
   check('the member payments route is gone (404)', (await get(`/api/member/${home.slug}/payments`, await cookie(home.id, homeEmail))).status === 404);
@@ -543,10 +543,11 @@ async function main() {
   check('…a lapsed membership gives no benefits line, and is past its grace (not inGrace)', hs3.status === 200 && hs3.body?.benefits === null && hs3.body?.inGrace === false, hs3.body);
 
   // The benefits line (invite email, Your <Course>).
+  // GUEST-PASS-OFF (Cam 2026-11-24): a tier row still holding guestPassesPerYear says nothing about passes.
   const tb = { discountPct: null, greenFeeWeekdayCents: null, greenFeeWeekendCents: null, lineRates: null, advanceBookingDays: 9, windowPublic: false, guestPassesPerYear: 6 };
-  check('benefits: % off, window, passes', memberBenefitsLine({ ...tb, discountPct: 20 }, { publicAdvanceDays: 7 }) === '20% off every round · book 9 days out · 6 guest passes a year');
-  check('benefits: a flat price, one pass', memberBenefitsLine({ ...tb, greenFeeWeekdayCents: 4500, greenFeeWeekendCents: 5000, guestPassesPerYear: 1 }, {}) === 'rounds from $45 · book 9 days out · 1 guest pass a year');
-  check('benefits: the public window says nothing about days', memberBenefitsLine({ ...tb, discountPct: 10, windowPublic: true, guestPassesPerYear: 0 }, {}) === '10% off every round');
+  check('benefits: % off and window, no guest passes', memberBenefitsLine({ ...tb, discountPct: 20 }, { publicAdvanceDays: 7 }) === '20% off every round · book 9 days out');
+  check('benefits: a flat price', memberBenefitsLine({ ...tb, greenFeeWeekdayCents: 4500, greenFeeWeekendCents: 5000 }, {}) === 'rounds from $45 · book 9 days out');
+  check('benefits: the public window says nothing about days', memberBenefitsLine({ ...tb, discountPct: 10, windowPublic: true }, {}) === '10% off every round');
 
   await cleanup();
   console.log(failed ? `\n${failed} FAILED` : '\nall passed');

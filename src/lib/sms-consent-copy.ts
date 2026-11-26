@@ -7,7 +7,9 @@ import { optInText, alertOptInText, helpText } from './sms-copy';
 
 // 2026-11-05 (Twilio campaign review): consent names GreenReserve, the registered brand, as the sender,
 // says "text messages (SMS)", and uses the carriers' own disclosure phrases.
-export const SMS_CONSENT_VERSION = '2026-11-05';
+// 2026-11-24 (Cam, A2P brand): texts open with the course name since #525, so consent says texts come
+// "from <Course> via GreenReserve". Agreements under 2026-11-05 stay valid (GreenReserve still sends them).
+export const SMS_CONSENT_VERSION = '2026-11-24';
 
 /** Twilio asks for a figure (Cam 2026-11-02: "up to 4 messages per booking"). */
 export const SMS_FREQUENCY = 'up to 4 messages per booking';
@@ -16,13 +18,13 @@ const SITE = 'greenreserve.app';
 
 /** The web opt-in box (booking form, event sign-up). Never pre-ticked. */
 export function smsWebConsentText(courseName: string): string {
-  return `I agree to receive text messages (SMS) from GreenReserve about my booking at ${courseName || 'the course'}: a pay link, a day-of notice and a receipt. ` +
+  return `I agree to receive text messages (SMS) from ${courseName || 'the course'} via GreenReserve about my booking: a pay link, a day-of notice and a receipt. ` +
     `${cap(SMS_FREQUENCY)}. Msg & data rates may apply. Reply STOP to cancel, HELP for help.`;
 }
 
 /** What staff read to a golfer before ticking "They said yes" (verbal opt-in). */
 export function smsVerbalScript(courseName: string): string {
-  return `“Can GreenReserve send you text messages (SMS) about this booking at ${courseName || 'our course'}? It’s ${SMS_FREQUENCY} — a pay link, a day-of notice and a receipt. ` +
+  return `“Can we send you text messages (SMS) from ${courseName || 'our course'} via GreenReserve about this booking? It’s ${SMS_FREQUENCY} — a pay link, a day-of notice and a receipt. ` +
     `Msg & data rates may apply. Reply STOP to cancel, HELP for help. The terms and privacy policy are at ${SITE}/terms and ${SITE}/privacy. Is that a yes?”`;
 }
 
@@ -50,13 +52,33 @@ function cap(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
 // alertSmsConsentText() and nothing else; the alert row keeps that exact text and the time,
 // and the SmsConsent row (scope 'alerts') keeps ALERT_SMS_CONSENT_VERSION. Change a word →
 // bump the version.
-export const ALERT_SMS_CONSENT_VERSION = 'alerts-2026-11-18';
+// 2026-11-24 (Cam, A2P brand): "from <Course> via GreenReserve", as the booking box.
+export const ALERT_SMS_CONSENT_VERSION = 'alerts-2026-11-24';
 
 /** The alert sheet's text opt-in box. Never pre-ticked. */
 export function alertSmsConsentText(courseName: string): string {
-  return `Text me when it opens. I agree to receive text messages (SMS) from GreenReserve about this tee time alert at ${courseName || 'the course'}, ` +
+  return `Text me when it opens. I agree to receive text messages (SMS) from ${courseName || 'the course'} via GreenReserve about this tee time alert, ` +
     `up to 1 message per date I picked, only for this alert and separate from booking texts. Msg & data rates may apply. Reply STOP to cancel, HELP for help.`;
 }
 
 /** The alert enrollment confirmation with no course to name (the course's own is alertOptInText(name)). */
 export const ALERT_SMS_CONFIRMATION = alertOptInText(null);
+
+// ---------- Past wordings ----------
+// A SmsConsent row stores only the version key, so every version anyone agreed to stays readable here
+// (Privacy §3: "we keep … the wording you agreed to"). Add the outgoing wording when you bump a version.
+export const PAST_SMS_CONSENT_WORDING: Record<string, (courseName: string) => string> = {
+  '2026-11-05': c => `I agree to receive text messages (SMS) from GreenReserve about my booking at ${c || 'the course'}: a pay link, a day-of notice and a receipt. ` +
+    `Up to 4 messages per booking. Msg & data rates may apply. Reply STOP to cancel, HELP for help.`,
+  'alerts-2026-11-18': c => `Text me when it opens. I agree to receive text messages (SMS) from GreenReserve about this tee time alert at ${c || 'the course'}, ` +
+    `up to 1 message per date I picked, only for this alert and separate from booking texts. Msg & data rates may apply. Reply STOP to cancel, HELP for help.`,
+};
+
+/**
+ * The alert version a stored alert box text was agreed under. A guest's alert keeps the exact text it
+ * ticked and is confirmed later from the email, so the version comes from that text, not from today's.
+ */
+export function alertConsentVersionOf(wording: string | null | undefined): string {
+  if (wording && !wording.includes(' via GreenReserve about this tee time alert')) return 'alerts-2026-11-18';
+  return ALERT_SMS_CONSENT_VERSION;
+}

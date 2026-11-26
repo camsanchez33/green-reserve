@@ -24,14 +24,16 @@
 import { prisma } from './prisma';
 import { dealSeat } from './last-minute';
 import { todayIn, addDaysStr } from './course-time';
+// The two numbers the Settings card shows live in a pure file, so the browser doesn't bundle
+// this file's database code (security audit 2026-11-24).
+import { WEEKS_LOOKED_AT, MAX_WEEKLY_STEP } from './demand-pricing-shared';
+export { WEEKS_LOOKED_AT, MAX_WEEKLY_STEP };
 
 export type DemandMode = 'off' | 'suggest' | 'auto';
 export type DemandCourse = { id?: string; demandMode: string; demandFloorPct: number; demandCeilingPct: number };
 /** `${dow}-${hour}` → the applied percent. Null when the course has demand pricing off. */
 export type DemandMap = Map<string, number> | null;
 
-export const WEEKS_LOOKED_AT = 8;
-export const MAX_WEEKLY_STEP = 10;
 export const MIN_DAYS_OF_DATA = 90;
 const MIN_DATES_IN_HOUR = 4;
 

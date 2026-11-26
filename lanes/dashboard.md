@@ -30,6 +30,7 @@ Support (chats) · Light parity. Specs: ADMIN_REDO_SPEC "Course dashboard Home",
    - Tiles, step bar, normal-size fields, Cancel and Back as plain links.
    - Import and reminders move to each membership's page. (No joining-online requests: Join online is gone, GOLFER-SIGNIN-RETIRED, Cam via Build 2026-11-18.)
    - Wire only what Build's data supports; hide the rest, never fake it.
+   - No guest passes (GUEST-PASS-OFF, Cam 2026-11-24): the mockup's "Guest passes a year" field and guest-pass perks are not built. "Guests pay the member rate" stays.
 3. **Events — APPROVED, build it** (Cam 2026-11-17, "events is good"). Mockup `lanes/dashboard/events-mockup.html` (https://claude.ai/artifact/BVqXkiviwzu8ktCdyNNR9H) is the spec, in both looks. All of Cam's comment threads on that artifact are part of the spec.
    - **Lists the course edits.** Every built-in list on the page can be extended by the course (plus) and edited or removed (pencil, popup).
    - **Who builds the roster.** In outing setup it's one choice: the organizer gives the list OR players add themselves (radio, never both).
