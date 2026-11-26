@@ -11,7 +11,7 @@ export interface Tier {
   greenFeeWeekday: number | null; greenFeeWeekend: number | null;
   cartFeeWeekday: number | null; cartFeeWeekend: number | null;
   discountPct: number | null;
-  advanceBookingDays: number; guestPassesPerYear: number; guestsPayMemberRate?: boolean; autoRenew?: boolean; autoRenewRetry?: boolean;
+  advanceBookingDays: number; guestsPayMemberRate?: boolean; autoRenew?: boolean; autoRenewRetry?: boolean;
   accountOn?: boolean; accountLimitCents?: number | null; accountLimit?: string | null; accountSettle?: string;
   annualFee: number; initiationFee: number; termMonths: number;
   notes: string; active: boolean;

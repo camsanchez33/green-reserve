@@ -24,7 +24,7 @@ export function MembershipSetup({ tier, colors, onClose, onSaved, onDelete }: {
     name: '', color: colors[0], autoRenew: true, autoRenewRetry: true,
     annualFee: 0, initiationFee: 0, hasInit: false, termMonths: 12, advanceBookingDays: 14,
     greenFeeWeekday: null, greenFeeWeekend: null, cartFeeWeekday: null, cartFeeWeekend: null, discountPct: null,
-    guestPassesPerYear: 0, notes: '',
+    notes: '',
   });
   const [mode, setMode] = useState<Mode>(tier?.discountPct != null ? 'pct' : 'each');
   const [saving, setSaving] = useState(false);
@@ -119,7 +119,6 @@ export function MembershipSetup({ tier, colors, onClose, onSaved, onDelete }: {
           </div>
         </>}
         <div className="border-t border-line pt-3.5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[13.5px]">
-          <label className="flex items-center gap-2.5">Guest passes a year<input inputMode="numeric" className={INPUT + ' w-20'} value={f.guestPassesPerYear ?? 0} onChange={e => set('guestPassesPerYear', Number(e.target.value) || 0)} /></label>
           <label className="flex items-center gap-2"><input type="checkbox" className="accent-pine" checked={!!f.guestsPayMemberRate} onChange={e => set('guestsPayMemberRate', e.target.checked)} />Guests pay the member rate</label>
         </div>
       </>}

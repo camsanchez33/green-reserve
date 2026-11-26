@@ -15,7 +15,7 @@ export async function signPreviewToken(courseId: string): Promise<string> {
 
 export async function verifyPreviewToken(token: string): Promise<string | null> {
   try {
-    const { payload } = await jwtVerify(token, getSecret());
+    const { payload } = await jwtVerify(token, getSecret(), { algorithms: ['HS256'] });
     if (payload.purpose !== 'preview' || typeof payload.courseId !== 'string') return null;
     return payload.courseId;
   } catch {
@@ -39,7 +39,7 @@ export async function signLookToken(courseId: string): Promise<string> {
 /** For the pages that only SHOW the course: the course's preview link or the admin's look. */
 export async function verifyViewToken(token: string): Promise<{ courseId: string; look: boolean } | null> {
   try {
-    const { payload } = await jwtVerify(token, getSecret());
+    const { payload } = await jwtVerify(token, getSecret(), { algorithms: ['HS256'] });
     if ((payload.purpose !== 'preview' && payload.purpose !== 'look') || typeof payload.courseId !== 'string') return null;
     return { courseId: payload.courseId, look: payload.purpose === 'look' };
   } catch {

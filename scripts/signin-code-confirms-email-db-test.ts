@@ -11,12 +11,17 @@ import { signPendingTwoFactorToken } from '../src/lib/auth';
 import { readStoredCode } from '../src/lib/two-factor';
 import { POST } from '../src/app/api/auth/2fa/verify/route';
 import { POST as verifyLink } from '../src/app/api/auth/verify/route';
+import { randomBytes } from 'crypto';
+// Real tokens are randomBytes(32) hex; /api/auth/verify refuses any other shape (audit 2026-11-24 M2).
+const hexToken = () => randomBytes(32).toString('hex');
+const LINK_TOKEN = hexToken();
 
 const TAG = 'codeconfirmstest';
 let failed = 0;
 const ok = (l: string, c: boolean, d?: unknown) => { console.log(`${c ? 'PASS' : 'FAIL'}  ${l}${c || d === undefined ? '' : ' — ' + JSON.stringify(d)}`); if (!c) failed++; };
 
 async function cleanup() {
+  await prisma.rateLimit.deleteMany({ where: { key: 'verify-email:198.51.100.7' } });
   await prisma.securityEvent.deleteMany({ where: { email: { startsWith: TAG } } }).catch(() => {});
   await prisma.courseOperator.deleteMany({ where: { email: { startsWith: TAG } } });
 }
@@ -26,7 +31,7 @@ async function signIn(n: string, prefix: string, extra: Record<string, unknown> 
   const hash = await bcrypt.hash('246810', 4);
   const op = await prisma.courseOperator.create({ data: {
     name: 'Jordan Tester', email: `${TAG}+${n}@t.local`, password: 'x', emailVerified: false, onboardingStep: 0,
-    verificationToken: `${TAG}-${n}`, twoFactorCode: prefix + hash, twoFactorCodeExpiry: new Date(Date.now() + 600_000), ...extra,
+    verificationToken: hexToken(), twoFactorCode: prefix + hash, twoFactorCodeExpiry: new Date(Date.now() + 600_000), ...extra,
   } });
   const pending = await signPendingTwoFactorToken({ operatorId: op.id });
   const res = await POST(new NextRequest('http://localhost/api/auth/2fa/verify', {
@@ -57,8 +62,8 @@ async function signIn(n: string, prefix: string, extra: Record<string, unknown> 
   const legacy = await signIn('legacy', '');
   ok('a code stored before this change still works, and changes nothing about the email', legacy.res.status === 200 && legacy.body.redirect === '/dashboard/verify' && !legacy.row.emailVerified, legacy.body);
 
-  const linkOp = await prisma.courseOperator.create({ data: { name: 'Jordan Tester', email: `${TAG}+link@t.local`, password: 'x', emailVerified: false, onboardingStep: 2, verificationToken: `${TAG}-link` } });
-  await verifyLink(new NextRequest('http://localhost/api/auth/verify', { method: 'POST', body: JSON.stringify({ token: `${TAG}-link` }), headers: { 'content-type': 'application/json' } }));
+  const linkOp = await prisma.courseOperator.create({ data: { name: 'Jordan Tester', email: `${TAG}+link@t.local`, password: 'x', emailVerified: false, onboardingStep: 2, verificationToken: LINK_TOKEN } });
+  await verifyLink(new NextRequest('http://localhost/api/auth/verify', { method: 'POST', body: JSON.stringify({ token: LINK_TOKEN }), headers: { 'content-type': 'application/json', 'x-forwarded-for': '198.51.100.7' } }));
   const linkRow = await prisma.courseOperator.findUniqueOrThrow({ where: { id: linkOp.id } });
   ok('the confirm-email link confirms without moving an owner back in onboarding', linkRow.emailVerified && linkRow.onboardingStep === 2);
 

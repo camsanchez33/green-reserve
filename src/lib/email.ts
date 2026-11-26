@@ -429,7 +429,7 @@ export async function sendPasswordChangedNotification(data: {
 
 export async function sendMemberInviteEmail(data: {
   name: string; email: string; courseName: string; groupName: string; coursePageUrl: string; benefits: string;
-  /** Members pricing on at the course (lib/pricing-switch). Off: no rate is promised; the invite says "to book. You can book <window> · <passes>." */
+  /** Members pricing on at the course (lib/pricing-switch). Off: no rate is promised; the invite says "to book. You can book <window>." */
   memberPricing: boolean;
   courseId?: string;
 }) {

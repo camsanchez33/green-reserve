@@ -14,21 +14,19 @@ import type { WindowCourse } from './booking-window';
 const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
 /**
- * One sentence of what the golfer's groups give here, e.g. "20% off every round and you can book 9 days out. 6 guest
- * passes a year." `tier` is the live membership's (null when there is none, or it has lapsed), `resident` whether a
+ * One sentence of what the golfer's groups give here, e.g. "20% off every round and you can book 9 days out." `tier` is the live membership's (null when there is none, or it has lapsed), `resident` whether a
  * resident card is good today. `memberPricing` is the course's Members switch (lib/pricing-switch): off, no member rate
- * is charged anywhere, so none is promised here; the window and guest passes are not prices and stay. Null when
+ * is charged anywhere, so none is promised here; the window is not a price and stays. Null when
  * nothing applies.
  */
 export function benefitsSentence(tier: BenefitTier | null, member: boolean, resident: boolean, course: WindowCourse, memberPricing: boolean): string | null {
   if (member) {
     const priced = tier && !memberPricing ? withoutRates(tier) : tier;
     const parts = memberBenefitParts(priced, course, { resident });
-    const rate = parts.find(p => !p.startsWith('book ') && !p.includes('guest pass'));
+    const rate = parts.find(p => !p.startsWith('book '));
     const window = parts.find(p => p.startsWith('book '));
-    const passes = parts.find(p => p.includes('guest pass'));
     const first = [rate, window ? (rate ? `you can ${window}` : `You can ${window}`) : null].filter(Boolean).join(' and ');
-    const out = [first ? first[0].toUpperCase() + first.slice(1) + '.' : '', passes ? passes[0].toUpperCase() + passes.slice(1) + '.' : ''].filter(Boolean).join(' ');
+    const out = first ? first[0].toUpperCase() + first.slice(1) + '.' : '';
     if (out) return out;
   }
   if (resident) {

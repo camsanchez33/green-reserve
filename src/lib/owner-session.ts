@@ -136,7 +136,7 @@ export async function ownerSessionFromCookie() {
   const token = (await cookies()).get(OWNER_COOKIE)?.value;
   if (!token) return null;
   let claims: { type?: string; sid?: string; adminId?: string };
-  try { claims = (await jwtVerify(token, secret)).payload as typeof claims; } catch { return null; }
+  try { claims = (await jwtVerify(token, secret, { algorithms: ['HS256'] })).payload as typeof claims; } catch { return null; }
   if (claims.type !== 'owner_session' || !claims.sid || !claims.adminId) return null;
   const s = await prisma.ownerSession.findUnique({
     where: { id: claims.sid },

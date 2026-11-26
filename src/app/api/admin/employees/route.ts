@@ -117,7 +117,8 @@ export async function PATCH(req: NextRequest) {
       // MP-2b: MP-2 cleared the lockout on the forgot-password path and left
       // this one — an owner resetting a locked-out employee still handed them a
       // password that answered "Too many attempts". Same bug, other door.
-      data: { passwordHash, passwordChangedAt: new Date(), mustChangePassword: true, failedLoginAttempts: 0, lockoutUntil: null },
+      // Audit 2026-11-24 M5: and every session they have open ends now.
+      data: { passwordHash, passwordChangedAt: new Date(), mustChangePassword: true, failedLoginAttempts: 0, lockoutUntil: null, sessionVersion: { increment: 1 } },
     });
     await passwordChanged(req, target, 'temporary password, reset by the owner');
     await auditAdmin(session, { action: auditAction, targetType: 'admin', targetId: id, reason: reasonOf(body) });
