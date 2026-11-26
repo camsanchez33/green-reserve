@@ -14,7 +14,7 @@ import { StatusDot } from '@/components/ui/StatusDot';
 import { INPUT_COMPACT as INPUT } from '@/components/ui/field';
 import { LoadError } from '@/components/dashboard/LoadError';
 import { dfetch } from '@/lib/dashboard-fetch';
-import { WEEKS_LOOKED_AT, MAX_WEEKLY_STEP } from '@/lib/demand-pricing';
+import { WEEKS_LOOKED_AT, MAX_WEEKLY_STEP } from '@/lib/demand-pricing-shared';
 
 type Settings = { demandMode: 'off' | 'suggest' | 'auto'; demandFloorPct: number; demandCeilingPct: number; demandSuggestedAt: string | null };
 type Hour = { dow: number; hour: number; pct: number; suggestedPct: number; fillPct: number; courseFillPct: number };

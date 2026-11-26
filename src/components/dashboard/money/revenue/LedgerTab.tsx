@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link';
 import { dfetch } from '@/lib/dashboard-fetch';
 import { LoadError } from '@/components/dashboard/LoadError';
-import { methodLabel } from '@/lib/ledger-view';
+import { methodLabel } from '@/lib/ledger-labels';
 import { FilterMenu, SideCard, Dl, Dot, Kv, IconButton, Icon, ROW, ROW_SEL, usd2, dayLong } from './ui';
 import type { LedgerDays, RevenueLedgerDay, RevenueLedgerRow, Range, Mismatch } from './data';
 

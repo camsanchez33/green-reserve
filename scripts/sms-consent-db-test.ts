@@ -97,8 +97,12 @@ async function main() {
   {
     const { smsWebConsentText: web, smsVerbalScript: verbal } = await import('../src/lib/sms-consent-copy');
     const box = web('Pine Valley Golf Club'), say = verbal('Pine Valley Golf Club');
-    ok('the event sign-up says event, not booking', read('src/app/events/[id]/SignupForm.tsx').includes(".replace('my booking at', 'my event at')") && box.includes('my booking at'));
-    ok('the opt-in names GreenReserve as the sender of text messages (SMS)', box.includes('text messages (SMS) from GreenReserve') && say.includes('GreenReserve send you text messages (SMS)'));
+    ok('the event sign-up says event, not booking', read('src/app/events/[id]/SignupForm.tsx').includes(".replace('about my booking', 'about my event')") && box.includes('about my booking'));
+    // A2P brand (Cam 2026-11-24): texts open with the course name, so consent says "from <Course> via GreenReserve".
+    ok('the opt-in names the course via GreenReserve as the sender of text messages (SMS)', box.includes('text messages (SMS) from Pine Valley Golf Club via GreenReserve') && say.includes('text messages (SMS) from Pine Valley Golf Club via GreenReserve'));
+    const { alertSmsConsentText: alertBox, SMS_CONSENT_VERSION: v, ALERT_SMS_CONSENT_VERSION: av } = await import('../src/lib/sms-consent-copy');
+    ok('…the alert box too, and both versions moved on so new agreements record the new wording', alertBox('Pine Valley Golf Club').includes('text messages (SMS) from Pine Valley Golf Club via GreenReserve') && v === '2026-11-24' && av === 'alerts-2026-11-24');
+    ok('the public /sms-consent page shows the course-via-GreenReserve confirmation and HELP reply', read('src/app/sms-consent/page.tsx').includes("optInText('[Course Name]')") && read('src/app/sms-consent/page.tsx').includes("helpText('[Course Name]', '[course phone]')"));
     ok('…with what, how often, Msg & data rates and Reply STOP to cancel, HELP for help', [box, say].every(t => t.includes('a pay link, a day-of notice and a receipt') && /up to 4 messages per booking/i.test(t) && t.includes('Msg & data rates may apply') && t.includes('Reply STOP to cancel, HELP for help')));
   }
   // Twilio's campaign review matches this sentence verbatim against the live /privacy page — never reword it.

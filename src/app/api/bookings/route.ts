@@ -7,7 +7,8 @@ import { memberPlayers, splitTotal, memberSpot } from '@/lib/member-rates';
 import { cartCharge, cartRuleOf } from '@/lib/cart-pricing';
 import { groupGreenFee } from '@/lib/residents';
 import { applyPromo, reserveUse, releaseUse, seatAfter, NOTHING_OFF, PROMO_USED, type PromoRow } from '@/lib/promo-codes';
-import { dealPct, dealRateSeat } from '@/lib/last-minute';
+import { dealPct } from '@/lib/last-minute';
+import { pickOwnSeat, ratedSeat, memberGivesMore } from '@/lib/two-groups';
 import { demandPctFor, onlinePublicSeat, dealWins } from '@/lib/demand-pricing';
 import { holdingById, packSeats, packPrice, takeRounds, giveBack, PackError, PACK_NO_CODE, ROUND_PACKS_ON, PACKS_OFF } from '@/lib/round-packs';
 import { isPastIn, payLinkOpensOn } from '@/lib/course-time';
@@ -182,6 +183,27 @@ export async function POST(req: NextRequest) {
   // MP-3 B2c: cents in, cents out. The x100 that used to live here is gone —
   // per-player rates are already cents, so the total is a plain multiply and
   // there is no float in the money path at all.
+  // PRICE-2 + PRICE-5: the online public seat — the lower of a last-minute deal and the demand
+  // price (lib/demand-pricing); a member, resident or pack seat is never above it.
+  const lastMinutePct = dealPct(teeTimeFull.course, teeTimeFull, 'online');
+  const demandPct = await demandPctFor(teeTimeFull.course, teeTimeFull);
+  const pubSeat = onlinePublicSeat(teeTimeFull.greenFeeCents, lastMinutePct, demandPct);
+  const seatDeals = { pubSeat, dealPct: lastMinutePct, publicCents: teeTimeFull.greenFeeCents, stack: teeTimeFull.course.lastMinuteStack };
+
+  // RES-1: a golfer logged in to this course (gr_member, a member or a resident) whose email is on the resident list pays the
+  // resident rate for one player — themselves. TWO-GROUPS-PRICE (Cam 2026-11-24, lib/two-groups): a golfer who is also a
+  // member with a member price here gets the LOWER own seat after deals, the member rate on a tie; never both.
+  const residentCard = teeTimeFull.residentRateCents != null && residentPricingOn(teeTimeFull.course)
+    ? await loggedInResident(teeTimeFull.courseId, teeTimeFull.date) : null;
+  const pick = pickOwnSeat(appliedTier ? resolvedGreenFeeOverride : null, residentCard ? teeTimeFull.residentRateCents : null, seatDeals,
+    !!appliedTier && memberGivesMore(appliedTier, resolvedCartFeeOverride ?? teeTimeFull.cartFeeCents, teeTimeFull.cartFeeCents, cartRuleOf(teeTimeFull.course.cartPricing) === 'per_cart'));
+  if (pick.group === 'resident' && appliedTier) {
+    // The resident rate is lower: this is a resident booking, and the member's prices (cart too) don't apply.
+    appliedTier = null; appliedTierName = 'standard'; appliedRate = 'standard';
+    resolvedGreenFeeOverride = null; resolvedCartFeeOverride = null;
+  }
+  const resident = pick.group === 'resident' ? residentCard : null;
+
   const greenFeePerPlayerCents = resolvedGreenFeeOverride ?? teeTimeFull.greenFeeCents;
   const cartFeePerPlayerCents  = resolvedCartFeeOverride  ?? teeTimeFull.cartFeeCents;
   // Cam 2026-10-29: the member pays the member rate; guests pay the public rate unless the tier says otherwise.
@@ -189,10 +211,6 @@ export async function POST(req: NextRequest) {
   // A cart is required when this tee time can't be walked (its price-table cell, CART-1).
   const wantsCart = walkingAllowedAt(teeTimeFull) ? !!cartSelected : true;
 
-  // RES-1: a golfer logged in to this course (gr_member, a member or a resident) whose email is on the resident list pays the
-  // resident rate for one player — themselves. A member rate is never combined with it.
-  const resident = appliedTierName === 'standard' && teeTimeFull.residentRateCents != null && residentPricingOn(teeTimeFull.course)
-    ? await loggedInResident(teeTimeFull.courseId, teeTimeFull.date) : null;
   // PRICE-1 (Cam 2026-10-30): a promo code comes off the green fee, SEAT BY SEAT — the member's
   // spot, the resident and each other player each pay their own rate less the code — so the
   // per-seat rates kept on the booking add up to its total and keep the discount through a
@@ -202,11 +220,6 @@ export async function POST(req: NextRequest) {
   // PRICE-3: rounds from the signed-in golfer's own round pack — they replace the rate, and no code goes with them.
   const usePack = typeof packLineId === 'string' && packLineId !== '';
   if (usePack && promoCode !== undefined && promoCode !== null && String(promoCode).trim() !== '') return NextResponse.json({ error: PACK_NO_CODE, code: 'promo' }, { status: 400 });
-  // PRICE-2 + PRICE-5: the online public seat — the lower of a last-minute deal and the demand
-  // price (lib/demand-pricing); a member, resident or pack seat is never above it.
-  const lastMinutePct = dealPct(teeTimeFull.course, teeTimeFull, 'online');
-  const demandPct = await demandPctFor(teeTimeFull.course, teeTimeFull);
-  const pubSeat = onlinePublicSeat(teeTimeFull.greenFeeCents, lastMinutePct, demandPct);
   // What the booking keeps: whichever of the two set the public price.
   const dealSet = dealWins(teeTimeFull.greenFeeCents, lastMinutePct, demandPct);
   const kept = { lastMinutePct: dealSet ? lastMinutePct : 0, demandPct: dealSet ? 0 : demandPct };
@@ -233,8 +246,9 @@ export async function POST(req: NextRequest) {
   }
   // PRICE-2: a last-minute deal comes first (lib/last-minute) — each seat at its deal price —
   // then any promo code off that.
-  const ownSeat = appliedTier ? Math.min(pubSeat, dealRateSeat(lastMinutePct, greenFeePerPlayerCents, teeTimeFull.greenFeeCents, teeTimeFull.course.lastMinuteStack)) : pubSeat;
-  const resSeat = teeTimeFull.residentRateCents == null ? null : Math.min(pubSeat, dealRateSeat(lastMinutePct, teeTimeFull.residentRateCents, teeTimeFull.greenFeeCents, teeTimeFull.course.lastMinuteStack));
+  // The own seats priced by lib/two-groups (ratedSeat), the one rule the list, the preview and the swap use.
+  const ownSeat = appliedTier && pick.memberSeat != null ? pick.memberSeat : pubSeat;
+  const resSeat = teeTimeFull.residentRateCents == null ? null : ratedSeat(teeTimeFull.residentRateCents, seatDeals);
   const seat = (c: number) => (promoRow ? seatAfter(promoRow, c) : c);
   const ratedGreenFeeTotal = appliedTier ? splitTotal(players, memberN, ownSeat, pubSeat)
     : groupGreenFee(players, ownSeat, resident ? 1 : 0, resSeat).greenFeeTotal;
