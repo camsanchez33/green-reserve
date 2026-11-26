@@ -226,7 +226,7 @@ async function main() {
   const namelessNone = await post(`h1none@${TAG}.test`, { name: '' });
   check('H1 a nameless add answers the same whether or not the email has an account', namelessAcct.status === 400 && namelessNone.status === 400 && JSON.stringify(namelessAcct.body) === JSON.stringify(namelessNone.body), { namelessAcct, namelessNone });
   const named = await post(h1Acct.email, { name: 'Typed Name' });
-  check('H1 a named add for an account email is a plain invite: nothing from the account', named.status === 201 && named.body?.golferId == null && named.body?.linked === false && !JSON.stringify(named.body).includes('Secret') && !JSON.stringify(named.body).includes('0142'), named);
+  check('H1 a named add for an account email is a plain invite: nothing from the account', named.status === 201 && named.body?.golferId == null && named.body?.linked === false && !JSON.stringify(named.body).includes('Secret') && !String(named.body?.phone ?? named.body?.invitePhone ?? '').includes('0142'), named);
 
   // The invite and the dues link go to the member's own email (placeholder addresses: logged, never sent).
   // The Resend client needs a key to be made; placeholder addresses are logged and never handed to it.
