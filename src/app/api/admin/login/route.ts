@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
     email: admin.email,
     name: admin.name,
     role: admin.role,
+    sv: admin.sessionVersion,
   });
 
   const res = NextResponse.json({ success: true, role: admin.role, name: admin.name });

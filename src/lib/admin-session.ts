@@ -37,6 +37,14 @@ export interface AdminSession {
    * row on every request, like role, so a change takes effect at once.
    */
   areas?: string[] | null;
+  /**
+   * Audit 2026-11-24 M5: AdminUser.sessionVersion when this employee token was minted. A password
+   * change, reset or sign-out bumps the row, and resolveAdminSession refuses a token whose sv no longer
+   * matches, so a copied cookie dies with it (it used to live out its 12h). Tokens without one count as 0.
+   */
+  sv?: number;
+  /** The employee token's own expiry (seconds), so a re-issued cookie keeps the 12h absolute limit. */
+  exp?: number;
 }
 
 /**
@@ -126,11 +134,34 @@ export async function freshStepUpRequired(session: AdminSession): Promise<NextRe
   return null;
 }
 
-export async function signAdminToken(payload: AdminSession) {
-  return new SignJWT({ ...payload, type: 'admin_session' })
+/** `expiresAt` (seconds): keep an existing session's end when re-issuing it — no renewal past 12h. */
+export async function signAdminToken(payload: AdminSession, expiresAt?: number) {
+  const { exp: _exp, ...claims } = payload;
+  return new SignJWT({ ...claims, type: 'admin_session' })
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('12h')
+    .setExpirationTime(expiresAt ?? '12h')
     .sign(secret);
+}
+
+/**
+ * Audit 2026-11-24 M5: employee sign-out ends the session on the server too, so a copied cookie stops
+ * working (it only cleared the browser's). Only a token that is still live bumps the version: an old,
+ * dead cookie can't sign anyone else out. Never throws (sign-out must always work).
+ */
+export async function endEmployeeSession(token: string | undefined): Promise<void> {
+  if (!token) return;
+  try {
+    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
+    const c = payload as { type?: string; adminId?: string; sv?: unknown };
+    if (c.type !== 'admin_session' || typeof c.adminId !== 'string') return;
+    await prisma.adminUser.updateMany({ where: { id: c.adminId, sessionVersion: typeof c.sv === 'number' ? c.sv : 0 }, data: { sessionVersion: { increment: 1 } } });
+  } catch { /* expired or bad token: nothing to end */ }
+}
+
+/** Every outstanding employee token for this admin stops working (M5). Returns the new version. */
+export async function bumpAdminSessionVersion(adminId: string): Promise<number> {
+  const r = await prisma.adminUser.update({ where: { id: adminId }, data: { sessionVersion: { increment: 1 } }, select: { sessionVersion: true } });
+  return r.sessionVersion;
 }
 
 /**
@@ -185,11 +216,11 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
   // real owner back and mint a fresh owner account. The row was already on the
   // wire; this costs nothing. (mfa stays a claim: it records how this session
   // was authenticated, which no later row change can retroactively alter.)
-  let admin: { active: boolean; role: string; areas: string[]; areasSetAt: Date | null } | null;
+  let admin: { active: boolean; role: string; areas: string[]; areasSetAt: Date | null; sessionVersion: number } | null;
   try {
     admin = await prisma.adminUser.findUnique({
       where: { id: claims.adminId },
-      select: { active: true, role: true, areas: true, areasSetAt: true },
+      select: { active: true, role: true, areas: true, areasSetAt: true, sessionVersion: true },
     });
   } catch (err) {
     console.error(JSON.stringify({ ev: 'admin_session.db_unavailable', adminId: claims.adminId, error: err instanceof Error ? err.message : String(err) }));
@@ -201,8 +232,10 @@ export async function resolveAdminSession(): Promise<AdminSession | null> {
   // AW-1: the employees' cookie never carries the owner (an old owner token, or an
   // employee promoted to owner, signs in again at /cam).
   if (admin.role === 'owner') return null;
+  // M5: a password change, reset or sign-out since this token was minted ends it.
+  if ((typeof claims.sv === 'number' ? claims.sv : 0) !== admin.sessionVersion) return null;
 
-  return { adminId: claims.adminId, email: claims.email, name: claims.name, role: admin.role, mfa: claims.mfa === true, areas: admin.areasSetAt ? admin.areas : null };
+  return { adminId: claims.adminId, email: claims.email, name: claims.name, role: admin.role, mfa: claims.mfa === true, areas: admin.areasSetAt ? admin.areas : null, sv: admin.sessionVersion, exp: typeof claims.exp === 'number' ? claims.exp : undefined };
 }
 
 export async function signAdminSetPasswordToken(payload: { adminId: string; email: string }) {

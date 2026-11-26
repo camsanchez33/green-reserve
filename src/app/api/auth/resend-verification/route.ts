@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getOperatorSession } from '@/lib/auth';
+import { liveOperatorSession } from '@/lib/session';
 import { sendOperatorVerifyEmail } from '@/lib/email';
 import { randomBytes } from 'crypto';
 import { rateLimit } from '@/lib/rate-limit';
@@ -9,7 +9,7 @@ import { rateLimit } from '@/lib/rate-limit';
 // emailVerified (e.g. signed in with a password reset without clicking the
 // original setup link). Never verifies in-app — only re-sends the real link.
 export async function POST() {
-  const session = await getOperatorSession();
+  const session = await liveOperatorSession() // audit 2026-11-24 L1: a killed cookie (old sessionVersion) is refused;
   if (!session || session.kind !== 'operator') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const operator = await prisma.courseOperator.findUnique({ where: { id: session.operatorId } });

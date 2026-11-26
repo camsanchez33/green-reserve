@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getOperatorSession } from '@/lib/auth';
-import { resolveDashboardSession } from '@/lib/session';
+import { resolveDashboardSession, liveOperatorSession } from '@/lib/session';
 import { ALL_KEYS } from '@/lib/staff-permissions';
 
 // Lists every course this operator owns, plus which one is currently active
 // (per resolveDashboardSession's cookie logic) — feeds the dashboard's course
 // switcher. Staff belong to exactly one course and never see a switcher.
 export async function GET() {
-  const session = await getOperatorSession();
+  const session = await liveOperatorSession() // audit 2026-11-24 L1: a killed cookie (old sessionVersion) is refused;
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   // SD-1: the sidebar hides the configuration tabs for staff — no point
   // offering doors that now 403.
