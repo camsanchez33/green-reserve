@@ -50,8 +50,19 @@ for (const [name, b] of [['Light', lb], ['Dark', db], ['Sidebar', rb]] as const)
   ok(`${name}: no colour cast on surfaces and grey text (R=G=B)`, cast.length === 0, cast);
 }
 
-ok('the tab lifts on hover, never the current tab', g.includes('.op-tab:not([aria-current]):hover') && g.includes('translateY(-2px)'));
-ok('reduced motion turns the lift off', /prefers-reduced-motion: reduce\)[^\n]*transform: none/.test(g));
+// UI-STYLE sidebar: hover is a faint fill (no lift); the current page is a lighter fill, a 2px left bar and bold text.
+ok('sidebar hover is a faint fill, never a lift', g.includes('.op-tab:not([aria-current]):hover { background-color: rgb(255 255 255 / .06);') && !g.includes('translateY('));
+ok('the current page: lighter fill, left bar, bold', g.includes('.op-tab[aria-current="page"] { background-color: rgb(255 255 255 / .12); box-shadow: inset 2px 0 0 #EDEDED;') && g.includes('font-weight: 600; }'));
+ok('reduced motion turns the transitions off', /prefers-reduced-motion: reduce\) \{ \.op-look:has\(\.op-rail\) \.op-tab \{ transition: none; \} \}/.test(g));
+const railNav = side.slice(side.indexOf('<aside className="op-rail'), side.indexOf('</aside>', side.indexOf('<aside className="op-rail')));
+const navArr = side.slice(side.indexOf('const navItems'), side.indexOf('];', side.indexOf('const navItems')));
+ok('every rail item has one 16px line icon, hidden from screen readers (no colour dot)', (railNav.match(/<span aria-hidden="true" className="op-ic shrink-0 flex">/g) || []).length === 4 && !/icon: null/.test(navArr) && (navArr.match(/className="w-4 h-4"\/>/g) || []).length >= 12 && !railNav.includes("style={{ backgroundColor: isActive"));
+ok('rail group labels are small and quiet', railNav.includes('text-[11.5px] font-semibold text-ink-muted'));
+const adminSide = readFileSync('src/components/admin/AdminSidebar.tsx', 'utf8');
+const iconMap = adminSide.slice(adminSide.indexOf('const ICONS'), adminSide.indexOf('};', adminSide.indexOf('const ICONS')));
+const menuKeys = [...adminSide.matchAll(/\{ (?:key: '(\w+)', label: '[^']+'|label: '[^']+', key: '(\w+)'), href:/g)].map(m => m[1] ?? m[2]);
+ok('admin: every menu item has one 16px line icon', menuKeys.length >= 18 && menuKeys.every(k => new RegExp(`\\b${k}: <[A-Za-z0-9]+ className=\\{IC\\}\\/>`).test(iconMap)) && adminSide.includes("const IC = 'w-4 h-4';") && adminSide.includes('<span aria-hidden="true" className={g.ic}>{ICONS[item.key]}</span>'), menuKeys.filter(k => !new RegExp(`\\b${k}: <`).test(iconMap)));
+ok('admin: small quiet group labels; current page is a neutral fill, left bar and bold', adminCss.includes('.grpLabel { font-size: 11.5px; font-weight: 600; color: var(--g-muted);') && adminCss.includes('.on { background: rgba(255, 255, 255, .12); color: #FFFFFF; font-weight: 600; box-shadow: inset 2px 0 0 #EDEDED; }'));
 ok('reduced transparency gets solid panels and a solid rail', g.includes('prefers-reduced-transparency: reduce') && g.includes('background-color: var(--op-panel-solid)') && g.includes('.op-rail { background-color: var(--color-rail); -webkit-backdrop-filter: none'));
 ok('a pop-up window\'s panel (inside a fixed inset-0 backdrop) stays solid', g.includes('.op-look:has(.op-rail) .fixed.inset-0 .bg-white.shadow-card'));
 ok('a fixed panel (the phone More menu, the assistant) stays solid', g.includes('.op-look:has(.op-rail) .fixed.bg-white.shadow-card'));

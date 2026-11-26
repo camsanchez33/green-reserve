@@ -225,8 +225,8 @@ body {
 }
 
 /* The material, on screen and rail pages only. One rule for both looks; the tokens above say solid (Light) or glass
-   (Dark). A pop-up window's panel and a golfer-page preview stay solid; the tab under the pointer lifts 2px (GLASS-1;
-   off with reduced motion); anyone who asks for less transparency gets solid panels. */
+   (Dark). A pop-up window's panel and a golfer-page preview stay solid; anyone who asks for less transparency gets solid
+   panels. */
 @media screen {
 .op-look:has(.op-rail) { isolation: isolate; }
 .op-look:has(.op-rail) .min-h-screen.bg-page { background-color: transparent; }
@@ -241,12 +241,14 @@ body {
    review 2026-11-13). */
 .op-look:has(.op-rail) .op-well { background-color: var(--op-well); }
 .op-look:has(.op-rail) .op-rail { background-color: var(--op-rail-bg); -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur); box-shadow: 1px 0 0 var(--op-edge); }
-.op-look:has(.op-rail) .op-tab { transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease, color .18s ease; }
-.op-look:has(.op-rail) .op-tab:not([aria-current]):hover {
-  transform: translateY(-2px); color: var(--color-ink);
-  background-color: color-mix(in srgb, var(--color-white) 78%, transparent);
-  box-shadow: 0 6px 18px rgba(0,0,0,.25), 0 0 0 1px rgba(255,255,255,.06);
-}
+/* UI-STYLE (Cam 2026-11-26): the sidebar item. Hover is a faint lighter fill; the current page is a lighter fill, a 2px
+   left bar and bold text. The icon is a monochrome line icon in the text colour, a touch quieter until current. Both
+   looks (the sidebar is dark in both). */
+.op-look:has(.op-rail) .op-tab { transition: background-color .15s ease, color .15s ease; }
+.op-look:has(.op-rail) .op-tab:not([aria-current]):hover { background-color: rgb(255 255 255 / .06); color: #FFFFFF; }
+.op-look:has(.op-rail) .op-tab[aria-current="page"] { background-color: rgb(255 255 255 / .12); box-shadow: inset 2px 0 0 #EDEDED; color: #FFFFFF; font-weight: 600; }
+.op-look:has(.op-rail) .op-tab .op-ic { opacity: .8; }
+.op-look:has(.op-rail) .op-tab[aria-current="page"] .op-ic { opacity: 1; }
 .op-look:has(.op-rail) .fixed.inset-0 .bg-white.shadow-card,
 .op-look:has(.op-rail) .fixed.bg-white.shadow-card,
 .op-look:has(.op-rail) .op-keep-light .bg-white.shadow-card { background-color: var(--color-white); -webkit-backdrop-filter: none; backdrop-filter: none; }
@@ -257,7 +259,7 @@ body {
   .op-look:has(.op-rail) .fixed .tt-card.bg-white.shadow-card { background-color: var(--op-panel); -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur); }
 }
 }
-@media screen and (prefers-reduced-motion: reduce) { .op-look:has(.op-rail) .op-tab { transition: none; } .op-look:has(.op-rail) .op-tab:not([aria-current]):hover { transform: none; } }
+@media screen and (prefers-reduced-motion: reduce) { .op-look:has(.op-rail) .op-tab { transition: none; } }
 @media screen and (prefers-reduced-transparency: reduce) {
   .op-look:has(.op-rail) .bg-white.shadow-card:not(.op-tab) { background-color: var(--op-panel-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
   .op-look:has(.op-rail) .fixed .tt-card.bg-white.shadow-card { background-color: var(--color-white); -webkit-backdrop-filter: none; backdrop-filter: none; }
