@@ -62,16 +62,16 @@ async function main() {
   if ('error' in r) { check('import ran', false, r); return; }
   const by = async (e: string) => prisma.courseMembership.findFirst({ where: { courseId: course.id, inviteEmail: e } });
   const a = await by(`${TAG}-a@x.com`), b = await by(`${TAG}-b@x.com`);
-  check('added count', r.added === (acct ? 3 : 2), r);
+  check('added count (audit 2026-11-24 H1: an address with an account but no name is skipped like any other)', r.added === 2, r);
   check('tier by name, case-insensitive; paid → paid_offline with the given expiry', a?.tierId === gold.id && a?.paymentStatus === 'paid_offline' && a?.expiresAt?.toISOString().startsWith('2027-03-31') === true, a);
   check('unknown tier → the default; not paid → unpaid, no expiry made up', b?.tierId === basic.id && b?.paymentStatus === 'unpaid' && b?.expiresAt === null, b);
   check('imported members never owe the joining fee again', a?.initiationWaived === true && b?.initiationWaived === true);
   const old = await prisma.courseMembership.findUnique({ where: { id: already.id } });
   check('an existing member is skipped and never changed', r.skipped.some(s => s.email === `${TAG}-old@x.com` && s.reason === 'Already a member') && old?.inviteName === 'Old Member' && old?.notes === 'keep me');
-  check('no name and no account → skipped with the reason', r.skipped.some(s => s.email === `${TAG}-noname@x.com`));
+  check('no name → skipped with the reason', r.skipped.some(s => s.email === `${TAG}-noname@x.com`));
   if (acct) {
     const m = await by(`${TAG}-acct@x.com`);
-    check('an existing GreenReserve account is linked and lends its name', m?.golferId === acct.id && m?.inviteName === 'Acc Ount' && m?.inviteAccepted === true, m);
+    check('H1: an existing GreenReserve account is never linked and lends nothing (the nameless row is skipped)', m === null && r.skipped.some(s => s.email === `${TAG}-acct@x.com` && !/account/i.test(s.reason)), m);
   }
   const again = await importMembers(course.id, readMemberCsv(csv).rows, { defaultTierId: basic.id, paidByDefault: false, addedBy: 'test' });
   check('importing the same file twice adds nobody', !('error' in again) && again.added === 0);
