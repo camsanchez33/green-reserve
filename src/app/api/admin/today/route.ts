@@ -34,7 +34,7 @@ export async function GET() {
     can('money') ? homeToday(now) : null,
     can('money') ? homeOverview(now) : null,
     can('problems') ? listProblems(now, { money: can('money') }) : null,
-    can('company') ? listGoals(now) : null,
+    can('company') ? listGoals(now, { money: can('money') }) : null,
   ]);
   let courses = null;
   if (queue && can('courses')) {

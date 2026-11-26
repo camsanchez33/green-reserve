@@ -736,8 +736,12 @@ async function main() {
     const { runAskTool } = await import('../src/lib/admin-ask');
     const NO_MONEY = ['pipeline', 'courses', 'golfers', 'messages', 'problems', 'company'];
     const m10 = await prisma.adminUser.create({ data: { name: 'Isol No Money', email: `${TS}-nomoney@test.local`, passwordHash: 'x', role: 'manager', active: true, areas: NO_MONEY, areasSetAt: new Date() } });
-    const alert = await prisma.adminAlert.create({ data: { key: `failed:isol-m10-${TS}`, kind: 'urgent', title: 'Card declined at check-in — Isol', detail: '1 round, $51.50 not collected.', href: `/admin/courses/${data.courseA.id}`, courseId: data.courseA.id } });
+    // The hourly check's own key for a declined card at this course (lib/admin-checks), so the course timeline finds it too.
+    await prisma.adminAlert.deleteMany({ where: { key: `failed:${data.courseA.id}` } });
+    const alert = await prisma.adminAlert.create({ data: { key: `failed:${data.courseA.id}`, kind: 'urgent', title: 'Card declined at check-in — Isol', detail: '1 round, $51.50 not collected.', href: `/admin/courses/${data.courseA.id}`, courseId: data.courseA.id } });
     await prisma.booking.update({ where: { id: bookingA.id }, data: { checkInFailReason: 'isolation: card declined' } });
+    const declined = await prisma.paymentEvent.create({ data: { bookingId: bookingA.id, kind: 'charge_failed', amountCents: 5150, stripeId: `isol-m10-${TS}:cf`, actor: 'system', detail: 'isolation: card declined' } });
+    const feeGoal = await prisma.adminGoal.create({ data: { metric: 'fees', target: 100_00, dueAt: new Date(Date.now() + 30 * 86_400_000), createdBy: 'isolation' } });
     try {
       const c = `admin_session=${await signAdminToken({ adminId: m10.id, email: m10.email, name: m10.name, role: 'manager', mfa: true })}`;
       type Detail = { money?: unknown; revenue30d?: { gross: unknown; platform: unknown; greenFees: unknown }; relationship?: { earnedCents: unknown; paidRounds: unknown } };
@@ -757,7 +761,15 @@ async function main() {
         const header = csv.split(String.fromCharCode(13, 10))[0].split(',');
         const feeCol = header.indexOf('"fees 30d"');
         const csvRows = csv.split(String.fromCharCode(13, 10)).slice(1).filter(Boolean);
-        return { detail, today, list, csvFees: csvRows.map(r => r.split('","')[feeCol]?.replace(/"/g, '')), probs, msg, ask, todayA: today?.courses?.find(x => x.id === data.courseA.id) };
+        const feed = (await api(`/api/admin/course-feed?courseId=${data.courseA.id}`, { cookie: c })).body as { items?: { id: string }[] };
+        const goals = (await api('/api/admin/goals', { cookie: c })).body as { goals?: { id: string }[] };
+        const badges = (await api('/api/admin/nav-badges', { cookie: c })).body as { openProblems?: number };
+        const ov = (await api('/api/admin/today/overview', { cookie: c })).body as { attention?: { rows: { id: string }[] } | null };
+        const gq = encodeURIComponent(`${TS}-golfera`);
+        const gList = (await api(`/api/admin/golfers?list=1&q=${gq}`, { cookie: c })).body as { seesMoney?: boolean; golfers?: { id: string | null; tone: string }[] };
+        const gFailed = await api(`/api/admin/golfers?list=1&filter=failed&q=${gq}`, { cookie: c });
+        const gRec = (await api(`/api/admin/golfers?id=${data.golferA.id}`, { cookie: c })).body as { golfer?: { trust: { failedCharges: unknown }; bookings: { id: string; checkInFailReason: string; events: { kind: string }[] }[] } };
+        return { feed, goals, badges, ov, gList, gFailed, gRec, gLine: gList?.golfers?.find(x => x.id === data.golferA.id), gBooking: gRec?.golfer?.bookings.find(x => x.id === bookingA.id), detail, today, list, csvFees: csvRows.map(r => r.split('","')[feeCol]?.replace(/"/g, '')), probs, msg, ask, todayA: today?.courses?.find(x => x.id === data.courseA.id) };
       };
 
       const a = await look();
@@ -771,8 +783,23 @@ async function main() {
       check('No Money → Messages context: no failed-charge count', a.msg?.context?.openItems?.failedCharges === null, JSON.stringify(a.msg?.context?.openItems));
       check('No Money → Ask: bookings by course carry no fees', !!a.ask?.courses?.length && a.ask.courses.every(r => !('feesCollected' in r)), JSON.stringify(a.ask?.courses?.slice(0, 2)));
 
+      const feedIds = (x: typeof a) => x.feed?.items?.map(i => i.id) ?? [];
+      check('No Money → course timeline: no declined charge and no declined-card problem', !!a.feed?.items && !feedIds(a).includes(`pe-${declined.id}`) && !feedIds(a).includes(`al-${alert.id}`), JSON.stringify(feedIds(a).slice(0, 20)));
+      check('No Money → Goals: no fees goal', !!a.goals?.goals && !a.goals.goals.some(g => g.id === feeGoal.id), JSON.stringify(a.goals));
+      check('No Money → Overview Needs attention: no declined-card problem', !!a.ov?.attention && !a.ov.attention.rows.some(r => r.id === `p-${alert.id}`), JSON.stringify(a.ov?.attention?.rows.map(r => r.id)));
+      check('No Money → Golfers list: the golfer is listed, not red, and the list says no Money', a.gList?.seesMoney === false && !!a.gLine && a.gLine.tone !== 'bad', JSON.stringify(a.gList));
+      check('No Money → Golfers "Failed charges" filter → 403 (area)', a.gFailed.status === 403 && (a.gFailed.body as { code?: string })?.code === 'area', JSON.stringify(a.gFailed));
+      check('No Money → golfer record: no failed-charge count, decline reason or declined event', a.gRec?.golfer?.trust.failedCharges === null && a.gBooking?.checkInFailReason === '' && !a.gBooking?.events.some(e => e.kind === 'charge_failed'), JSON.stringify({ t: a.gRec?.golfer?.trust, b: a.gBooking }));
+
       await prisma.adminUser.update({ where: { id: m10.id }, data: { areas: [...NO_MONEY, 'money'] } });
       const b = await look();
+      check('With Money → course timeline: the declined charge and the declined-card problem', feedIds(b).includes(`pe-${declined.id}`) && feedIds(b).includes(`al-${alert.id}`), JSON.stringify(feedIds(b).slice(0, 20)));
+      check('With Money → Goals: the fees goal', !!b.goals?.goals?.some(g => g.id === feeGoal.id));
+      check('With Money → the rail counts the declined-card problem (badge = list)', typeof a.badges?.openProblems === 'number' && b.badges?.openProblems === a.badges.openProblems + 1, JSON.stringify({ a: a.badges, b: b.badges }));
+      check('With Money → Overview Needs attention: the declined-card problem', !!b.ov?.attention?.rows.some(r => r.id === `p-${alert.id}`));
+      check('With Money → Golfers list: the golfer is red', b.gList?.seesMoney === true && b.gLine?.tone === 'bad', JSON.stringify(b.gLine));
+      check('With Money → Golfers "Failed charges" filter lists them', b.gFailed.status === 200 && !!(b.gFailed.body as { golfers?: { id: string | null }[] })?.golfers?.some(x => x.id === data.golferA.id), JSON.stringify(b.gFailed.body));
+      check('With Money → golfer record: the failed charge, its reason and event', b.gRec?.golfer?.trust.failedCharges === 1 && b.gBooking?.checkInFailReason === 'isolation: card declined' && !!b.gBooking?.events.some(e => e.kind === 'charge_failed'), JSON.stringify({ t: b.gRec?.golfer?.trust, b: b.gBooking }));
       const failedIds = (b.detail?.money as { failedCharges?: { bookingId: string }[] } | null)?.failedCharges?.map(f => f.bookingId) ?? [];
       check('With Money → course page: fees, gross and the failed charge', typeof b.detail?.revenue30d?.platform === 'number' && typeof b.detail?.revenue30d?.gross === 'number' && failedIds.includes(bookingA.id), JSON.stringify({ r: b.detail?.revenue30d, failedIds }));
       check('…and fees earned all time', typeof b.detail?.relationship?.earnedCents === 'number' && typeof b.detail?.relationship?.paidRounds === 'number');
@@ -786,6 +813,8 @@ async function main() {
     } finally {
       await prisma.booking.update({ where: { id: bookingA.id }, data: { checkInFailReason: '' } });
       await prisma.adminAlert.delete({ where: { id: alert.id } }).catch(() => {});
+      await prisma.paymentEvent.delete({ where: { id: declined.id } }).catch(() => {});
+      await prisma.adminGoal.delete({ where: { id: feeGoal.id } }).catch(() => {});
       await prisma.adminAuditLog.deleteMany({ where: { adminId: m10.id } }).catch(() => {});
       await prisma.adminUser.delete({ where: { id: m10.id } });
     }

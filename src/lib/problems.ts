@@ -60,6 +60,8 @@ export async function listProblems(now: Date, opts: { money: boolean }): Promise
 
 /** Every problem not yet cleared — the rail's count, the same rows Overview's Needs attention lists
  *  (open and snoozed: snoozing is gone, so one snoozed before then still counts). */
-export async function openProblemCount(): Promise<{ open: number }> {
-  return { open: await prisma.adminAlert.count({ where: { kind: 'urgent', resolvedAt: null } }) };
+export async function openProblemCount(opts: { money: boolean }): Promise<{ open: number }> {
+  // M10 / MONEY-VIEW-1: without Money the declined-card problems are not listed, so they are not counted either.
+  const notMoney = opts.money ? {} : { NOT: FAILED_CHARGE_PROBLEM_PREFIXES.map(p => ({ key: { startsWith: p } })) };
+  return { open: await prisma.adminAlert.count({ where: { kind: 'urgent', resolvedAt: null, ...notMoney } }) };
 }
