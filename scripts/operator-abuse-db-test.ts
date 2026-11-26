@@ -17,6 +17,7 @@ const nextServer = require('next/server');
 nextServer.after = (task: unknown) => { void Promise.resolve(typeof task === 'function' ? (task as () => unknown)() : task).catch(() => {}); };
 
 import { prisma } from '../src/lib/prisma';
+import { rateLimit } from '../src/lib/rate-limit';
 import { signStaffToken, signToken } from '../src/lib/auth';
 import { SENDS_PER_BOOKING_HOUR, SENDS_PER_DESTINATION_HOUR, SENDS_PER_COURSE_HOUR, golferSendAllowed } from '../src/lib/send-caps';
 import { PATCH as bookingsPatch } from '../src/app/api/operator/bookings/route';
@@ -99,7 +100,7 @@ const patch = async (h: (r: NextRequest) => Promise<Response | undefined>, url: 
   // Pay link by text, on the round's day: a number with no consent gets the "ask them" answer before anything is counted.
   const today = new Date().toISOString().slice(0, 10);
   const tToday = await prisma.teeTime.create({ data: { courseId: course.id, date: today, time: '23:50', playersAvailable: 4, greenFeeCents: 4000, cartFeeCents: 0 } });
-  const due = await prisma.booking.create({ data: { teeTimeId: tToday.id, courseId: course.id, golferName: 'Ray', golferEmail: `${TAG}+ray@t.local`, golferPhone: '+12025550173', players: 1, greenFeeTotal: 4000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 4150, status: 'confirmed', paymentStatus: 'no_payment_method' } });
+  const due = await prisma.booking.create({ data: { teeTimeId: tToday.id, courseId: course.id, golferName: 'Ray', golferEmail: `${TAG}+ray@t.local`, golferPhone: '+12025550273', players: 1, greenFeeTotal: 4000, cartFeeTotal: 0, accessFeeTotal: 150, totalAmount: 4150, status: 'confirmed', paymentStatus: 'no_payment_method' } });
   const ask = await patch(bookingsPatch, '/api/operator/bookings', { id: due.id, action: 'send_pay_link', via: 'sms' });
   const askBody = await ask.json() as { needsConsent?: boolean };
   const counted = await prisma.rateLimit.findUnique({ where: { key: `send:pay_link:sms:booking:${due.id}` } });
@@ -108,6 +109,14 @@ const patch = async (h: (r: NextRequest) => Promise<Response | undefined>, url: 
   const consentsBefore = await prisma.smsConsent.count();
   const capped = await patch(bookingsPatch, '/api/operator/bookings', { id: due.id, action: 'send_pay_link', via: 'sms', smsConsent: 'verbal' });
   ok('M11 a capped pay-link text is refused before the verbal consent is recorded', capped.status === 429 && (await prisma.smsConsent.count()) === consentsBefore, capped.status);
+
+  // Receipt by text to a number that hasn't agreed (and no consent given now): asks first, counts nothing.
+  const askReceipt = await patch(bookingsPatch, '/api/operator/bookings', { id: fresh.id, action: 'send_receipt', via: 'sms', to: '+1 202 555 0288' });
+  const askReceiptBody = await askReceipt.json() as { needsConsent?: boolean };
+  ok('M11 a receipt text to a number that hasn\'t agreed asks first, and counts nothing', askReceipt.status === 409 && askReceiptBody.needsConsent === true && !(await prisma.rateLimit.findUnique({ where: { key: `send:receipt:sms:booking:${fresh.id}` } })), askReceipt.status);
+
+  // A broken counter must not uncap texts: send: keys fail closed (a NUL byte makes Postgres refuse the statement).
+  ok('M11 a send cap whose counter fails says no; a sign-in limit still says yes', (await rateLimit('send:x\u0000', 5, 60)) === false && (await rateLimit('login:x\u0000', 5, 60)) === true);
 
   const route = read('src/app/api/operator/bookings/route.ts');
   ok('M11 all four sends (pay link and receipt, text and email) are capped', (route.match(/golferSendAllowed\(/g) ?? []).length === 4);

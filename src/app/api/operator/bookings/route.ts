@@ -1,6 +1,7 @@
 import { payLinkText, roundReceiptText } from '@/lib/sms-copy';
 import { golferSendAllowed, SEND_CAP_MESSAGE } from '@/lib/send-caps';
 import { hasSmsConsent } from '@/lib/sms-consent';
+import { isNorthAmericanNumber, isFictionalNumber } from '@/lib/twilio';
 import { shortLink } from '@/lib/short-links';
 import { SMS_NO_CONSENT_STAFF } from '@/lib/sms-consent-copy';
 import { requireRegisterOpen } from '@/lib/register-open';
@@ -278,7 +279,7 @@ export async function PATCH(req: NextRequest) {
       const to = normalizePhone(b.golferPhone);
       // No consent yet and none given now: the "ask them" answer, before a send is counted (so the retry with
       // consent isn't counted twice).
-      if (smsConsent !== 'verbal' && !(await hasSmsConsent(to))) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
+      if (smsConsent !== 'verbal' && isNorthAmericanNumber(to) && !isFictionalNumber(to) && !(await hasSmsConsent(to))) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
       // Audit 2026-11-24 M11: capped per booking, per number and per course (lib/send-caps).
       if (!(await golferSendAllowed({ courseId: session.courseId, bookingId: id, kind: 'pay_link', via: 'sms', to }))) return NextResponse.json({ error: SEND_CAP_MESSAGE }, { status: 429 });
       const url = `${process.env.NEXT_PUBLIC_URL}/checkin/${id}?token=${token}`;
@@ -322,7 +323,7 @@ export async function PATCH(req: NextRequest) {
       const phone = toRaw || b.golferPhone || '';
       if (phone.replace(/\D/g, '').length < 10) return NextResponse.json({ error: 'Enter a mobile number for the receipt.' }, { status: 400 });
       const to = normalizePhone(phone);
-      if (smsConsent !== 'verbal' && !(await hasSmsConsent(to))) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
+      if (smsConsent !== 'verbal' && isNorthAmericanNumber(to) && !isFictionalNumber(to) && !(await hasSmsConsent(to))) return NextResponse.json({ error: SMS_NO_CONSENT_STAFF, needsConsent: true }, { status: 409 });
       // Audit 2026-11-24 M11: checked before the verbal consent is recorded, so a refused send records nothing.
       if (!(await golferSendAllowed({ courseId: session.courseId, bookingId: id, kind: 'receipt', via: 'sms', to }))) return NextResponse.json({ error: SEND_CAP_MESSAGE }, { status: 429 });
       if (smsConsent === 'verbal') await optInAndConfirm(to, { method: 'verbal', courseId: session.courseId, bookingId: id, recordedBy: session.staffId ?? `operator:${session.operatorId}` });
