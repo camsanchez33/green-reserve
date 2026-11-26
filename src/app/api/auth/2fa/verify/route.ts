@@ -5,8 +5,7 @@ import { rateLimit, clientIp } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 import { securityEvent } from '@/lib/security-events';
 import { readStoredCode } from '@/lib/two-factor';
-
-const MAX_2FA_ATTEMPTS = 5;
+import { claimSecondFactorAttempt, spendSecondFactorIfOut, useSecondFactorCode } from '@/lib/login-guard';
 
 export async function POST(req: NextRequest) {
   const ip = clientIp(req);
@@ -25,31 +24,27 @@ export async function POST(req: NextRequest) {
   }
   const { operatorId } = payload as { operatorId: string };
 
-  const { code } = await req.json();
-  if (!code) return NextResponse.json({ error: 'Missing code' }, { status: 400 });
+  const { code } = ((await req.json().catch(() => null)) ?? {}) as { code?: unknown };
+  if (typeof code !== 'string' || !code) return NextResponse.json({ error: 'Missing code' }, { status: 400 });
 
   const operator = await prisma.courseOperator.findUnique({ where: { id: operatorId } });
   if (!operator || !operator.twoFactorCode || !operator.twoFactorCodeExpiry || operator.twoFactorCodeExpiry < new Date()) {
     return NextResponse.json({ error: 'Invalid or expired code.' }, { status: 400 });
   }
 
-  if (operator.twoFactorAttempts >= MAX_2FA_ATTEMPTS) {
-    await prisma.courseOperator.update({ where: { id: operator.id }, data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0 } });
-    return NextResponse.json({ error: 'Too many incorrect attempts. Please sign in again to get a new code.' }, { status: 400 });
+  // Audit 2026-11-24 M8: the try is claimed before the compare, against this exact code (lib/login-guard).
+  const storedCode = operator.twoFactorCode;
+  if (!(await claimSecondFactorAttempt('operator', operator.id, storedCode))) {
+    // No tries left, or the code changed under us (a new one was just sent).
+    const out = await spendSecondFactorIfOut('operator', operator.id);
+    await securityEvent(req, { kind: 'second_factor_failed', surface: 'course', email: operator.email, accountId: operator.id, detail: out ? 'sign-in code, no tries left' : 'sign-in code no longer current' });
+    return NextResponse.json({ error: out ? 'Too many incorrect attempts. Please sign in again to get a new code.' : 'Invalid or expired code.' }, { status: 400 });
   }
 
-  const stored = readStoredCode(operator.twoFactorCode);
-  const valid = await bcrypt.compare(String(code), stored.hash);
+  const stored = readStoredCode(storedCode);
+  const valid = await bcrypt.compare(code, stored.hash);
   if (!valid) {
-    const attempts = operator.twoFactorAttempts + 1;
-    const clearCode = attempts >= MAX_2FA_ATTEMPTS;
-    await prisma.courseOperator.update({
-      where: { id: operator.id },
-      data: {
-        twoFactorAttempts: clearCode ? 0 : attempts,
-        ...(clearCode ? { twoFactorCode: null, twoFactorCodeExpiry: null } : {}),
-      },
-    });
+    const clearCode = await spendSecondFactorIfOut('operator', operator.id);
     // Logged after the attempt counter moves, never before it (security audit).
     await securityEvent(req, { kind: 'second_factor_failed', surface: 'course', email: operator.email, accountId: operator.id, detail: 'sign-in code' });
     return NextResponse.json({ error: clearCode ? 'Too many incorrect attempts. Please sign in again to get a new code.' : 'Invalid or expired code.' }, { status: 400 });
@@ -60,15 +55,14 @@ export async function POST(req: NextRequest) {
   // never completes 2FA has not logged in. This is the column A-07's
   // "operator last login" health signal needed; it rendered "—" for every
   // course because CourseOperator had no such field until now.
-  await prisma.courseOperator.update({
-    where: { id: operator.id },
-    data: {
-      twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0, lastLoginAt: new Date(),
-      // A right code that went by email proves the inbox, so no "confirm your email" link after it.
-      // A texted code does not — that owner still confirms by link.
-      ...(confirmsEmail ? { emailVerified: true, verificationToken: null, onboardingStep: Math.max(operator.onboardingStep, 1) } : {}),
-    },
+  // Used up once: a second request with the same code, sent at the same moment, finds it gone.
+  const used = await useSecondFactorCode('operator', operator.id, storedCode, {
+    twoFactorCode: null, twoFactorCodeExpiry: null, lastLoginAt: new Date(),
+    // A right code that went by email proves the inbox, so no "confirm your email" link after it.
+    // A texted code does not — that owner still confirms by link.
+    ...(confirmsEmail ? { emailVerified: true, verificationToken: null, onboardingStep: Math.max(operator.onboardingStep, 1) } : {}),
   });
+  if (!used) return NextResponse.json({ error: 'Invalid or expired code.' }, { status: 400 });
 
   await securityEvent(req, { kind: 'signin_ok', surface: 'course', email: operator.email, accountId: operator.id, detail: confirmsEmail ? 'owner, email confirmed by sign-in code' : 'owner' });
   const token = await signToken({ operatorId: operator.id, email: operator.email, sv: operator.sessionVersion });

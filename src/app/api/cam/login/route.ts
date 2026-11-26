@@ -21,7 +21,9 @@ async function setTotpPending(admin: { id: string; twoFactorCode: string | null;
     ? ':' + admin.twoFactorCode.slice(TOTP_USED_PREFIX.length) : '';
   await prisma.adminUser.update({
     where: { id: admin.id },
-    data: { twoFactorCode: TOTP_PENDING + carried, twoFactorCodeExpiry: new Date(Date.now() + 10 * 60 * 1000), twoFactorAttempts: 0 },
+    // Audit 2026-11-24 M8: the try counter is NOT set back to 0 here. It was, on every right
+    // password, so the 5-try limit on the second factor never ran out (lib/login-guard).
+    data: { twoFactorCode: TOTP_PENDING + carried, twoFactorCodeExpiry: new Date(Date.now() + 10 * 60 * 1000) },
   });
 }
 
@@ -38,12 +40,8 @@ async function signIn(req: Request, admin: { id: string; email: string; name: st
   return res;
 }
 import { securityEvent } from '@/lib/security-events';
-import { failUnknownLogin, unknownLoginLockedUntil } from '@/lib/login-guard';
+import { failUnknownLogin, unknownLoginLockedUntil, claimPasswordAttempt, clearPasswordAttempts, dummyPasswordCheck, LOGIN_MAX_ATTEMPTS, claimSecondFactorAttempt, spendSecondFactorIfOut, useSecondFactorCode, mayIssueSecondFactor } from '@/lib/login-guard';
 import { totpMatchStep, matchRecoveryCode, looksLikeRecoveryCode, TOTP_PENDING, TOTP_USED_PREFIX, TOTP_STEP_SECONDS } from '@/lib/owner-totp';
-
-const MAX_2FA_ATTEMPTS = 5;
-const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_MS = 15 * 60 * 1000;
 
 function gen6DigitCode(): string {
   return String(randomInt(100000, 999999));
@@ -73,24 +71,26 @@ export async function POST(req: NextRequest) {
     if (!device) return startOver();
     // Only right after the password step (a challenge from adding a passkey can't sign anyone in).
     if (!admin.twoFactorCode?.startsWith(TOTP_PENDING) || !admin.twoFactorCodeExpiry || admin.twoFactorCodeExpiry < new Date()) return startOver();
-    if (admin.twoFactorAttempts >= MAX_2FA_ATTEMPTS) {
-      await prisma.adminUser.update({ where: { id: admin.id }, data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0, passkeyChallenge: null, passkeyChallengeExpiry: null } });
+    // Audit 2026-11-24 M8: the try is claimed before the check, against this pending marker (lib/login-guard).
+    const marker = admin.twoFactorCode;
+    if (!(await claimSecondFactorAttempt('admin', admin.id, marker))) {
+      if (!(await spendSecondFactorIfOut('admin', admin.id))) return startOver();
+      await prisma.adminUser.update({ where: { id: admin.id }, data: { passkeyChallenge: null, passkeyChallengeExpiry: null } });
       return NextResponse.json({ error: 'Too many incorrect attempts. Please start over.' }, { status: 400 });
     }
     if (!(await verifyPasskeySignIn(admin.id, body.response))) {
-      const attempts = admin.twoFactorAttempts + 1;
-      const clear = attempts >= MAX_2FA_ATTEMPTS;
-      await prisma.adminUser.update({ where: { id: admin.id }, data: { twoFactorAttempts: clear ? 0 : attempts, ...(clear ? { twoFactorCode: null, twoFactorCodeExpiry: null } : {}) } });
+      const clear = await spendSecondFactorIfOut('admin', admin.id);
       await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: 'passkey' });
       return NextResponse.json({ error: clear ? 'Too many incorrect attempts. Please start over.' : 'That passkey didn’t check out — start over and try again, or use your authenticator app.' }, { status: 400 });
     }
     // The backup step is no longer needed: clear its pending marker — but keep a
     // still-live used authenticator step it carried, so that code can't be replayed.
-    const carried = admin.twoFactorCode.slice(TOTP_PENDING.length + 1);
-    await prisma.adminUser.update({ where: { id: admin.id }, data: {
+    const carried = marker.slice(TOTP_PENDING.length + 1);
+    const used = await useSecondFactorCode('admin', admin.id, marker, {
       ...(carried ? { twoFactorCode: TOTP_USED_PREFIX + carried, twoFactorCodeExpiry: new Date(Date.now() + 2 * TOTP_STEP_SECONDS * 1000) } : { twoFactorCode: null, twoFactorCodeExpiry: null }),
-      twoFactorAttempts: 0, lastLoginAt: new Date(),
-    } });
+      lastLoginAt: new Date(),
+    });
+    if (!used) return startOver();
     return signIn(req, admin, device.id, 'passkey');
   }
 
@@ -119,8 +119,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Code expired — please start over' }, { status: 400 });
     }
 
-    if (admin.twoFactorAttempts >= MAX_2FA_ATTEMPTS) {
-      await prisma.adminUser.update({ where: { id: admin.id }, data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0 } });
+    // Audit 2026-11-24 M8: the try is claimed before the compare, against this exact code or
+    // pending marker, and only while tries remain (lib/login-guard).
+    const storedCode = admin.twoFactorCode;
+    if (admin.twoFactorSecret && !storedCode.startsWith(TOTP_PENDING)) return startOver();
+    if (!(await claimSecondFactorAttempt('admin', admin.id, storedCode))) {
+      if (!(await spendSecondFactorIfOut('admin', admin.id))) return startOver();
+      await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: 'no tries left' });
       return NextResponse.json({ error: 'Too many incorrect attempts. Please start over.' }, { status: 400 });
     }
 
@@ -158,38 +163,23 @@ export async function POST(req: NextRequest) {
         }
       }
       if (!ok) {
-        const attempts = admin.twoFactorAttempts + 1;
-        const clear = attempts >= MAX_2FA_ATTEMPTS;
-        await prisma.adminUser.update({
-          where: { id: admin.id },
-          data: { twoFactorAttempts: clear ? 0 : attempts, ...(clear ? { twoFactorCode: null, twoFactorCodeExpiry: null } : {}) },
-        });
+        const clear = await spendSecondFactorIfOut('admin', admin.id);
         await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: method === 'recovery' ? 'recovery code' : 'authenticator code' });
         return NextResponse.json({ error: clear ? 'Too many incorrect attempts. Please start over.' : 'Incorrect code' }, { status: 400 });
       }
-      await prisma.adminUser.update({ where: { id: admin.id }, data: { ...data, twoFactorAttempts: 0, lastLoginAt: new Date() } });
+      // Used up once: two requests with one code (or one recovery code) can't both sign in.
+      if (!(await useSecondFactorCode('admin', admin.id, storedCode, { ...data, lastLoginAt: new Date() }))) return startOver();
       return signIn(req, admin, device.id, method);
     }
 
-    const valid = await bcrypt.compare(String(code).trim(), admin.twoFactorCode);
+    const valid = await bcrypt.compare(String(code).trim(), storedCode);
     if (!valid) {
-      const attempts = admin.twoFactorAttempts + 1;
-      const clearCode = attempts >= MAX_2FA_ATTEMPTS;
-      await prisma.adminUser.update({
-        where: { id: admin.id },
-        data: {
-          twoFactorAttempts: clearCode ? 0 : attempts,
-          ...(clearCode ? { twoFactorCode: null, twoFactorCodeExpiry: null } : {}),
-        },
-      });
+      const clearCode = await spendSecondFactorIfOut('admin', admin.id);
       await securityEvent(req, { kind: 'second_factor_failed', surface: 'owner', email, accountId: admin.id, detail: 'emailed code' });
       return NextResponse.json({ error: clearCode ? 'Too many incorrect attempts. Please start over.' : 'Incorrect code' }, { status: 400 });
     }
 
-    await prisma.adminUser.update({
-      where: { id: admin.id },
-      data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorAttempts: 0, lastLoginAt: new Date() },
-    });
+    if (!(await useSecondFactorCode('admin', admin.id, storedCode, { twoFactorCode: null, twoFactorCodeExpiry: null, lastLoginAt: new Date() }))) return startOver();
 
     // The only path that has seen a second factor makes the owner session.
     return signIn(req, admin, device.id, 'email');
@@ -227,17 +217,22 @@ export async function POST(req: NextRequest) {
     return lockoutResponse(admin.lockoutUntil);
   }
 
+  // Audit 2026-11-24 M3: the try is claimed atomically before the compare (lib/login-guard).
+  const claim = await claimPasswordAttempt('admin', admin.id);
+  if (!claim.claimed) {
+    await dummyPasswordCheck(String(password));
+    await securityEvent(req, { kind: 'signin_failed', surface: 'owner', email, accountId: admin.id, detail: 'while locked out' });
+    return lockoutResponse(claim.lockoutUntil);
+  }
   const valid = await bcrypt.compare(String(password), admin.passwordHash);
   if (!valid) {
-    const failedLoginAttempts = admin.failedLoginAttempts + 1;
-    const lockoutUntil = failedLoginAttempts >= MAX_LOGIN_ATTEMPTS ? new Date(Date.now() + LOCKOUT_MS) : null;
-    await prisma.adminUser.update({ where: { id: admin.id }, data: { failedLoginAttempts, ...(lockoutUntil ? { lockoutUntil } : {}) } });
+    const lockoutUntil = claim.attempts >= LOGIN_MAX_ATTEMPTS ? claim.lockoutUntil : null;
     await securityEvent(req, { kind: lockoutUntil ? 'locked_out' : 'signin_failed', surface: 'owner', email, accountId: admin.id, detail: 'wrong password' });
     if (lockoutUntil) return lockoutResponse(lockoutUntil);
     return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
   }
 
-  await prisma.adminUser.update({ where: { id: admin.id }, data: { failedLoginAttempts: 0, lockoutUntil: null } });
+  await clearPasswordAttempts('admin', admin.id);
 
   // A device the owner hasn't approved: email the approval link and stop here.
   // Only after the password is proved, so nobody else can make the inbox ring.
@@ -270,6 +265,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ mustChangePassword: true, setPasswordToken: token });
   }
 
+  // Audit 2026-11-24 M8: each right password arms a fresh second-factor step, so they are capped per
+  // account. Only someone with the right password on an approved device reaches this.
+  if (!(await mayIssueSecondFactor('admin', admin.id))) {
+    await securityEvent(req, { kind: 'rate_limited', surface: 'owner', email, accountId: admin.id, detail: 'second-factor steps per account' });
+    return NextResponse.json({ error: 'Too many sign-ins started for this account in the last hour. Try again later.' }, { status: 429 });
+  }
+
   // AW-1b: a passkey is the second factor once one exists. The authenticator
   // app stays ready as the backup (its pending marker is set below too), and
   // an owner with a passkey never gets an emailed code.
@@ -293,7 +295,7 @@ export async function POST(req: NextRequest) {
   const expiry = new Date(Date.now() + 10 * 60 * 1000);
   await prisma.adminUser.update({
     where: { id: admin.id },
-    data: { twoFactorCode: hashedCode, twoFactorCodeExpiry: expiry, twoFactorAttempts: 0 },
+    data: { twoFactorCode: hashedCode, twoFactorCodeExpiry: expiry },
   });
 
   // Review fix: this send now throws on a Resend rejection (getResend), and an
