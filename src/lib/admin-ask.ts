@@ -33,7 +33,7 @@ export const ASK_TOOLS: Anthropic.Beta.BetaTool[] = [
   },
   {
     name: 'bookings_by_course',
-    description: "Bookings per course for a date range of TEE TIMES (YYYY-MM-DD, inclusive): bookings, players, cancelled, no-shows, checked in, and GreenReserve fees collected on rounds paid in that range. Courses with no bookings in the range are listed with zeros, so 'which courses had no bookings' is answerable. Leave both dates out for the last 7 days.",
+    description: "Bookings per course for a date range of TEE TIMES (YYYY-MM-DD, inclusive): bookings, players, cancelled, no-shows, checked in, and GreenReserve fees collected on rounds paid in that range. Courses with no bookings in the range are listed with zeros, so 'which courses had no bookings' is answerable. Leave both dates out for the last 7 days. The fees are left out for a login without the Money area.",
     input_schema: {
       type: 'object',
       properties: {
@@ -117,7 +117,9 @@ export async function runAskTool(name: string, input: unknown, role: string, are
       if (b.checkedInAt) r.checkedIn++;
       if (b.paymentStatus === PAID.paymentStatus && b.roundPaymentIntentId) r.feesCollected += b.accessFeeTotal;
     }
-    return ok({ from, to, courses: [...by.values()].map(r => ({ ...r, feesCollected: dollars(r.feesCollected) })).sort((a, b) => b.bookings - a.bookings) });
+    // M10 / MONEY-VIEW-1 (Cam 2026-11-26): GreenReserve's fees only with the Money area; without it the field is left out.
+    const seesFees = inArea('money');
+    return ok({ from, to, courses: [...by.values()].map(({ feesCollected, ...r }) => (seesFees ? { ...r, feesCollected: dollars(feesCollected) } : r)).sort((a, b) => b.bookings - a.bookings) });
   }
 
   if (name === 'list_inquiries') {

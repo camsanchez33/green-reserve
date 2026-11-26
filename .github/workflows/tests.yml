@@ -44,7 +44,7 @@ jobs:
       # Links and redirects in emails and sign-in routes are built from this (as in production, .env.example).
       NEXT_PUBLIC_URL: http://localhost:3000
       TEST_URL: http://localhost:3000
-      SERVER_TESTS: "isolation-test.ts concurrency-test.ts load-test.ts member-portal-price-test.ts member-login-db-test.ts resident-window-db-test.ts book-viewer-window-db-test.ts guest-pass-off-db-test.ts two-groups-db-test.ts"
+      SERVER_TESTS: "isolation-test.ts concurrency-test.ts load-test.ts member-portal-price-test.ts member-login-db-test.ts resident-window-db-test.ts book-viewer-window-db-test.ts guest-pass-off-db-test.ts two-groups-db-test.ts pwa-e2e-test.ts pwa-install-test.ts"
 
     steps:
       - uses: actions/checkout@v7
@@ -108,6 +108,78 @@ jobs:
 
       - name: Two groups get the lower own seat
         run: npx tsx scripts/two-groups-db-test.ts
+
+      - name: Server log
+        if: failure()
+        run: tail -200 next.log || true
+
+  # PWA install (Cam 2026-11-26: a separate job, NOT a required check). It depends on the runner's current Chrome and on
+  # Lighthouse 11 (no longer maintained), so a Chrome update must not turn unrelated PRs red. It builds what it needs
+  # itself. The two scripts are in SERVER_TESTS above so the pure loop skips them. Service worker in the runner's Chrome
+  # (only /_next/static/* and the offline page may be cached), then the install criteria on pinned Lighthouse 11
+  # (perf-audit.yml's gate is separate and unchanged). playwright-core drives the runner's own Chrome.
+  pwa-install:
+    name: PWA install (not required)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: greenreserve
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Throwaway values for a throwaway database — no real secret belongs here.
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/greenreserve
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/greenreserve
+      JWT_SECRET: ci-only-not-a-real-secret-0123456789abcdef
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      NEXT_PUBLIC_URL: http://localhost:3000
+      TEST_URL: http://localhost:3000
+      CHROME_PATH: /usr/bin/google-chrome
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply every migration from scratch
+        run: npx prisma migrate deploy
+
+      - name: Build
+        run: npx next build
+
+      - name: Start the app
+        run: |
+          npx next start -p 3000 > next.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000/api/health && exit 0
+            sleep 2
+          done
+          echo "::error::App did not answer /api/health within 60s"
+          cat next.log
+          exit 1
+
+      - name: Installable app (service worker, install criteria)
+        run: |
+          npx tsx scripts/perf-seed.ts
+          npm install --no-save playwright-core@1.63.0
+          npx tsx scripts/pwa-e2e-test.ts
+          npx tsx scripts/pwa-install-test.ts
 
       - name: Server log
         if: failure()

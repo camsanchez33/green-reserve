@@ -37,7 +37,7 @@ export async function GET() {
     prisma.booking.count({ where: { ...FAILED_CHARGE_WHERE, ...ON_REAL_COURSE } }),
     openDisputes(),
     // ADMIN-C: the Problems count and the top bar's one line (same rules as Home's health line).
-    openProblemCount(),
+    openProblemCount({ money: hasArea(session, 'money') }),
     todayHealth(now).catch(() => null),
   ]);
   const systemsOk = health ? health.jobs.bad.length === 0 && !health.stripeWebhook.lastError && (health.stripeWebhook.lastAt === null || health.stripeWebhook.ok) && health.payments.blocked === 0 : null;

@@ -5,13 +5,14 @@ import { sendMessageNotificationEmail } from '@/lib/email';
 import { threadSignal } from '@/lib/thread-signal';
 import { computeOpenChanges } from '@/lib/change-requests';
 import { FAILED_CHARGE_WHERE } from '@/lib/money-problems';
+import { hasArea } from '@/lib/admin-areas';
 import { withAudit } from '@/lib/admin-audit';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 // MP-7b: what an admin needs to answer without a tab hop — who the operator
 // is, whether they use the dashboard, and whether the course is booking.
-async function threadContext(courseId: string) {
+async function threadContext(courseId: string, seesMoney: boolean) {
   const since = new Date(Date.now() - 30 * 86_400_000);
   const [course, lastBooking, bookings30d, inquiry, failedCharges] = await Promise.all([
     prisma.course.findUnique({ where: { id: courseId }, select: { firstWentLiveAt: true, operator: { select: { name: true, email: true, phone: true, lastLoginAt: true } } } }),
@@ -20,7 +21,8 @@ async function threadContext(courseId: string) {
     // Review 2026-10-04 (MP-7b "open items"): what is waiting on someone — the
     // same derivations the course page's Overview uses, never a second one.
     prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true, events: { select: { actorName: true, fromStatus: true, toStatus: true, createdAt: true } } } }),
-    prisma.booking.count({ where: { courseId, ...FAILED_CHARGE_WHERE } }),
+    // M10 / MONEY-VIEW-1 (Cam 2026-11-26): failed charges only with the Money area (null without).
+    seesMoney ? prisma.booking.count({ where: { courseId, ...FAILED_CHARGE_WHERE } }) : null,
   ]);
   const openChanges = inquiry ? computeOpenChanges(inquiry.events).length : 0;
   return {
@@ -67,12 +69,12 @@ export async function GET(req: NextRequest) {
       // No thread yet — the page still needs to know whether it may start one.
       const course = await prisma.course.findUnique({ where: { id: courseId }, select: { name: true, slug: true, active: true, archivedAt: true } });
       if (!course) return NextResponse.json(null);
-      return NextResponse.json({ id: null, courseId, messages: [], course, inquiryId: null, closedAt: null, context: await threadContext(courseId) });
+      return NextResponse.json({ id: null, courseId, messages: [], course, inquiryId: null, closedAt: null, context: await threadContext(courseId, hasArea(session, 'money')) });
     }
     // Lets the message list link change-request mirrors back to the inquiry
     // where the structured, addressable version of the ask actually lives.
     const inquiry = await prisma.courseInquiry.findFirst({ where: { builtCourseId: courseId }, select: { id: true } });
-    return NextResponse.json({ ...thread, inquiryId: inquiry?.id ?? null, context: await threadContext(courseId) });
+    return NextResponse.json({ ...thread, inquiryId: inquiry?.id ?? null, context: await threadContext(courseId, hasArea(session, 'money')) });
   }
 
   // Thread list. MP-7a: the last few messages come along so the signal can
