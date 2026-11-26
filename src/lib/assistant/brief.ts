@@ -34,7 +34,9 @@ import { readAssistantSettings, unknownLineFor, plainLine, plainText, type Assis
 /** The policy block's tag. Course text never contains '<', so it cannot forge this. */
 export const POLICY_TAG = 'policy_lines';
 
-export type BriefAudience = 'staff' | 'golfer';
+/** 'staff-limited': a staff login without schedule.view, events.manage or members.view — the staff brief minus rates,
+ *  closed days, dues and private events (only events open for sign-up, as on the course page). ASSIST-2 review. */
+export type BriefAudience = 'staff' | 'staff-limited' | 'golfer';
 export type BriefSectionKey = 'basics' | 'info' | 'rates' | 'policy' | 'closures' | 'conditions' | 'events' | 'memberships' | 'range' | 'facilities' | 'notes' | 'setup';
 export type BriefSection = { key: BriefSectionKey; label: string; count: string };
 export type CourseBrief = {
@@ -106,7 +108,8 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
   if (!course) return null;
   const today = todayIn(course.timezone, now);
   const until = addDaysStr(today, BRIEF_DAYS_AHEAD);
-  const staff = audience === 'staff';
+  const staff = audience === 'staff' || audience === 'staff-limited';
+  const limited = audience === 'staff-limited';
 
   const [schedules, closures, events, tiers, buckets, notes] = await Promise.all([
     prisma.teeTimeSchedule.findMany({
@@ -122,7 +125,7 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
     prisma.blackout.findMany({ where: { courseId, date: { gte: today, lte: until } }, orderBy: [{ date: 'asc' }, { id: 'asc' }], take: MAX_CLOSURES, select: { date: true, reason: true } }),
     prisma.courseEvent.findMany({
       // Golfers hear only events open for sign-up; staff hear every planned one. Never the organiser's details.
-      where: { courseId, date: { gte: today, lte: until }, status: { not: 'cancelled' }, ...(staff ? {} : { signupOpen: true }) },
+      where: { courseId, date: { gte: today, lte: until }, status: { not: 'cancelled' }, ...(staff && !limited ? {} : { signupOpen: true }) },
       orderBy: [{ date: 'asc' }, { startTime: 'asc' }, { id: 'asc' }], take: MAX_EVENTS,
       select: { name: true, date: true, startTime: true, format: true, holes: true, pricePerPlayerCents: true, signupOpen: true, includes: true },
     }),
@@ -213,7 +216,7 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
     body: tiers.length ? tiers.map(t => {
       const tier = course.hasMemberPricing ? t : withoutRates(t);
       const parts = memberBenefitParts(tier, course);
-      return `- ${line(t.name, 80)}${parts.length ? `: ${parts.join(' · ')}` : ''}${staff && t.annualFeeCents > 0 ? ` (dues ${usd(t.annualFeeCents)} a year)` : ''}`;
+      return `- ${line(t.name, 80)}${parts.length ? `: ${parts.join(' · ')}` : ''}${staff && !limited && t.annualFeeCents > 0 ? ` (dues ${usd(t.annualFeeCents)} a year)` : ''}`;
     }).concat([course.memberLoginOn
       ? 'Members log in on the course\'s booking page with the email the course has on file.'
       : `Members don't log in online here: online bookings are at the public price${course.hasMemberPricing ? ', and member rates are given at the counter' : ''}.`])
@@ -249,7 +252,7 @@ export async function buildCourseBrief(courseId: string, audience: BriefAudience
     });
   }
 
-  const kept = staff ? blocks : blocks.filter(b => {
+  const kept = limited ? blocks.filter(b => b.key !== 'rates' && b.key !== 'closures') : staff ? blocks : blocks.filter(b => {
     const topic = TOPIC_OF[b.key];
     return !topic || settings.golferTopics.includes(topic);
   });

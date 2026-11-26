@@ -63,9 +63,9 @@ async function cleanup() {
     // 2. Every pricing path reads the switch
     const paths: [string, string[]][] = [
       ['src/app/api/bookings/route.ts', ["live && membership!.tier && memberPricingOn(teeTimeFull.course)", 'residentPricingOn(teeTimeFull.course)']],
-      ['src/app/api/member/[courseSlug]/tee-times/route.ts', ['live && memberPricingOn(course) ? tier : null', 'const residentCard = residentPricingOn(course) ? await residentOn(', 'const resident = !pricingTier ? residentCard : null;']],
-      ['src/app/api/bookings/resident-rate/route.ts', ['if (!memberPricingOn(tt.course)) tier = null;', '!residentPricingOn(tt.course)', 'hasMemberPricing: true, hasResidentPricing: true']],
-      ['src/app/api/manage/[bookingId]/swap-time/route.ts', ['residentPricingOn(switches)']],
+      ['src/app/api/member/[courseSlug]/tee-times/route.ts', ['live && memberPricingOn(course) ? tier : null', 'const residentCard = residentPricingOn(course) ? await residentOn(', 'const rates = pick.group === \'member\' ? tierRates : null;']],
+      ['src/app/api/bookings/resident-rate/route.ts', ['if (!memberPricingOn(tt.course)) tier = null;', 'residentPricingOn(tt.course) && signedIn', 'hasMemberPricing: true, hasResidentPricing: true']],
+      ['src/app/api/manage/[bookingId]/swap-time/route.ts', ['residentPricingOn(course) ? await residentOn(', 'memberPricingOn(course) ? (await liveMembershipFor(']],
       ['src/lib/move-booking.ts', ["opts.pricing !== 'keep' && !memberPricingOn(b.course)", "opts.pricing !== 'keep' && !residentPricingOn(b.course) ? 0"]],
       ['src/lib/checkin-booking.ts', ['m?.tier && memberPricingOn(grace)']],
       ['src/app/api/operator/counter-members/route.ts', ['membersOn && q.length >= 2', 'membersOn && mode === \'any\'', 'residentsOn: residentPricingOn(course)']],
