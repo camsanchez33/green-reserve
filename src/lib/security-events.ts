@@ -14,7 +14,11 @@ import { evidentiaryIp, rateLimit } from './rate-limit';
 
 export type SecurityKind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed'
   // Team (Cam 2026-11-17): a course owner invited, disabled, re-enabled or removed a staff login, or sent it a reset link.
-  | 'access_changed';
+  | 'access_changed'
+  // Audit 2026-11-24 M6: the owner's authenticator app was set up or replaced, or the recovery codes were.
+  | 'second_factor_changed'
+  // Audit 2026-11-24 M7: someone asked for an admin password-reset link (sent or not).
+  | 'reset_requested';
 export type SecuritySurface = 'admin' | 'owner' | 'course' | 'golfer' | 'member';
 
 export const SECURITY_KEEP_DAYS = 90;
@@ -37,7 +41,7 @@ export async function securityEvent(req: Request | null, e: { kind: SecurityKind
     // A password change is never capped (Cam 2026-11-16): every caller is already behind a session and the
     // current password, owner step-up, a single-use link or ADMIN_SECRET, and it may be the only record.
     // The same for access_changed: only a signed-in course owner causes one.
-    if (ip && e.kind !== 'password_changed' && e.kind !== 'access_changed' && !(await rateLimit(`secev:ip:${ip}`, MAX_EVENTS_PER_IP_HOUR, 3600))) return;
+    if (ip && e.kind !== 'password_changed' && e.kind !== 'access_changed' && e.kind !== 'second_factor_changed' && !(await rateLimit(`secev:ip:${ip}`, MAX_EVENTS_PER_IP_HOUR, 3600))) return;
     await prisma.securityEvent.create({
       data: {
         kind: e.kind,
@@ -103,10 +107,10 @@ export async function securityOverview(now = new Date()) {
     prisma.securityEvent.groupBy({ by: ['kind'], where: { createdAt: { gte: since30 } }, _count: { _all: true } }),
     prisma.securityEvent.groupBy({ by: ['ip'], where: failed30, _count: { _all: true }, orderBy: { _count: { ip: 'desc' } }, take: 10 }),
     prisma.securityEvent.groupBy({ by: ['email'], where: { ...failed30, email: { not: '' } }, _count: { _all: true }, orderBy: { _count: { email: 'desc' } }, take: 10 }),
-    prisma.securityEvent.findMany({ where: { createdAt: { gte: since30 }, kind: { notIn: ['signin_ok', 'password_changed', 'access_changed'] } }, orderBy: { createdAt: 'desc' }, take: 100 }),
+    prisma.securityEvent.findMany({ where: { createdAt: { gte: since30 }, kind: { notIn: ['signin_ok', 'password_changed', 'access_changed', 'second_factor_changed'] } }, orderBy: { createdAt: 'desc' }, take: 100 }),
     // Password and access changes are read on their own, so 100 newer failures can never push one off the page,
     // and a burst of owner changes can never push a failure off it.
-    prisma.securityEvent.findMany({ where: { createdAt: { gte: since30 }, kind: { in: ['password_changed', 'access_changed'] } }, orderBy: { createdAt: 'desc' }, take: 100 }),
+    prisma.securityEvent.findMany({ where: { createdAt: { gte: since30 }, kind: { in: ['password_changed', 'access_changed', 'second_factor_changed'] } }, orderBy: { createdAt: 'desc' }, take: 100 }),
     lockedAccountsNow(now),
   ]);
   const recent = [...recentAll, ...passwordChanges].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());

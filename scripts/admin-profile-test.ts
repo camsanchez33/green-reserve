@@ -40,7 +40,7 @@ check('passkeys: step-up fetch, options → add, delete', /stepUpFetch\('\/api\/
 check('passkeys: plus disabled until the app is set up', /disabled=\{!appSetUp/.test(keys) && /'Waiting for your device…'|>Waiting for your device…</.test(keys));
 check('devices: step-up fetch, removing this device signs out to /cam', /stepUpFetch\('\/api\/admin\/owner-devices'/.test(devs) && /signedOut\) \{ window\.location\.assign\('\/cam'\)/.test(devs));
 check('removes confirm first', /if \(!await ask\(/.test(keys) && /if \(!await ask\(/.test(devs) && /if \(!await ask\(/.test(soe));
-check('two-factor: start, confirm, regenerate on the same route', /'\/api\/admin\/two-factor'/.test(tf) && /action: 'start'/.test(tf) && /action: 'confirm', enrolToken: setup\.enrolToken, code/.test(tf) && /action: 'regenerate', code/.test(tf));
+check('two-factor: start, confirm, regenerate on the same route', /'\/api\/admin\/two-factor'/.test(tf) && /action: 'start'/.test(tf) && /action: 'confirm', enrolToken: setup\.enrolToken, code/.test(tf) && /action: 'regenerate' \}/.test(tf)); // audit 2026-11-24 M6: the Confirm-it's-you dialog asks for the factor, not a code box
 check('two-factor: links read as approved', /'Move to a new phone'/.test(tf) && /'Set up'/.test(tf) && />Make new codes</.test(tf) && /Copy all/.test(tf) && />I saved them</.test(tf));
 check('sign out everywhere: same call', /'\/api\/admin\/logout'/.test(soe) && /everywhere: true/.test(soe) && /assign\('\/cam'\)/.test(soe));
 check('no browser confirm() left', ![keys, devs, soe].some(f => /[^.\w]confirm\(/.test(f)));
@@ -48,7 +48,8 @@ check('no browser confirm() left', ![keys, devs, soe].some(f => /[^.\w]confirm\(
 const conf = read('src/components/admin/ProfileCard.tsx');
 check('confirm dialog: focus starts on Cancel, Tab stays inside', /cancelRef\.current\?\.focus\(\)/.test(conf) && !/okRef\.current\?\.focus\(\);\n/.test(conf.split('const key')[0]) && /e\.key === 'Tab'/.test(conf));
 check('Enter can fire a code or passkey call only once (no repeat, not while busy)',
-  (tf.match(/e\.key === 'Enter' && !e\.repeat && !busy/g) || []).length === 2 && /e\.key === 'Enter' && !e\.repeat && busy === ''/.test(keys));
+  (tf.match(/e\.key === 'Enter' && !e\.repeat && !busy/g) || []).length === 1 && // M6: the regenerate code box is gone
+   /e\.key === 'Enter' && !e\.repeat && busy === ''/.test(keys));
 check('passkeys stay hidden until the authenticator app is set up (as before)', /\{appSetUp && keys && keys\.map/.test(keys));
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }

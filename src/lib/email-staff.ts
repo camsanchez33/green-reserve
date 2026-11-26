@@ -499,6 +499,24 @@ export function ownerPasskeyChangedEmail(d: { change: 'added' | 'removed'; passk
   });
 }
 
+// Audit 2026-11-24 M6: the owner's authenticator app or recovery codes changed — like a passkey change,
+// it alters how the account signs in, so it is always announced. No link in it.
+export function ownerTwoFactorChangedEmail(d: { change: 'set_up' | 'replaced' | 'recovery_codes'; device: string; when: string }): BuiltEmail {
+  const what = d.change === 'set_up' ? 'An authenticator app was set up' : d.change === 'replaced' ? 'The authenticator app was moved to a new phone' : 'New recovery codes were made';
+  const after = d.change === 'set_up'
+    ? 'From now on, signing in at /cam asks for a code from the app instead of an emailed code. Not you? Sign in, go to My profile and choose “Sign out everywhere”, set up the authenticator again, then change your password.'
+    : d.change === 'replaced'
+      ? 'Your old recovery codes stopped working too. Not you? Someone is signed in as you: sign in at once with a passkey if you have one, choose “Sign out everywhere”, set up the app again and change your password. With no passkey, the account is recovered from the database (docs/RUNBOOK.md, “Owner 2FA recovery”).'
+      : 'Not you? Sign in, go to My profile and choose “Sign out everywhere”, make new codes, then change your password.';
+  const tail = d.change === 'set_up' ? '' : d.change === 'recovery_codes' ? ' The old codes no longer work.' : ' The old app’s codes no longer work.';
+  return gr(d.change === 'recovery_codes' ? 'GreenReserve recovery codes replaced' : d.change === 'set_up' ? 'GreenReserve authenticator app set up' : 'GreenReserve authenticator app changed', {
+    line: `${what}.`,
+    paragraphs: [`${what} for the GreenReserve owner account.${tail}`],
+    rows: deviceRows({ device: d.device, when: d.when }, 'From'),
+    after: [after],
+  });
+}
+
 // ---------- Outreach to new courses (plain, personal, with the CAN-SPAM footer) ----------
 
 /** The footer's one line: "<postal address> · Reply “no thanks” to stop." Throws while the address is empty. */

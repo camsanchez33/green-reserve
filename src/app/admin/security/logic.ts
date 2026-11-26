@@ -4,7 +4,7 @@
 import type { Check } from '@/lib/security-checklist';
 import type { SentryIssuesResult } from '@/lib/sentry-issues';
 
-export type Kind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed' | 'access_changed'
+export type Kind = 'signin_failed' | 'signin_ok' | 'locked_out' | 'second_factor_failed' | 'step_up_failed' | 'rate_limited' | 'new_device' | 'password_changed' | 'access_changed' | 'second_factor_changed' | 'reset_requested'
   | 'checker_action' | 'checker_undo' | 'checker_decision';
 export type Tone = 'ok' | 'warn' | 'bad' | 'neutral';
 
@@ -50,6 +50,8 @@ export const KIND: Record<Kind, [string, Tone, string]> = {
   new_device: ['New owner device', 'warn', 'A new phone or computer was approved to sign in as you.'],
   password_changed: ['Password changed', 'neutral', 'A person changed their own password.'],
   access_changed: ['Login access changed', 'neutral', 'A course owner invited, turned off, turned back on or removed a staff login, or sent one a reset link.'],
+  reset_requested: ['Reset link asked for', 'neutral', 'Someone asked for an admin password-reset link. A link goes out only to a real, active login, at most 3 an hour.'],
+  second_factor_changed: ['Authenticator changed', 'warn', 'The owner’s authenticator app was set up or moved to a new phone, or new recovery codes were made. If that wasn’t you, act at once.'],
   checker_action: ['Checker acted', 'warn', 'The security checker took a safe step on its own, such as blocking an address.'],
   checker_undo: ['Checker undone', 'neutral', 'You undid something the security checker did.'],
   checker_decision: ['Fix decided', 'neutral', 'You approved a fix or said not now. It is recorded for a person to do.'],
