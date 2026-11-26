@@ -32,7 +32,7 @@ const lib = readFileSync(new URL('../src/lib/assistant/homepage.ts', import.meta
 const route = readFileSync(new URL('../src/app/api/assistant/homepage/route.ts', import.meta.url), 'utf8');
 ok('no database, no course data', !/prisma|getCourseBrief|courseId: (?!null)/.test(lib + route));
 ok('route: no tools', !/tools:/.test(route));
-ok('route: a time limit on the model call', /timeout: 20_000/.test(route) && /maxDuration = 30/.test(route));
+ok('route: a time limit on the model call', /timeout: 12_000, maxRetries: 0/.test(route) && /maxDuration = 30/.test(route));
 ok('route: key, then per-IP, before the body', route.indexOf('assistantClient()', route.indexOf('export async function POST')) < route.indexOf('publicIpAllows(') && route.indexOf('publicIpAllows(') < route.indexOf('req.json()'));
 ok('route: anything but a normal end → the Book a call line', /stop_reason !== 'end_turn' \|\| !text\) return NextResponse\.json\(\{ reply: HOMEPAGE_UNSURE/.test(route));
 ok('route: log has no words', !/logAssistant\(\{[^}]*(history|text|reply)/.test(route));

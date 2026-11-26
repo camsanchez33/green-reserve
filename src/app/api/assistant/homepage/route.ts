@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       model: ASSISTANT_MODEL, max_tokens: HOMEPAGE_MAX_TOKENS, system: systemBlocks(HOMEPAGE_PERSONA, '', ''), messages: history,
       output_config: { effort: ASSISTANT_EFFORT },
       betas: [FALLBACK_BETA], fallbacks: 'default',
-    }, { timeout: 20_000 });
+    }, { timeout: 12_000, maxRetries: 0 });
   } catch (err) {
     console.error('[assistant] homepage call failed:', err instanceof Anthropic.APIError ? `${err.status} ${err.name}` : err instanceof Error ? err.name : 'error');
     return NextResponse.json({ reply: HOMEPAGE_UNSURE });
