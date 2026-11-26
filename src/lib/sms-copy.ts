@@ -2,7 +2,7 @@
 // lanes/build/emails-texts-mockup.html v17 "Texts"): the words of every text we send, in one place.
 //   Every course text starts with the course's full name and ends "Reply STOP to opt out."
 //   One segment each: at most 160 GSM-7 characters. A course name that would push a text past that is
-//   shortened (never the link or the STOP line); anything outside GSM-7 (curly quotes, dashes) is
+//   shortened by whole words only, never mid-word (Cam 2026-11-26), and never the link or the STOP line; anything outside GSM-7 (curly quotes, dashes) is
 //   replaced, because one such character makes the whole text UCS-2 and cuts it to 70 per segment.
 //   Links are short links on our own domain (lib/short-links), passed in already made.
 // Codes (the staff sign-in code) and the opt-in / HELP replies carry their own STOP wording.
@@ -48,18 +48,38 @@ export function smsSegments(text: string): { chars: number; gsm: boolean; segmen
 }
 
 /**
- * Build a course text that fits one segment: `make(name)` is tried with the full course name, then a
- * shorter one, down to 12 characters. The link and the STOP line are never cut.
+ * Words a shortened course name never ends on ("The Old Course at" reads as a mistake): connectors and
+ * stray punctuation are dropped along with the word after them.
+ */
+const DANGLING = new Set(['at', 'of', 'the', 'and', '&', '-', 'on', 'in', 'by', 'for', 'a', '+', '/']);
+
+/**
+ * A course name shortened to whole words only (Cam 2026-11-26, SMS-WORDS): drop words from the end,
+ * never cut one in half, never end on a connector or punctuation. The first word always stays, so a
+ * name is never emptied; one word too long to fit on its own is kept whole and the text is allowed past
+ * one segment (no real course name comes near: it would need a single 40+ character word).
+ */
+export function wordsThatFit(name: string, fits: (n: string) => boolean): string {
+  let words = name.split(' ').filter(Boolean);
+  if (fits(words.join(' '))) return words.join(' ');
+  while (words.length > 1) {
+    words = words.slice(0, -1);
+    while (words.length > 1 && DANGLING.has(words[words.length - 1].toLowerCase())) words = words.slice(0, -1);
+    words[words.length - 1] = words[words.length - 1].replace(/[,;:&/+-]+$/, '') || words[words.length - 1];
+    if (fits(words.join(' '))) break;
+  }
+  return words.join(' ');
+}
+
+/**
+ * Build a course text that fits one segment: `make(name)` is tried with the full course name, then with
+ * whole words dropped from its end (wordsThatFit). The link, the STOP line and "via GreenReserve" are
+ * never cut, only the course name.
  */
 function fit(courseName: string, make: (name: string) => string): string {
   const full = toGsm(courseName).trim() || 'Your course';
-  let name = full;
-  let text = toGsm(make(name));
-  while (smsSegments(text).chars > 160 && name.length > 12) {
-    name = name.slice(0, name.length - 1).trimEnd();
-    text = toGsm(make(name));
-  }
-  return text;
+  const name = wordsThatFit(full, n => smsSegments(toGsm(make(n))).chars <= 160);
+  return toGsm(make(name));
 }
 
 const money = (cents: number) => `$${(Math.round(cents) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -134,14 +154,17 @@ function viaBrand(courseName: string | null | undefined, rest: string): string {
   return fit(course, n => `${n} via GreenReserve${rest}`);
 }
 
-/** The one-time confirmation when a number agrees to booking texts (Twilio requires it). 156 characters with a 21-character name. */
+// The two confirmations use Cam's shorter fixed wording (2026-11-26) so a course name keeps up to ~37
+// characters whole (it was 25 with "You're set for …").
+
+/** The one-time confirmation when a number agrees to booking texts (Twilio requires it). 144 characters with a 21-character name. */
 export function optInText(courseName: string | null | undefined): string {
-  return viaBrand(courseName, `: You're set for booking texts, up to 4 per booking. Msg & data rates may apply. Reply HELP for help, STOP to opt out.`);
+  return viaBrand(courseName, `: Booking texts on, up to 4 per booking. Msg & data rates may apply. Reply HELP for help, STOP to opt out.`);
 }
 
 /** The confirmation when a number agrees to tee time alert texts. */
 export function alertOptInText(courseName: string | null | undefined): string {
-  return viaBrand(courseName, `: You're set for alert texts, 1 per date you picked. Msg & data rates may apply. Reply HELP for help, STOP to opt out.`);
+  return viaBrand(courseName, `: Alert texts on, 1 per date you picked. Msg & data rates may apply. Reply HELP for help, STOP to opt out.`);
 }
 
 /** The reply to HELP. With the course the number last agreed for: its phone. 137 characters with a 21-character name. */
