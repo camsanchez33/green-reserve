@@ -18,8 +18,9 @@ import { useCourse } from './context';
 export function MoneyTab() {
   const { detail, txItems, refundNote, setRefundNote, txLoading, txError, txPage, setTxPage, txPages, txTotal, txFrom, setTxFrom, txTo, setTxTo, txSearch, setTxSearch, loadTransactions, openOperate } = useCourse();
   const m = detail.money;
-  // M10 / MONEY-VIEW-1: the server sends no money to a login without the Money area; the tab is hidden then.
-  if (!m) return <p className="text-[14px] text-ink-muted">Your login doesn’t include Money. Ask the owner to add it on Team.</p>;
+  // M10 / MONEY-VIEW-1: the server sends no money to a login without the Money area. The tab is hidden then and
+  // ?tab=money opens the Timeline (useCourseDetail selectTab), so this tab never renders without it.
+  if (!m) return null;
   const vs = m.feesSamePointLastMonth;
   return (
             <div className="max-w-5xl">
