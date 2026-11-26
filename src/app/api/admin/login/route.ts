@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { hashToken } from '@/lib/token-hash';
 import { signAdminToken, signAdminSetPasswordToken } from '@/lib/admin-session';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
@@ -73,7 +74,7 @@ export async function POST(req: NextRequest) {
     await prisma.adminUser.update({
       where: { id: admin.id },
       data: {
-        setPasswordToken: token,
+        setPasswordToken: hashToken(token), // M9: only the hash is stored
         setPasswordTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
     });

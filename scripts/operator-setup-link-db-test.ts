@@ -5,6 +5,7 @@
 import { readFileSync } from 'fs';
 import { NextRequest } from 'next/server';
 import { prisma } from '../src/lib/prisma';
+import { hashToken } from '../src/lib/token-hash';
 import { issueSetupLink, hasSetUp } from '../src/lib/operator-setup';
 import { POST, GET } from '../src/app/api/auth/reset-password/route';
 
@@ -53,7 +54,7 @@ async function cleanup() {
 
   // A forgot-password token (1 hour) sent back with setup: true sets the password, never a session.
   const forgot = await mk('forgot');
-  await prisma.courseOperator.update({ where: { id: forgot.id }, data: { resetToken: 'f'.repeat(64), resetTokenExpiry: new Date(Date.now() + 3_600_000) } });
+  await prisma.courseOperator.update({ where: { id: forgot.id }, data: { resetToken: hashToken('f'.repeat(64)), resetTokenExpiry: new Date(Date.now() + 3_600_000) } });
   // An ordinary reset queues the password-changed email with after(), which throws
   // outside a request here — after the write, so the row still tells the story.
   await post({ token: 'f'.repeat(64), password: PW, setup: true }).catch(() => null);

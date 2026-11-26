@@ -5,6 +5,9 @@ import { validatePasswordStrength } from '@/lib/password';
 import { sendPasswordChangedNotification } from '@/lib/email';
 import { verifyStaffResetToken, signToken } from '@/lib/auth';
 import { securityEvent } from '@/lib/security-events';
+import { hashToken } from '@/lib/token-hash';
+
+// Audit 2026-11-24 M9: an owner's reset or setup link is looked up by its SHA-256; the column never holds the token.
 
 // SD-9c: an operator's reset token is 64 hex chars stored in a column; a staff
 // member's is a signed JWT (see lib/auth.ts signStaffResetToken).
@@ -28,7 +31,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ valid: true, email: staff.email });
   }
 
-  const operator = await prisma.courseOperator.findUnique({ where: { resetToken: token } });
+  const operator = await prisma.courseOperator.findUnique({ where: { resetToken: hashToken(token) } });
   if (!operator || !operator.resetTokenExpiry || operator.resetTokenExpiry < new Date()) {
     return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
   }
@@ -37,8 +40,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { token, password, setup } = await req.json();
-  if (!token || !password) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  const { token, password, setup } = ((await req.json().catch(() => null)) ?? {}) as { token?: unknown; password?: unknown; setup?: unknown };
+  if (typeof token !== 'string' || typeof password !== 'string' || !token || !password) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   const passwordError = validatePasswordStrength(password);
   if (passwordError) return NextResponse.json({ error: passwordError }, { status: 400 });
 
@@ -68,7 +71,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   }
 
-  const operator = await prisma.courseOperator.findUnique({ where: { resetToken: token } });
+  const operator = await prisma.courseOperator.findUnique({ where: { resetToken: hashToken(token) } });
   if (!operator || !operator.resetTokenExpiry || operator.resetTokenExpiry < new Date()) {
     return NextResponse.json({ error: 'This reset link is invalid or has expired.' }, { status: 400 });
   }
@@ -85,7 +88,7 @@ export async function POST(req: NextRequest) {
   const hashed = await bcrypt.hash(password, 12);
   // Conditional on the token still being there, so two submits of one link can't both land.
   const { count } = await prisma.courseOperator.updateMany({
-    where: { id: operator.id, resetToken: token },
+    where: { id: operator.id, resetToken: hashToken(token) },
     // SD-5: a reset signs every existing session out.
     data: {
       password: hashed, resetToken: null, resetTokenExpiry: null, sessionVersion: { increment: 1 },

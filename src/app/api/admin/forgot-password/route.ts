@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { hashToken } from '@/lib/token-hash';
 import { signAdminSetPasswordToken } from '@/lib/admin-session';
 import { rateLimit, clientIp } from '@/lib/rate-limit';
 import { sendAdminPasswordResetEmail } from '@/lib/email';
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
       const token = await signAdminSetPasswordToken({ adminId: admin.id, email: admin.email });
       await prisma.adminUser.update({
         where: { id: admin.id },
-        data: { setPasswordToken: token, setPasswordTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000) },
+        data: { setPasswordToken: hashToken(token) /* M9: only the hash is stored */, setPasswordTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000) },
       });
       const resetLink = `${process.env.NEXT_PUBLIC_URL || 'https://greenreserve.app'}/admin/set-password?token=${encodeURIComponent(token)}`;
       try {
