@@ -1,7 +1,8 @@
 // BIRDIE_AI_SPEC B1, ASSIST-1 (Cam 2026-11-24) — the dashboard assistant. Persona and knowledge come from WHERE the
 // request lands and WHO is asking (the session), never from the client.
 //
-// GET  → { enabled, persona, greeting, chips, knows }   (the widget decides whether to render; knows = "What it knows")
+// GET  → { enabled, persona, greeting, chips }   (the widget decides whether to render)
+// GET ?knows=1 → { knows } — "What it knows" for this login, read when the panel opens
 // POST → streams NDJSON events, one per line (lib/assistant/run) — {"t":"text"} reply text, {"t":"status"} while a
 //        lookup runs, {"t":"card","d":ProposalCard} for a drafted change, {"t":"end"} — or a JSON error.
 // PUT  → { applied: { title, path, method, ok, error? } } — the widget reports a confirm card's outcome so every
@@ -44,37 +45,38 @@ function staffSees(session: Parameters<typeof can>[0]): StaffSees {
 }
 
 /**
- * GET runs on every dashboard page (the widget remounts on navigation), so it reads the stored snapshot's section
- * list instead of rebuilding the brief; only a course with no snapshot yet builds it once. Sections this login can't
- * read are left out.
+ * "What it knows" for this login, read when the panel opens (GET ?knows=1), never on every page: it refreshes the
+ * course's snapshot (so "Updated" moves when the text changed) and returns the sections of the brief THIS login's
+ * assistant actually reads, so a count never includes what the login can't see.
  */
 async function knowsFor(courseId: string, sees: StaffSees) {
-  let row = await prisma.courseBrief.findUnique({ where: { courseId_audience: { courseId, audience: 'staff' } }, select: { sections: true, builtAt: true } });
-  if (!row) {
-    const b = await getCourseBrief(courseId, 'staff');
-    row = b ? { sections: b.sections, builtAt: b.builtAt } : null;
-  }
-  if (!row || !Array.isArray(row.sections)) return null;
-  const hidden = new Set<string>([...(sees.settings ? [] : ['setup']), ...(sees.members ? [] : ['memberships'])]);
-  const sections = (row.sections as BriefSection[]).filter(s => s && typeof s.key === 'string' && !hidden.has(s.key));
+  const all = sees.schedule && sees.members && sees.events && sees.settings;
+  const [full, mine] = await Promise.all([
+    getCourseBrief(courseId, 'staff'),
+    all ? Promise.resolve(null) : buildCourseBrief(courseId, 'staff', new Date(), sees),
+  ]);
+  if (!full) return null;
+  const sections: BriefSection[] = (mine ?? full).sections;
   const notes = sections.find(s => s.key === 'notes');
-  return { notes: Number(notes?.count ?? 0) || 0, sections, builtAt: row.builtAt.toISOString() };
+  return { courseName: full.courseName, notes: Number(notes?.count ?? 0) || 0, sections, builtAt: full.builtAt.toISOString() };
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await resolveDashboardSession();
   if (!session) return NextResponse.json({ enabled: false }, { status: 401 });
   if (!birdieEnabled()) return NextResponse.json({ enabled: false });
-  const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { name: true, assistantStaffOn: true } });
+  // Runs on every dashboard page (the widget remounts on navigation): one small read.
+  const course = await prisma.course.findUnique({ where: { id: session.courseId }, select: { assistantStaffOn: true } });
   if (!course || course.assistantStaffOn === false) return NextResponse.json({ enabled: false });
-  const knows = await knowsFor(session.courseId, staffSees(session));
+  if (req.nextUrl.searchParams.get('knows') === '1') {
+    return NextResponse.json({ knows: await knowsFor(session.courseId, staffSees(session)) }, { headers: { 'Cache-Control': 'no-store' } });
+  }
   return NextResponse.json({
     enabled: true,
     persona: 'operator',
     greeting: OPERATOR_GREETING,
     chips: OPERATOR_CHIPS,
     helpsWith: 'how to do anything on this dashboard, and what your course is set to',
-    knows: knows ? { courseName: course.name, ...knows } : null,
   });
 }
 

@@ -163,12 +163,15 @@ const SECRET_Q = 'My name is Pat Golfer, phone 555-0100. Can I walk?';
 
   // 10. The route: course from the session only, caps before the body, the course's staff switch, no message text logged.
   const route = readFileSync(new URL('../src/app/api/birdie/chat/route.ts', import.meta.url), 'utf8');
-  ok('route: every brief read is the session course\'s', !/(get|build)CourseBrief\((?!session\.courseId|courseId)/.test(route) && /knowsFor\(session\.courseId/.test(route));
+  ok('route: every brief read is the session course\'s', !/(get|build)CourseBrief\((?!session\.courseId|courseId)/.test(route) && /knowsFor\(session\.courseId, staffSees\(session\)\)/.test(route));
   ok('route: the body is only read for messages', !/body[?]?\.(courseId|course)\b/.test(route));
   ok('route: caps before the body', route.indexOf('checkCaps(') > 0 && route.indexOf('checkCaps(') < route.indexOf('req.json()'));
   ok('route: honours the course\'s staff switch (GET and POST)', /assistantStaffOn === false\) return NextResponse\.json\(\{ enabled: false \}\)/.test(route) && /if \(!brief\.settings\.staffOn\) return/.test(route));
   ok('route: fails closed without a client', /if \(!client\) return/.test(route));
   ok('route: no conversation log with text', !/logConversation|question,|reply,/.test(route));
+  ok('route: What it knows is read when the panel opens, refreshing the snapshot, for this login', /searchParams\.get\('knows'\) === '1'/.test(route) && /getCourseBrief\(courseId, 'staff'\)/.test(route) && /buildCourseBrief\(courseId, 'staff', new Date\(\), sees\)/.test(route));
+  const widget = readFileSync(new URL('../src/components/birdie/BirdieWidget.tsx', import.meta.url), 'utf8');
+  ok('widget: fetches What it knows each time the panel opens', /fetch\('\/api\/birdie\/chat\?knows=1'/.test(widget) && /\[open, meta\]\)/.test(widget));
   ok('route: the applied log carries no card title (it names golfers)', !/title: str\(/.test(route));
   ok('route: the brief is built for this login\'s permissions', /buildCourseBrief\(session\.courseId, 'staff', new Date\(\), staffSees\(session\)\)/.test(route) && /can\(session, 'members\.view'\)/.test(route) && /can\(session, 'settings\.edit'\)/.test(route));
   ok('route: no model of its own', !/claude-/.test(route));

@@ -14,7 +14,7 @@ import { ASK_EVENT, markBirdieReady } from '@/lib/birdie/ask';
 
 type Turn = { role: 'user' | 'assistant'; content: string; pending?: boolean; error?: boolean; status?: string; cards?: ProposalCard[] };
 type Knows = { courseName: string; notes: number; sections: { key: string; label: string; count: string }[]; builtAt: string };
-type Meta = { enabled: boolean; greeting: string; chips: string[]; helpsWith: string; knows?: Knows | null };
+type Meta = { enabled: boolean; greeting: string; chips: string[]; helpsWith: string };
 
 // ASSIST-1 "What it knows": what the assistant read about this course, and when that last changed. Times in the
 // browser's own clock, like the rest of the dashboard's "Updated" lines.
@@ -84,6 +84,8 @@ export default function BirdieWidget() {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  // "What it knows": read each time the panel opens, so it follows the course's latest changes.
+  const [knows, setKnows] = useState<Knows | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -99,6 +101,16 @@ export default function BirdieWidget() {
     try { if (localStorage.getItem(OPEN_KEY) === '1') setOpen(true); if (localStorage.getItem(TUCK_KEY) === '1') setTucked(true); } catch { /* storage unavailable */ }
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    if (!open || !meta) return;
+    let cancelled = false;
+    fetch('/api/birdie/chat?knows=1', { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then((d: { knows?: Knows | null } | null) => { if (!cancelled) setKnows(d?.knows ?? null); })
+      .catch(() => { /* the panel works without it; the line just doesn't show */ });
+    return () => { cancelled = true; };
+  }, [open, meta]);
 
   useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight }); }, [turns, open]);
 
@@ -228,7 +240,7 @@ export default function BirdieWidget() {
             </div>
             <button type="button" onClick={close} aria-label="Close" className="ml-auto text-ink-muted hover:text-ink transition-colors"><X className="w-4 h-4" /></button>
           </div>
-          {meta.knows && <KnowsPanel knows={meta.knows} />}
+          {knows && <KnowsPanel knows={knows} />}
           <div ref={listRef} aria-live="polite" aria-atomic="false" className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-[200px]">
             <div className="text-sm text-ink">{meta.greeting}</div>
             {turns.length === 0 && <div className="text-[12.5px] text-ink-soft">It reads your course&apos;s live numbers and can draft a change for you to save. It never changes anything by itself. Try one:</div>}
