@@ -227,7 +227,7 @@ async function main() {
   const walk = (d: string): string[] => readdirSync(d).flatMap(f => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : [p]; });
   const files = walk('src').filter(f => /\.(tsx?|jsx?)$/.test(f));
   const linking = files.filter(f => /\.webmanifest|PWA_APPS\.\w+\.manifest/.test(readFileSync(f, 'utf8'))).sort();
-  check('manifests linked only from the two layouts (named in lib/pwa)', linking.join() === ['src/app/admin/layout.tsx', 'src/app/dashboard/layout.tsx', 'src/lib/pwa.ts'].join(), linking);
+  check('manifests linked only from the two layouts (named in lib/pwa)', linking.join() === ['src/app/admin/layout.tsx', 'src/app/dashboard/layout.tsx', 'src/lib/pwa-shared.ts'].join(), linking);
   check('each layout links its own manifest', readFileSync('src/app/dashboard/layout.tsx', 'utf8').includes('manifest={PWA_APPS.dashboard.manifest}') && readFileSync('src/app/admin/layout.tsx', 'utf8').includes('manifest={PWA_APPS.admin.manifest}'));
   const registering = files.filter(f => /import PwaRegister/.test(readFileSync(f, 'utf8'))).sort();
   check('worker registered only from the two layouts', registering.join() === ['src/app/admin/layout.tsx', 'src/app/dashboard/layout.tsx'].join(), registering);

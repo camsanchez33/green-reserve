@@ -5,7 +5,7 @@
 // cookie, not a login setting, on purpose: it is a screen preference (a bright
 // pro shop vs a dark office), it must be known before the first paint, and it
 // needs no permission — every login, staff included, can flip it. Client-safe.
-import { PWA_THEME_COLOR } from './pwa';
+import { PWA_THEME_COLOR } from './pwa-shared';
 
 export const OP_THEME_COOKIE = 'gr_op_theme';
 export type OpTheme = 'light' | 'dark';

@@ -11,30 +11,15 @@
 //   - it never caches a page or an API response: only /_next/static/* (status 200, same origin) and gr-offline.html.
 //   - each deploy is a new version (the commit SHA): skipWaiting + clients.claim, and caches of other versions are
 //     deleted on activate.
-// Kill switch: PWA_KILL=1 in the environment (Vercel applies it on the next deploy), or PWA_KILL_SWITCH below set to
+// Kill switch: PWA_KILL=1 in the environment (Vercel applies it on the next deploy), or PWA_KILL_SWITCH (pwa-shared.ts) set to
 // true. Then /sw.js serves a worker that deletes every GreenReserve cache and unregisters itself, and the layouts
 // unregister instead of registering. docs/RUNBOOK.md → "Installed app (service worker) kill switch".
-// Client-safe: no server imports.
+// Server only (reads process.env): the browser imports the constants from ./pwa-shared instead.
 import { liveCommit } from './build-info';
+import { PWA_KILL_SWITCH, PWA_CACHE_PREFIX, PWA_OFFLINE_URL } from './pwa-shared';
 
-/** In-code kill switch. Flip to true and deploy to remove the service worker from every installed browser. */
-export const PWA_KILL_SWITCH = false;
-
-/** Both registrations' scopes. The SW script lives at /sw.js; each layout registers it with its own scope. */
-export const PWA_SCOPES = { dashboard: '/dashboard', admin: '/admin' } as const;
-export type PwaScope = (typeof PWA_SCOPES)[keyof typeof PWA_SCOPES];
-
-export const PWA_CACHE_PREFIX = 'gr-pwa-';
-export const PWA_OFFLINE_URL = '/gr-offline.html';
-
-/** Each app's manifest and home-screen title (the manifests' "name"). */
-export const PWA_APPS = {
-  dashboard: { manifest: '/dashboard.webmanifest', title: 'GreenReserve' },
-  admin: { manifest: '/admin.webmanifest', title: 'GreenReserve Admin' },
-} as const;
-
-/** theme-color per dashboard look (the page colour of each look in globals.css) and for the admin glass. */
-export const PWA_THEME_COLOR = { dark: '#1D1E1D', light: '#E9EAE6', admin: '#0C1C17' } as const;
+export { PWA_KILL_SWITCH, PWA_SCOPES, PWA_CACHE_PREFIX, PWA_OFFLINE_URL, PWA_APPS, PWA_THEME_COLOR } from './pwa-shared';
+export type { PwaScope } from './pwa-shared';
 
 /** Server only: is the worker switched off? */
 export function pwaKilled(env: Record<string, string | undefined> = process.env): boolean {

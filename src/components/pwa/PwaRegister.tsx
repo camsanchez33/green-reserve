@@ -7,7 +7,7 @@
 // It also catches beforeinstallprompt as early as the page allows (an inline listener, so an event that fires
 // before React hydrates is not lost) for the "Install app" button (useInstallApp).
 import { useEffect } from 'react';
-import { PWA_CACHE_PREFIX, type PwaScope } from '@/lib/pwa';
+import { PWA_CACHE_PREFIX, type PwaScope } from '@/lib/pwa-shared';
 import { captureInstallPrompt } from './install-store';
 
 // Runs during HTML parsing, before hydration. Keeps the event for the button instead of Chrome's own mini-bar.
