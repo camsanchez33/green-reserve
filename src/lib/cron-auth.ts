@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { secretEquals } from './secret-compare';
 
 /**
  * The cron bearer check, in one place.
@@ -30,7 +31,8 @@ export function cronAuthFailure(req: NextRequest): NextResponse | null {
     return NextResponse.json({ error: 'Cron is not configured' }, { status: 503 });
   }
 
-  if (req.headers.get('authorization') !== `Bearer ${secret}`) {
+  // Constant time (audit 2026-11-24 L10).
+  if (!secretEquals(req.headers.get('authorization'), `Bearer ${secret}`)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

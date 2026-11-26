@@ -42,7 +42,7 @@ export async function signMemberMagicToken(payload: Proven & { membershipId?: st
 
 export async function verifyMemberMagicToken(token: string): Promise<Proven | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
     return readProven(payload, 'member_magic');
   } catch { return null; }
 }
@@ -61,7 +61,7 @@ export async function getMemberSession(): Promise<Proven | null> {
   const token = cookieStore.get('gr_member')?.value;
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
     return readProven(payload, 'member_session');
   } catch { return null; }
 }
