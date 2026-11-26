@@ -118,6 +118,17 @@ ok('admin search: the dark glass field', g.includes('[data-admin-shell] .ui-sear
 const SEARCHES = ['src/components/dashboard/OperatorSearch.tsx', 'src/app/dashboard/page.tsx', 'src/app/dashboard/shop/page.tsx', 'src/components/dashboard/StockTab.tsx', 'src/components/dashboard/money/revenue/ui.tsx', 'src/components/dashboard/money/CancellationsPanel.tsx', 'src/components/dashboard/money/PaymentsPanel.tsx', 'src/components/dashboard/events/EventPlayers.tsx', 'src/components/dashboard/members/ResidentsCard.tsx', 'src/app/dashboard/settings/page.tsx', 'src/components/admin/AdminSidebar.tsx', 'src/app/admin/golfers/page.tsx', 'src/app/admin/system/page.tsx', 'src/app/admin/support/page.tsx', 'src/app/admin/announcements/page.tsx'];
 ok('every page search carries the .ui-search hook', SEARCHES.every(f => /ui-search/.test(readFileSync(f, 'utf8'))), SEARCHES.filter(f => !/ui-search/.test(readFileSync(f, 'utf8'))));
 
+// UI-STYLE phone layouts (Cam 2026-11-26, the mockup's "On a phone"): same content and actions, sized for a thumb.
+const phone = (() => { const i = css.indexOf('@media screen and (max-width: 767px) {'); return i < 0 ? '' : css.slice(i, css.indexOf('\n}\n', i)); })();
+const sheetPage = readFileSync('src/app/dashboard/page.tsx', 'utf8');
+ok('phone: the tee sheet opens in List unless this browser picked a view', sheetPage.includes("else if (window.matchMedia('(max-width: 767px)').matches) setSheetViewState('list');") && sheetPage.includes("' ui-stats mb-4'"));
+ok('phone: the day numbers fit in one row', phone.includes('.ui-stats { grid-template-columns: repeat(5, minmax(0, 1fr));'));
+ok('phone: the primary action is pinned above the tab bar', sheetPage.includes('className="ui-fab ') && phone.includes('.ui-fab {\n    position: fixed;') && phone.includes('.bg-white.shadow-card:has(.ui-fab, [aria-modal="true"]) { -webkit-backdrop-filter: none; backdrop-filter: none; }'));
+ok('phone: 44px tap targets on the page and in pop-ups', phone.includes(':is(main, .fixed.inset-0) :is(button, [role="tab"], select) { min-height: 44px; }') && phone.includes(':is(main, .fixed.inset-0) :is(button, a)[aria-label] { min-width: 44px; min-height: 44px; }'));
+ok('phone: dialogs are sheets from the bottom', phone.includes('border-radius: 14px 14px 0 0;') && phone.includes('align-items: flex-end;'));
+ok('admin phone: a bottom tab bar (More opens the menu), 44px targets, menu button gone', adminCss.includes('.tabbar {\n    display: flex; position: fixed;') && adminCss.includes('.ibtn, .search { min-width: 44px; height: 44px; }') && /@media \(max-width: 899px\) \{\n  \.menuBtn \{ display: none; \}/.test(adminCss) && readFileSync('src/components/admin/AdminSidebar.tsx', 'utf8').includes('<nav className={g.tabbar} aria-label="Admin sections">'));
+ok('admin Overview: every stat card on one row on a computer', adminCss.includes('.kpis { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);'));
+
 // ── Admin: dark glass only, neutral; the menu's hover and active are white at low alpha (no green tint).
 const adb = (() => { const i = adminCss.indexOf('.shell[data-theme="dark"] {'); return adminCss.slice(i, adminCss.indexOf('\n}', i)); })();
 const whiteAlpha = (n: string) => new RegExp(`${n}: rgba\\(255, 255, 255, \\.\\d+\\);`).test(adb);

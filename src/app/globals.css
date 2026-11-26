@@ -282,6 +282,40 @@ body {
 [data-admin-shell] .ui-search:focus-within { border-color: rgb(255 255 255 / .32); }
 [data-admin-shell] .ui-search input { background: transparent; color: inherit; }
 }
+/* UI-STYLE phone layouts (Cam 2026-11-26, the mockup's "On a phone"): same content and actions, sized for a thumb.
+   Both looks (the colours come from the tokens). Admin's phone rules are in admin-glass.module.css. */
+@media screen and (max-width: 767px) {
+  /* The tee sheet's day numbers fit across in one row (5, or 4 / 3 when fewer show). */
+  .op-look:has(.op-rail) .ui-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+  .op-look:has(.op-rail) .ui-stats:has(> :nth-child(4):last-child) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .op-look:has(.op-rail) .ui-stats:has(> :nth-child(3):last-child) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .op-look:has(.op-rail) .ui-stats > * { padding: 6px; min-width: 0; }
+  .op-look:has(.op-rail) .ui-stats > * > div:first-child { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .op-look:has(.op-rail) .ui-stats > * > div:nth-child(2) { font-size: 14px; white-space: nowrap; }
+  .op-look:has(.op-rail) .ui-stats > * > div:nth-child(2) span { font-size: 10px; }
+  .op-look:has(.op-rail) .ui-stats > * > div:nth-child(3) { font-size: 9.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* The page's primary action stays in reach: pinned above the tab bar. */
+  .op-look:has(.op-rail) .ui-fab {
+    position: fixed; right: 16px; bottom: calc(56px + env(safe-area-inset-bottom) + 12px); z-index: 25;
+    min-height: 44px; padding: 0 18px; border-radius: 12px; font-size: 14px;
+    background-color: var(--color-pine); color: var(--color-page); box-shadow: 0 6px 16px rgb(0 0 0 / .18);
+  }
+  /* A blur makes its panel the box a fixed child is placed in, so the panel holding the pinned action drops it on a phone
+     (over the flat page the blur showed nothing anyway). Same for a panel holding a dialog. */
+  .op-look:has(.op-rail) .bg-white.shadow-card:has(.ui-fab, [aria-modal="true"]) { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  /* 44px tap targets for every control on the page and in its pop-ups. */
+  .op-look:has(.op-rail) :is(main, .fixed.inset-0) :is(button, [role="tab"], select) { min-height: 44px; }
+  .op-look:has(.op-rail) :is(main, .fixed.inset-0) :is(button, a)[aria-label] { min-width: 44px; min-height: 44px; }
+  .op-look:has(.op-rail) :is(main, .fixed.inset-0) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) { min-height: 44px; }
+  .op-look:has(.op-rail) .ui-stats :is(button, a) { min-height: 0; min-width: 0; }
+  /* Dialogs open as sheets from the bottom: full width, rounded top, scrolling inside. Covers <Modal> (role="dialog") and the
+     hand-built centred pop-ups (a fixed backdrop centring one panel). */
+  :is(.op-look:has(.op-rail), [data-admin-shell]) :is(.fixed.inset-0:has(> [role="dialog"][aria-modal="true"]), .fixed.inset-0.flex.items-center.justify-center) { align-items: flex-end; justify-content: center; padding: 0; }
+  :is(.op-look:has(.op-rail), [data-admin-shell]) :is(.fixed.inset-0 > [role="dialog"][aria-modal="true"], .fixed.inset-0.flex.items-center.justify-center > .bg-white) {
+    width: 100%; max-width: none; height: auto; margin: 0; max-height: 92vh; overflow-y: auto;
+    border-radius: 14px 14px 0 0; padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+}
 @media screen and (prefers-reduced-motion: reduce) { .op-look:has(.op-rail) .op-tab { transition: none; } }
 @media screen and (prefers-reduced-transparency: reduce) {
   .op-look:has(.op-rail) .bg-white.shadow-card:not(.op-tab) { background-color: var(--op-panel-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
