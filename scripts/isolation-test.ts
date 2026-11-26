@@ -1409,7 +1409,7 @@ async function main() {
       checkStatus('…invite → 403', (await api('/api/operator/staff/invite', { method: 'POST', cookie: sk, body: { name: 'X', email: `${TS}-team-x@test.local` } })).status, 403);
       checkStatus('…or change their own access → 403', (await api('/api/operator/staff', { method: 'PATCH', cookie: sk, body: { id: st.id, permissions: ['money.refund_rounds'] } })).status, 403);
       checkStatus('…or read the history → 403', (await api('/api/operator/team/history', { cookie: sk })).status, 403);
-      checkStatus('…or add staff the old way → 403', (await api('/api/operator/staff', { method: 'POST', cookie: sk, body: { name: 'X', email: `${TS}-team-z@test.local` } })).status, 403);
+      checkStatus('…and the old way to add staff is gone for everyone (audit 2026-11-24 L9) → 405', (await api('/api/operator/staff', { method: 'POST', cookie: sk, body: { name: 'X', email: `${TS}-team-z@test.local` } })).status, 405);
       checkStatus('Logged out → 401', (await api('/api/operator/team')).status, 401);
 
       const made = await api('/api/operator/team/roles', { method: 'POST', cookie: cookieA, body: { fromSuggested: 'starter' } });
