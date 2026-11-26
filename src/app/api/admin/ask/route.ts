@@ -98,7 +98,8 @@ export async function POST(req: NextRequest) {
           if (said && !/\s$/.test(said)) say('\n\n');
           stream = request(messages);
         }
-        console.log(JSON.stringify({ ev: 'admin.ask', adminId: session.adminId, question, calls, chars: said.length, ms: Date.now() - started }));
+        // No question text in the log (ASSIST-1: logs never carry what was asked).
+        console.log(JSON.stringify({ ev: 'admin.ask', adminId: session.adminId, calls, chars: said.length, ms: Date.now() - started }));
       } catch (err) {
         // Headers are sent; the stream is the only channel left.
         console.error('[admin-ask] stream failed:', err);
