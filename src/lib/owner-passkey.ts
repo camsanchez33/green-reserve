@@ -22,16 +22,23 @@ export function relyingParty() {
 
 const transportsOf = (t: string[]) => t as AuthenticatorTransportFuture[];
 
-async function setChallenge(adminId: string, challenge: string) {
-  await prisma.adminUser.update({ where: { id: adminId }, data: { passkeyChallenge: challenge, passkeyChallengeExpiry: new Date(Date.now() + CHALLENGE_MS) } });
+// Audit 2026-11-24 M6 review: the one slot is tagged with what armed it. A challenge armed to sign in or
+// confirm ("Confirm it's you" arms one with no confirm needed) could be answered by a passkey REGISTRATION,
+// so adding a passkey skipped the fresh confirm its options need. Each use now takes only its own kind.
+export type ChallengePurpose = 'register' | 'authenticate';
+const TAG: Record<ChallengePurpose, string> = { register: 'reg:', authenticate: 'auth:' };
+
+async function setChallenge(adminId: string, challenge: string, purpose: ChallengePurpose) {
+  await prisma.adminUser.update({ where: { id: adminId }, data: { passkeyChallenge: TAG[purpose] + challenge, passkeyChallengeExpiry: new Date(Date.now() + CHALLENGE_MS) } });
 }
 
-/** Take the challenge in flight, once. Null when there is none or it expired. */
-async function consumeChallenge(adminId: string): Promise<string | null> {
+/** Take the challenge in flight, once, if it was armed for `purpose`. Null when there is none, it expired, or it is the other kind. */
+export async function consumeChallenge(adminId: string, purpose: ChallengePurpose): Promise<string | null> {
   const a = await prisma.adminUser.findUnique({ where: { id: adminId }, select: { passkeyChallenge: true, passkeyChallengeExpiry: true } });
   if (!a?.passkeyChallenge || !a.passkeyChallengeExpiry || a.passkeyChallengeExpiry < new Date()) return null;
+  if (!a.passkeyChallenge.startsWith(TAG[purpose])) return null;
   const n = await prisma.adminUser.updateMany({ where: { id: adminId, passkeyChallenge: a.passkeyChallenge }, data: { passkeyChallenge: null, passkeyChallengeExpiry: null } });
-  return n.count === 1 ? a.passkeyChallenge : null;
+  return n.count === 1 ? a.passkeyChallenge.slice(TAG[purpose].length) : null;
 }
 
 export async function hasPasskey(adminId: string): Promise<boolean> {
@@ -51,12 +58,12 @@ export async function registrationOptions(admin: { id: string; email: string; na
     excludeCredentials: existing.map(p => ({ id: p.credentialId, transports: transportsOf(p.transports) })),
     authenticatorSelection: { residentKey: 'preferred', userVerification: 'required' },
   });
-  await setChallenge(admin.id, options.challenge);
+  await setChallenge(admin.id, options.challenge, 'register');
   return options;
 }
 
 export async function addPasskey(adminId: string, response: RegistrationResponseJSON, name: string): Promise<{ ok: true; name: string } | { ok: false; error: string }> {
-  const expectedChallenge = await consumeChallenge(adminId);
+  const expectedChallenge = await consumeChallenge(adminId, 'register');
   if (!expectedChallenge) return { ok: false, error: 'That took too long — try adding the passkey again.' };
   const { rpID, origin } = relyingParty();
   let verified;
@@ -85,14 +92,14 @@ export async function authenticationOptions(adminId: string) {
     rpID, userVerification: 'required',
     allowCredentials: keys.map(p => ({ id: p.credentialId, transports: transportsOf(p.transports) })),
   });
-  await setChallenge(adminId, options.challenge);
+  await setChallenge(adminId, options.challenge, 'authenticate');
   return options;
 }
 
 /** True when this response proves one of this owner's passkeys, now. Never throws. */
 export async function verifyPasskeySignIn(adminId: string, response: AuthenticationResponseJSON): Promise<boolean> {
   const key = typeof response?.id === 'string' ? await prisma.ownerPasskey.findUnique({ where: { credentialId: response.id } }) : null;
-  const expectedChallenge = await consumeChallenge(adminId);
+  const expectedChallenge = await consumeChallenge(adminId, 'authenticate');
   if (!key || key.adminId !== adminId || !expectedChallenge) return false;
   const { rpID, origin } = relyingParty();
   try {
