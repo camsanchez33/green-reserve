@@ -12,10 +12,25 @@ import { BOOKING_ACCENT_COLOURS, BOOKING_ACCENTS, type BookingLook, type Booking
 export type { BookingLook, BookingAccent };
 export type CourseLook = { look: BookingLook; accent: BookingAccent };
 
+// UI style overhaul (Cam 2026-11-26, lanes/build.md "UI style overhaul — APPROVED"): Light is SOLID (white cards on a
+// neutral grey page, R=G=B) and Dark is GLASS (a flat #141414 page, translucent panels with a blur, a faint white hairline,
+// a soft top highlight and a soft shadow; no colour cast). Fields match their screen: white with a thin border on Light,
+// a dark glass field with a faint light edge on Dark. `blur` and `shadow` are what a panel wears in each look.
 const NEUTRAL: Record<BookingLook, Record<string, string>> = {
-  light: { bg: '#EEEFEA', paper: '#FAFAF7', card: '#FFFFFF', ink: '#141814', soft: '#50554F', muted: '#686D67', line: '#E1E3DC', bad: '#A3452F', 'bad-soft': '#FBEAE6' },
-  dark:  { bg: '#111211', paper: '#1A1C1A', card: '#222422', ink: '#EDEEEB', soft: '#C3C6C0', muted: '#A6AAA3', line: '#343734', bad: '#EE9480', 'bad-soft': '#3A2220' },
+  light: {
+    bg: '#F2F2F2', paper: '#F2F2F2', card: '#FFFFFF', ink: '#161616', soft: '#4A4A4A', muted: '#5C5C5C', line: '#E4E4E4',
+    field: '#FFFFFF', 'field-edge': '#D4D4D4', bad: '#A3452F', 'bad-soft': '#FBEAE6',
+    blur: 'none', shadow: '0 1px 2px rgb(20 20 20 / .06)',
+  },
+  dark: {
+    bg: '#141414', paper: '#141414', card: 'rgb(38 38 38 / .62)', ink: '#EDEDED', soft: '#C6C6C6', muted: '#A8A8A8', line: 'rgb(255 255 255 / .10)',
+    field: 'rgb(255 255 255 / .06)', 'field-edge': 'rgb(255 255 255 / .14)', bad: '#EE9480', 'bad-soft': '#3A2220',
+    blur: 'blur(30px) saturate(1.8)', shadow: 'inset 0 1px 0 rgb(255 255 255 / .07), 0 1px 2px rgb(0 0 0 / .30), 0 10px 30px rgb(0 0 0 / .28)',
+  },
 };
+
+/** Dark's panels as opaque colours, for the pages still drawn with the site's classes (lookSiteVars), which have no glass. */
+const DARK_SOLID = { card: '#262626', line: '#333333', lineSoft: '#2A2A2A', lineStrong: '#4A4A4A' } as const;
 
 /** The status colours on Dark (the site's dark values; red the look's own --g-bad). */
 export const DARK_STATUS = { '--color-ok': '#7BD9A4', '--color-warn': '#F2C46B', '--color-bad': NEUTRAL.dark.bad } as const;
@@ -61,8 +76,8 @@ export function golferLookVars(course: { booking_look?: Partial<CourseLook> | nu
   if (accent) {
     const c = BOOKING_ACCENT_COLOURS[accent][mode];
     ({ acc, hover, soft, onAcc } = c);
-    // The header band keeps the preset's own colour in both looks, with white on it; Black lifts to a grey on Dark.
-    band = mode === 'dark' && accent === 'black' ? '#2C2F33' : BOOKING_ACCENT_COLOURS[accent].light.acc;
+    // The header band keeps the preset's own colour in both looks, with white on it; Black lifts to a neutral grey on Dark.
+    band = mode === 'dark' && accent === 'black' ? '#2C2C2C' : BOOKING_ACCENT_COLOURS[accent].light.acc;
   } else {
     // A colour that is no preset (only without booking_look): as it is, on Light.
     acc = hex; hover = hex; soft = `color-mix(in srgb, ${hex} 10%, #FFFFFF)`; onAcc = '#FFFFFF'; band = hex;
@@ -114,9 +129,9 @@ export function lookSiteVars(course: { booking_look?: Partial<CourseLook> | null
   if (lookOf(course).mode === 'dark') {
     const n = NEUTRAL.dark;
     Object.assign(vars, {
-      '--color-paper': n.bg, '--color-card': n.card, '--color-ink': n.ink, '--color-ink-soft': n.soft,
-      '--color-ink-muted': n.muted, '--color-ink-faint': n.muted, '--color-line': n.line, '--color-line-soft': '#2A2D2A',
-      '--color-line-strong': '#4A4D4A',
+      '--color-paper': n.bg, '--color-card': DARK_SOLID.card, '--color-ink': n.ink, '--color-ink-soft': n.soft,
+      '--color-ink-muted': n.muted, '--color-ink-faint': n.muted, '--color-line': DARK_SOLID.line, '--color-line-soft': DARK_SOLID.lineSoft,
+      '--color-line-strong': DARK_SOLID.lineStrong,
     });
   }
   return vars as CSSProperties;
