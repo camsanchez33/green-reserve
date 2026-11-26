@@ -51,21 +51,23 @@ export function smsSegments(text: string): { chars: number; gsm: boolean; segmen
  * Words a shortened course name never ends on ("The Old Course at" reads as a mistake): connectors and
  * stray punctuation are dropped along with the word after them.
  */
-const DANGLING = new Set(['at', 'of', 'the', 'and', '&', '-', 'on', 'in', 'by', 'for', 'a', '+', '/']);
+const DANGLING = new Set(['at', 'of', 'the', 'and', 'on', 'in', 'by', 'for', 'a', 'de', 'du', 'la', 'le', 'les', 'des', 'del', 'el', 'los', 'las']);
+const stripEnd = (w: string) => w.replace(/[,;:&/+-]+$/, '');
 
 /**
  * A course name shortened to whole words only (Cam 2026-11-26, SMS-WORDS): drop words from the end,
  * never cut one in half, never end on a connector or punctuation. The first word always stays, so a
- * name is never emptied; one word too long to fit on its own is kept whole and the text is allowed past
- * one segment (no real course name comes near: it would need a single 40+ character word).
+ * name is never emptied; a first word too long to fit on its own (38+ characters in the opt-in) is kept
+ * whole and the text is allowed past one segment (Build ruling: no real course name comes near).
  */
 export function wordsThatFit(name: string, fits: (n: string) => boolean): string {
   let words = name.split(' ').filter(Boolean);
   if (fits(words.join(' '))) return words.join(' ');
+  const dangles = (w: string) => { const s = stripEnd(w); return !s || DANGLING.has(s.toLowerCase()); };
   while (words.length > 1) {
     words = words.slice(0, -1);
-    while (words.length > 1 && DANGLING.has(words[words.length - 1].toLowerCase())) words = words.slice(0, -1);
-    words[words.length - 1] = words[words.length - 1].replace(/[,;:&/+-]+$/, '') || words[words.length - 1];
+    while (words.length > 1 && dangles(words[words.length - 1])) words = words.slice(0, -1);
+    words[words.length - 1] = stripEnd(words[words.length - 1]) || words[words.length - 1];
     if (fits(words.join(' '))) break;
   }
   return words.join(' ');

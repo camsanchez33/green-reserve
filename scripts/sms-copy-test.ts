@@ -39,18 +39,22 @@ const N40 = 'The Golf Club at Whispering Pines Estate';
 const N60 = 'The Old Course at Whispering Pines Country Club & Golf Links';
 const nameUsed = (full: string, text: string) => {
   if (text.startsWith(full + ' ')) return full;
-  const words = full.split(' ');
-  for (let k = words.length - 1; k >= 1; k--) { const p = words.slice(0, k).join(' '); if (text.startsWith(p + ' ')) return p; }
+  const words = full.split(' ').filter(Boolean);
+  for (let k = words.length - 1; k >= 1; k--) {
+    const p = words.slice(0, k).join(' ');
+    for (const q of [p, p.replace(/[,;:&/+-]+$/, '')]) if (text.startsWith(q + ' ')) return q;
+  }
   return null;
 };
 const midWord = (full: string, text: string) => {
   const used = nameUsed(full, text);
   if (used === null) return 'course name missing';
   if (used === full) return null;
-  const next = full.slice(used.length + 1).split(' ')[0];
+  const rest = full.split(' ').filter(Boolean).slice(used.split(' ').length);
+  const next = rest[0] ?? '';
   const after = text.slice(used.length + 1).split(' ')[0];
   if (after.length < next.length && next.startsWith(after)) return `cut mid-word ("${used} ${after}")`;
-  if (/^(at|of|the|and|&|-|on|in|by|for|a)$/i.test(used.split(' ').pop()!)) return `ends on a connector ("${used}")`;
+  if (/^(at|of|the|and|on|in|by|for|a|de|du|la|le|les|des|del|el|los|las)$/i.test(used.split(' ').pop()!) || /[,;:&/+-]$/.test(used)) return `ends on a connector or punctuation ("${used}")`;
   return null;
 };
 
@@ -82,6 +86,16 @@ for (const course of [LONG, N10, N26, N40, N60])
 check('10- and 26-character names stay whole in both confirmations and HELP', [N10, N26].every(n => [T.optInText(n), T.alertOptInText(n), T.helpText(n, '(555) 010-2000')].every(t => t.startsWith(`${n} via GreenReserve: `))));
 check('the 40-character name gives way a whole word: "The Golf Club at Whispering Pines via …"', T.optInText(N40).startsWith('The Golf Club at Whispering Pines via GreenReserve: '), T.optInText(N40));
 check('the 60-character name never ends on "&": "… Country Club via GreenReserve" in HELP', !/ & via /.test(T.helpText(N60, '(555) 010-2000')) && !/ at via /.test(T.optInText(N60)), [T.helpText(N60, '(555) 010-2000'), T.optInText(N60)]);
+for (const [name, max, want] of [
+  ['Course at, Whispering Pines', 12, 'Course'],
+  ['Club of- Whispering', 9, 'Club'],
+  ['Pine Ridge Golf &, Country Club', 20, 'Pine Ridge Golf'],
+  ['Pines Golf Club, The Resort', 20, 'Pines Golf Club'],
+  ['The  Old   Course', 8, 'The Old'],
+  ['Wailea Golf Club - Gold Course', 20, 'Wailea Golf Club'],
+  ['Club de Golf de la Vallee du Richelieu', 30, 'Club de Golf de la Vallee'],
+  ['Golf + Country / Club', 15, 'Golf + Country'],
+] as const) check(`wordsThatFit("${name}", ${max}) = "${want}" (punctuation stripped before the connector check)`, T.wordsThatFit(name, n => n.length <= max) === want, T.wordsThatFit(name, n => n.length <= max));
 check('wordsThatFit keeps the first word even when nothing fits, and never cuts it', T.wordsThatFit('Supercalifragilistic Links', () => false) === 'Supercalifragilistic');
 check('HELP for a course with a name but no phone still says "<Course> via GreenReserve" with the support address', T.helpText(C, '') === `Maple Run Golf Course via GreenReserve: Booking texts. Questions? support@greenreserve.app. Msg & data rates may apply. Reply STOP to opt out.` && T.helpText(C, '  ') === T.helpText(C, ''));
 check('everyday texts are unchanged: no "via GreenReserve"', samples(C).filter(s => s.stop !== false && s.name !== 'HELP reply').every(s => !s.text.includes('via GreenReserve')));
