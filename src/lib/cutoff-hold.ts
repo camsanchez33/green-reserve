@@ -58,6 +58,16 @@ export async function chargeCutoffHold(bookingId: string, now: Date = new Date()
 
   const amountCents = Math.round(booking.cancellationFeeTotal);
   const account = booking.course.stripeAccountId;
+  // Audit 2026-11-24 M1: the hold CLAIMS the round before it is charged, like every other card charge,
+  // so a cancel (which now claims too) can't run while it is in flight: the cancel answers "being
+  // charged" and, tried again, finds the hold already taken. The claim is let go on every way out.
+  const stamp = new Date();
+  const claimed = await prisma.booking.updateMany({
+    where: { id: bookingId, status: 'confirmed', paymentStatus: 'card_on_file', readerStartedAt: null, ...notBeingCharged(stamp.getTime()) },
+    data: { shopLockedAt: stamp },
+  });
+  if (!claimed.count) return 'not_due';
+  const unclaim = () => prisma.booking.updateMany({ where: { id: bookingId, shopLockedAt: stamp }, data: { shopLockedAt: null } }).catch(() => {});
   console.log(JSON.stringify({ ev: 'cron.cancelfee.attempt', bookingId, amountCents }));
   let pi: Awaited<ReturnType<typeof chargeOnConnectedAccount>>;
   try {
@@ -79,6 +89,7 @@ export async function chargeCutoffHold(bookingId: string, now: Date = new Date()
     // charges the whole round — a day early. Surfacing it in admin Problems is
     // the admin side's (money-problems.ts).
     const message = err instanceof Error ? err.message : String(err);
+    await unclaim();
     console.error(JSON.stringify({ ev: 'cron.cancelfee.fail', bookingId, error: message }));
     // Both crons run at 09:00: the other one charging this same key right now is
     // not a decline — it records the hold itself.
@@ -95,10 +106,12 @@ export async function chargeCutoffHold(bookingId: string, now: Date = new Date()
   // transaction that could time out after the charge); the event is best-effort.
   const recorded = await prisma.booking.updateMany({
     // AUDIT-1: …and no round charge claimed the booking while the hold was charged (it's refunded below).
-    where: { id: bookingId, status: 'confirmed', paymentStatus: 'card_on_file', ...notBeingCharged(now.getTime()) },
-    data: { paymentStatus: 'cancellation_fee_charged', cancellationFeeChargeId: pi.id, cancellationFeeChargedAt: new Date() },
+    // M1: only while this run still holds its own claim (it lets go of it in the same write).
+    where: { id: bookingId, status: 'confirmed', paymentStatus: 'card_on_file', shopLockedAt: stamp },
+    data: { paymentStatus: 'cancellation_fee_charged', cancellationFeeChargeId: pi.id, cancellationFeeChargedAt: new Date(), shopLockedAt: null },
   });
   if (!recorded.count) {
+    await unclaim();
     const after = await prisma.booking.findUnique({ where: { id: bookingId }, select: { cancellationFeeChargeId: true, status: true, paymentStatus: true } });
     if (after?.cancellationFeeChargeId === pi.id) return 'recorded_elsewhere';
     try {

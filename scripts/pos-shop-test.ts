@@ -39,6 +39,8 @@ s.paymentIntents.create = async (p: { amount: number; application_fee_amount?: n
   sent.charges.push(p); return { id: `pi_${TAG}_${++piSeq}`, amount: p.amount, created: Math.floor(Date.now() / 1000) };
 };
 s.refunds.create = async (p: { amount?: number; refund_application_fee?: boolean }) => { sent.refunds.push(p); return { id: `re_${TAG}_${sent.refunds.length}`, amount: p.amount ?? 0 }; };
+// Audit 2026-11-24 L5: a round's refund cap is read from Stripe's list for its PaymentIntent — answered from what was refunded here.
+s.refunds.list = async (q: { payment_intent?: string }) => ({ data: (sent.refunds as { payment_intent?: string; amount?: number }[]).filter(r => !q.payment_intent || r.payment_intent === q.payment_intent).map(r => ({ amount: r.amount ?? 0, status: 'succeeded' })) });
 
 async function cleanup() {
   const courses = await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } });

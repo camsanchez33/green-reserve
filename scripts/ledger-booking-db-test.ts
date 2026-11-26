@@ -62,22 +62,25 @@ async function cleanup() {
   const again = await performCancellation(three.id, STAFF, { notifySlotAlerts: false });
   ok('a third cancel afterwards is refused', 'error' in again && again.status === 409);
 
-  // A golfer's late cancel (fee charged now) loses to a waived weather cancel that
-  // commits while the golfer's charge is in flight: the fee goes back, on the record.
+  // A golfer's late cancel (fee charged now) while a waived weather cancel arrives mid-charge.
+  // Audit 2026-11-24 M1: the golfer's cancel holds the round's claim, so the weather cancel is refused
+  // ("being charged") instead of racing it; the golfer's cancel completes with its fee, and nothing is refunded.
   const fc = await prisma.course.create({ data: { name: 'Ledger Fee GC', slug: `${TAG}-b`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '0', holes: 18, timezone: 'UTC', stripeAccountId: 'acct_lb', stripeAccountActive: true } });
   const soon = new Date(Date.now() + 2 * 3600_000);
   const ft = await prisma.teeTime.create({ data: { courseId: fc.id, date: soon.toISOString().slice(0, 10), time: soon.toISOString().slice(11, 16), holes: 18, greenFeeCents: 5000, cartFeeCents: 0, playersAvailable: 4, playersBooked: 2, status: 'available' } });
   const late = await prisma.booking.create({ data: { teeTimeId: ft.id, courseId: fc.id, golferName: 'Late', golferEmail: `${TAG}+late@t.local`, players: 2,
     greenFeeTotal: 10000, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 10000, status: 'confirmed', paymentStatus: 'card_on_file',
     stripeCustomerId: 'cus_x', stripePaymentMethodId: 'pm_x', cancellationFeeTotal: 1000, cancellationHoursAtBooking: 24, lateFeeTimingAtBooking: 'late_cancel' } });
-  duringCharge = async () => { await performCancellation(late.id, { type: 'system' }, { notifySlotAlerts: false, waiveFee: true, courseCalledOff: 'weather' }); };
+  let weather: unknown = null;
+  duringCharge = async () => { weather = await performCancellation(late.id, { type: 'system' }, { notifySlotAlerts: false, waiveFee: true, courseCalledOff: 'weather' }); };
   const before = refunds.length;
   const lost = await performCancellation(late.id, { type: 'golfer', id: null }, { notifySlotAlerts: false });
   const lb = await prisma.booking.findUniqueOrThrow({ where: { id: late.id } });
   const ledger = await prisma.paymentEvent.findMany({ where: { bookingId: late.id, kind: 'refund' } });
-  ok('a late cancel beaten by a waived cancel mid-charge: refused', 'error' in lost && lost.status === 409, lost);
-  ok('…its late fee is refunded, and the refund is on the ledger', refunds.length === before + 1 && ledger.length === 1, { refunds: refunds.length - before, ledger: ledger.length });
-  ok('…and the booking says no fee kept', lb.status === 'cancelled' && !lb.cancellationFeeChargeId && lb.cancellationFeeTotal === 0, lb);
+  ok('a waived cancel arriving while a late cancel charges its fee is refused (M1: the late cancel holds the claim)', !!weather && (weather as { status?: number }).status === 409, weather);
+  ok('…and the late cancel goes through with its fee', 'success' in lost && lost.feeCharged === true, lost);
+  ok('…nothing is refunded and nothing extra is on the ledger', refunds.length === before && ledger.length === 0, { refunds: refunds.length - before, ledger: ledger.length });
+  ok('…and the booking says the fee was kept', lb.status === 'cancelled' && !!lb.cancellationFeeChargeId && lb.paymentStatus === 'cancellation_fee_charged', lb);
 
   // R-CRON-007: the check-in email's dedup is claimed, and a failed send is put back.
   // (No RESEND_API_KEY here, so every send fails — the path that matters.)

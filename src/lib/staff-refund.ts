@@ -16,6 +16,7 @@
 //    as on any late cancel).
 import Stripe from 'stripe';
 import { prisma } from './prisma';
+import { refundedOnRound, recordRefundEventOnce } from './refund-booking';
 import { stripe } from './stripe';
 import { sendRefundEmail } from './email';
 import { roundChargedTotal, roundApplicationFeeCents } from './shop';
@@ -38,7 +39,6 @@ const bookingFor = (courseId: string, bookingId: string) => prisma.booking.findF
   include: {
     teeTime: { select: { date: true, time: true } },
     course: { select: { name: true, stripeAccountId: true, timezone: true } },
-    paymentEvents: { where: { kind: 'refund' }, select: { amountCents: true } },
   },
 });
 
@@ -60,7 +60,10 @@ export async function refundRound(courseId: string, bookingId: string, opts: { a
     return fail(409, b.paymentStatus === 'paid_offline' ? 'This round was paid at the counter — give the cash back at the register.' : b.paymentStatus === 'on_account' ? 'This round is on a member account — credit it back on Members.' : 'This round hasn’t been paid by card, so there is nothing to refund.');
   }
   if (!b.course.stripeAccountId) return fail(409, 'Connect Stripe first — the refund goes back through it.');
-  const already = b.paymentEvents.reduce((s, e) => s + e.amountCents, 0);
+  // Audit 2026-11-24 L5: from Stripe, for this round's own charge only (a hold given back no longer counts).
+  let already: number;
+  try { already = await refundedOnRound(b.roundPaymentIntentId, b.course.stripeAccountId); }
+  catch (err) { return fail(502, `Could not read the round's refunds from Stripe (${err instanceof Error ? err.message : String(err)}). Try again.`); }
   const left = refundableCents(b, already);
   if (left <= 0) return fail(409, 'This round has already been refunded in full.');
   const amountCents = opts.amountCents === undefined || opts.amountCents === null || opts.amountCents === '' ? left : Number(opts.amountCents);
@@ -76,7 +79,7 @@ export async function refundRound(courseId: string, bookingId: string, opts: { a
       // Keyed on what was refunded before, not the amount: two refunds started at once from the same
       // state share a key, so Stripe refunds once (a different amount gets its "same key, different
       // request" refusal) — never two that together pass the course's share.
-      { stripeAccount: b.course.stripeAccountId, idempotencyKey: `staff-refund-${bookingId}-${already}` },
+      { stripeAccount: b.course.stripeAccountId, idempotencyKey: `staff-refund-${bookingId}-${b.roundPaymentIntentId}-${already}` },
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -86,15 +89,14 @@ export async function refundRound(courseId: string, bookingId: string, opts: { a
   const full = amountCents >= left;
   // LEDGER-1: the course's share back; GreenReserve keeps its fee (refund_application_fee: false).
   await recordMove({ courseId, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, stripeId: refund.id, bookingId, actor: 'staff', note: reason });
-  // Two taps at once send the same idempotency key, so Stripe returns one refund twice: record it once.
-  if (await prisma.paymentEvent.findFirst({ where: { bookingId, kind: 'refund', stripeId: refund.id }, select: { id: true } })) {
-    return { ok: true, refundId: refund.id, amountCents, full, emailSent: false };
-  }
-  await prisma.$transaction([
-    prisma.paymentEvent.create({ data: { bookingId, kind: 'refund', amountCents, stripeId: refund.id, actor: 'operator', actorName: opts.actorName, detail: reason } }),
+  // Two taps at once send the same idempotency key, so Stripe returns one refund twice: record it once
+  // (L5: under a lock, so the two can't both pass the check).
+  const wrote = await recordRefundEventOnce(
+    { bookingId, kind: 'refund', amountCents, stripeId: refund.id, actor: 'operator', actorName: opts.actorName, detail: reason },
     // The course's whole share back: the round is refunded (Money stops counting it as paid or owed).
-    ...(full ? [prisma.booking.update({ where: { id: bookingId }, data: { paymentStatus: 'refunded' } })] : []),
-  ]);
+    full ? tx => tx.booking.update({ where: { id: bookingId }, data: { paymentStatus: 'refunded' } }) : undefined,
+  );
+  if (!wrote) return { ok: true, refundId: refund.id, amountCents, full, emailSent: false };
   await recordBookingEventSafe({
     bookingId, courseId, type: 'round_refunded', actor: opts.actor, amountCents, playerCount: b.players, stripeId: refund.id,
     teeTimeAt: teeTimeInstant(b.course.timezone, b.teeTime.date, b.teeTime.time), metadata: { reason, full, by: opts.actorName },

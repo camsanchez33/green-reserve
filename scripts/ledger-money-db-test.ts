@@ -98,16 +98,19 @@ const hhmm = (d: Date) => d.toISOString().slice(11, 16);
   duringCharge = async () => { await prisma.booking.update({ where: { id: checkedIn.id }, data: { status: 'completed', paymentStatus: 'paid', checkedInAt: new Date() } }); };
   ok('a group checked in and paid while its hold was being charged: refunded', (await chargeCutoffHold(checkedIn.id)) === 'refunded');
 
-  // A golfer cancelling late WHILE the cron's charge is in flight: the cancel's own
-  // charge (same key) hears "in progress", waits, replays the cron's PaymentIntent.
+  // A golfer cancelling late WHILE the cron's charge is in flight. Audit 2026-11-24 M1: the cron holds the
+  // round's claim, so that cancel is refused ("being charged"); tried again, it finds the hold already
+  // taken and keeps it. One charge, never refunded.
   const racing = await booking(t1.id);
   let cancelRun: Promise<unknown> | null = null;
   duringCharge = async () => { cancelRun = performCancellation(racing.id, { type: 'golfer' }); await new Promise(r => setTimeout(r, 300)); };
   const before3 = refunds.length;
   const rr = await chargeCutoffHold(racing.id);
-  const cr = await cancelRun;
+  const cr = await cancelRun as { status?: number } | null;
+  const again = await performCancellation(racing.id, { type: 'golfer' });
   const r1 = await prisma.booking.findUniqueOrThrow({ where: { id: racing.id } });
-  ok('a late cancel racing the cron’s in-flight charge: one charge, kept, never refunded', refunds.length === before3 && (rr === 'charged' || rr === 'recorded_elsewhere') && r1.status === 'cancelled' && r1.paymentStatus === 'cancellation_fee_charged' && !!r1.cancellationFeeChargeId && r1.cancellationFeeTotal === 2000, { rr, cr, r1: { status: r1.status, ps: r1.paymentStatus, id: r1.cancellationFeeChargeId, fee: r1.cancellationFeeTotal } });
+  ok('a late cancel racing the cron’s in-flight charge is refused while it charges', rr === 'charged' && cr?.status === 409, { rr, cr });
+  ok('…tried again, the cancel keeps the one charge, never refunded', 'success' in again && refunds.length === before3 && r1.status === 'cancelled' && r1.paymentStatus === 'cancellation_fee_charged' && !!r1.cancellationFeeChargeId && r1.cancellationFeeTotal === 2000, { again, r1: { status: r1.status, ps: r1.paymentStatus, id: r1.cancellationFeeChargeId, fee: r1.cancellationFeeTotal } });
 
   // R-PAY-010: a declined hold is ledgered, once.
   const declined = await booking(t1.id, { stripePaymentMethodId: 'pm_declines' });
