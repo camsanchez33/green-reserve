@@ -228,7 +228,7 @@ export async function moveBooking(opts: {
       // whose rate is kept per player (rateIsOwn) and round packs keep their own pricing.
       let groupRate: string | null = null;
       // The booking's cart rule, as the cart is priced below (CART-2: a per-cart booking stays per cart).
-      const moveCartRule = b.cartUnitCents != null ? 'per_cart' : !b.cartSelected ? cartRuleOf(b.course.cartPricing) : 'per_player';
+      const cartRule = b.cartUnitCents != null ? 'per_cart' : !b.cartSelected ? cartRuleOf(b.course.cartPricing) : 'per_player';
       const g = opts.ownSeatGroups;
       if (g && opts.pricing !== 'keep' && !rateIsOwn && b.appliedRate !== 'pack' && !b.packLineId) {
         const memberTier = bookedTier ?? (memberPricingOn(b.course) ? g.memberTier : null);
@@ -236,7 +236,7 @@ export async function moveBooking(opts: {
         const residentOk = g.resident && residentPricingOn(b.course) && slot.residentRateCents != null;
         const pick = pickOwnSeat(memberRates ? memberRates.greenFeeCents : null, residentOk ? slot.residentRateCents : null,
           { pubSeat, dealPct: lmPct, publicCents: slot.greenFeeCents, stack },
-          !!memberTier && !!memberRates && memberGivesMore(memberTier, memberRates.cartFeeCents, slot.cartFeeCents, moveCartRule === 'per_cart'));
+          !!memberTier && !!memberRates && memberGivesMore(memberTier, memberRates.cartFeeCents, slot.cartFeeCents, cartRule === 'per_cart'));
         if (pick.group === 'member' && memberTier && memberRates) {
           rate = memberRates; memberN = memberPlayers(b.players, memberTier); spot = memberSpot(memberTier, rate);
           residentN = 0; groupRate = memberTier.name;
@@ -279,7 +279,6 @@ export async function moveBooking(opts: {
       }
       // CART-2: a booking made per cart stays per cart (its riders, the new time's cart price); one taking
       // a cart for the first time here follows the course's rule today; a per-player booking stays per player.
-      const cartRule = moveCartRule;
       if (b.cartUnitCents != null) coveredSeats = b.players - (b.cartRiders ?? b.players);
       const cartPriced = cartCharge({ rule: cartRule, cart: cartOn, players: b.players, coveredSeats, unitCents: slot.cartFeeCents, perPlayerTotal: newCart });
       newCart = cartPriced.cartFeeTotal;
