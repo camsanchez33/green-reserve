@@ -203,7 +203,7 @@ export default function AdminSidebar({ active, pendingInquiries = 0 }: {
       </button>
       {/* Platform activity mockup (Cam 2026-11-15): the search sits beside the bell, 34px tall; click or Ctrl K opens the palette. */}
       <span className={g.status} aria-hidden="true" />
-      <button type="button" onClick={openPalette} className={`${g.search} ${g.glass}`} aria-label="Search courses, golfers and payments, or ask anything" title="Search (Ctrl K)">
+      <button type="button" onClick={openPalette} className={`ui-search ${g.search} ${g.glass}`} aria-label="Search courses, golfers and payments, or ask anything" title="Search (Ctrl K)">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
         <kbd aria-hidden="true">Ctrl K</kbd>
       </button>

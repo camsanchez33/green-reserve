@@ -716,7 +716,7 @@ function SystemContent() {
     body = (
       <section className={`${g.glass} ${s.card}`} aria-label="Platform activity">
         <div className={s.bar}>
-          <label className={s.search}><SearchIco /><input value={q} onChange={e => setQ(e.target.value)} aria-label="Search platform activity" /></label>
+          <label className={`ui-search ${s.search}`}><SearchIco /><input value={q} onChange={e => setQ(e.target.value)} aria-label="Search platform activity" /></label>
           <div className={s.fwrap} ref={fwrap}>
             <button type="button" className={`${s.fbtn} ${g.glass}`} aria-haspopup="true" aria-expanded={menu} onClick={() => setMenu(m => !m)}>
               Filter{filt !== 'all' ? `: ${fLabel}` : ''}<Caret />

@@ -143,7 +143,7 @@ function AnnouncementsContent() {
     body = (
       <section className={`${g.glass} ${s.card}`} aria-label="Announcements">
         <div className={s.bar}>
-          <label className={s.search}>
+          <label className={`ui-search ${s.search}`}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
             <input type="search" value={q} onChange={e => setQ(e.target.value)} aria-label="Search announcements" />
           </label>

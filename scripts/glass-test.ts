@@ -29,7 +29,7 @@ ok('the material rules are under @media screen (print stays plain)', g.split('\n
 const block = (sel: string) => { const i = css.indexOf(sel + ' {'); return i < 0 ? '' : css.slice(i, css.indexOf('\n}', i)); };
 const lb = block('.op-look:has(.op-rail)');
 const db = block('.op-look[data-theme="dark"]:has(.op-rail)');
-const rb = block('.op-look:has(.op-rail) .op-rail');
+const rb = block('.op-look:has(.op-rail) :is(.op-rail, .op-band)');
 
 // One material rule for both looks; the tokens decide solid or glass.
 ok('cards take the material from tokens (one rule, both looks)', g.includes('.op-look:has(.op-rail) .bg-white.shadow-card:not(.op-tab) {') && g.includes('background-color: var(--op-panel); border-color: var(--op-edge);') && g.includes('backdrop-filter: var(--op-blur);') && g.includes('box-shadow: 0 0 0 1px var(--op-edge), var(--op-shadow);'));
@@ -106,6 +106,17 @@ ok('the Light block carries every --op- token Dark has', opTokens.length >= 8 &&
 ok('the time card is a panel only at xl, and solid under reduced transparency', /@media screen and \(min-width: 1280px\) \{\s*\n\s*\.op-look:has\(\.op-rail\) \.fixed \.tt-card\.bg-white\.shadow-card \{ background-color: var\(--op-panel\)/.test(css) && /prefers-reduced-transparency: reduce\)[\s\S]*?\.fixed \.tt-card\.bg-white\.shadow-card \{ background-color: var\(--color-white\)/.test(css));
 ok('a well is opt-in (.op-well), not every bg-page', css.includes('.op-look:has(.op-rail) .op-well { background-color: var(--op-well); }') && !css.includes('.bg-white.shadow-card .bg-page'));
 ok('tee sheet cells and List carry the money edge over the fill', readFileSync('src/components/dashboard/TeeSheetRows.tsx', 'utf8').includes("+ FILL[t] + ' ' + EDGE[t] + ' '") && readFileSync('src/components/dashboard/TeeSheetList.tsx', 'utf8').includes("FILL[t] + ' ' + EDGE[t]"));
+
+// UI-STYLE search and band: the band is the sidebar's colour and tokens; a search field is white + thin border on Light,
+// dark glass on Dark, the dark field in the band, and the dark field everywhere in the admin.
+ok('the header band is the sidebar\'s colour, material and tokens', g.includes('.op-band { background-color: var(--op-rail-bg); -webkit-backdrop-filter: var(--op-blur);') && g.includes('.op-look:has(.op-rail) :is(.op-rail, .op-band) {'));
+ok('search on Light: white field, thin border, 8px, no shadow', g.includes('.op-look:has(.op-rail) .ui-search {\n  background-color: #FFFFFF; border: 1px solid #D4D4D4; border-radius: 8px; box-shadow: none;'));
+ok('search on Dark and in the band: dark glass field, faint light edge', g.includes('.op-look[data-theme="dark"]:has(.op-rail) .ui-search { background-color: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .14);') && g.includes('.op-band .ui-search { background-color: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .14);'));
+ok('admin search: the dark glass field', g.includes('[data-admin-shell] .ui-search {\n  background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .14); border-radius: 8px;'));
+{ const railSrc = side.slice(side.indexOf('<aside className="op-rail'), side.indexOf('</aside>', side.indexOf('<aside className="op-rail')));
+  ok('no search in the sidebar', !railSrc.includes('<OperatorSearch') && !railSrc.includes('<input')); }
+const SEARCHES = ['src/components/dashboard/OperatorSearch.tsx', 'src/app/dashboard/page.tsx', 'src/app/dashboard/shop/page.tsx', 'src/components/dashboard/StockTab.tsx', 'src/components/dashboard/money/revenue/ui.tsx', 'src/components/dashboard/money/CancellationsPanel.tsx', 'src/components/dashboard/money/PaymentsPanel.tsx', 'src/components/dashboard/events/EventPlayers.tsx', 'src/components/dashboard/members/ResidentsCard.tsx', 'src/app/dashboard/settings/page.tsx', 'src/components/admin/AdminSidebar.tsx', 'src/app/admin/golfers/page.tsx', 'src/app/admin/system/page.tsx', 'src/app/admin/support/page.tsx', 'src/app/admin/announcements/page.tsx'];
+ok('every page search carries the .ui-search hook', SEARCHES.every(f => /ui-search/.test(readFileSync(f, 'utf8'))), SEARCHES.filter(f => !/ui-search/.test(readFileSync(f, 'utf8'))));
 
 // ── Admin: dark glass only, neutral; the menu's hover and active are white at low alpha (no green tint).
 const adb = (() => { const i = adminCss.indexOf('.shell[data-theme="dark"] {'); return adminCss.slice(i, adminCss.indexOf('\n}', i)); })();

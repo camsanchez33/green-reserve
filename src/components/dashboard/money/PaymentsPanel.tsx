@@ -94,7 +94,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter
       <div className="flex flex-wrap items-center gap-3 mb-3">
         {!dateFilter && <DateRangeButton value={shownRange} today={today} onChange={setRange} />}
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Find a golfer" aria-label="Find a golfer"
-          className="sm:ml-auto w-56 bg-white border border-line rounded-[7px] px-3 py-2 text-sm text-ink placeholder-ink-faint focus:ring-2 focus:ring-pine/10 focus:border-pine/40 outline-none" />
+          className="ui-search sm:ml-auto w-56 bg-white border border-line rounded-[7px] px-3 py-2 text-sm text-ink placeholder-ink-faint focus:ring-2 focus:ring-pine/10 focus:border-pine/40 outline-none" />
       </div>
       <SlidingTabs value={filter} onChange={k => setFilter(k as Filter)} className="mb-4" tabs={FILTERS.map(([k, l]) => [k, `${l} ${count(k)}`] as const)} />
 

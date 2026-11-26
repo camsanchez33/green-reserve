@@ -86,7 +86,7 @@ export default function OperatorSearch({ dropUp = false, onPicked }: { dropUp?: 
   const showPanel = open && q.trim().length >= 2;
   return (
     <div ref={box} className="relative">
-      <label className="flex items-center gap-2 bg-paper rounded-md px-2.5 py-2 focus-within:ring-2 focus-within:ring-pine/10">
+      <label className="ui-search flex items-center gap-2 bg-paper rounded-md px-2.5 py-2 focus-within:ring-2 focus-within:ring-pine/10">
         <Search className="w-3.5 h-3.5 text-ink-faint shrink-0" aria-hidden="true" />
         <input ref={input} value={q} onChange={e => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)}
           onKeyDown={e => { if (e.key === 'Escape') setOpen(false); if (e.key === 'Enter' && results?.[0] && resultsFor === q.trim()) go(results[0].href); }}

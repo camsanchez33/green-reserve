@@ -521,7 +521,7 @@ export default function ShopPage() {
                 )}
                 {tree.length > 0 && (
                   <div className="space-y-2.5 mb-3">
-                    <label className="flex items-center gap-2 bg-page op-well border border-line rounded-[10px] px-3 min-h-[44px] text-ink-muted">
+                    <label className="ui-search flex items-center gap-2 bg-page op-well border border-line rounded-[10px] px-3 min-h-[44px] text-ink-muted">
                       <Search className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                       <input ref={searchRef} value={q} onChange={e => setQ(e.target.value)} autoFocus
                         onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const t = q.trim(); if (scan(q) || !t) return; if (!tree.some(i => matches(i, q))) noMatch(q); else setNote(''); } }}
@@ -849,7 +849,7 @@ export default function ShopPage() {
                 {all && <span className="ml-auto text-[13.5px] text-ink-muted tabular-nums"><b className="text-[15px] font-semibold text-ink">{usd(taken.cents)}</b> taken · {taken.count} sale{taken.count === 1 ? '' : 's'}</span>}
               </div>
               <div className="flex items-center gap-2.5 mb-2">
-                <label className="flex-1 min-w-0 flex items-center gap-2 bg-page op-well border border-line rounded-[10px] px-3 min-h-[38px] text-ink-muted">
+                <label className="ui-search flex-1 min-w-0 flex items-center gap-2 bg-page op-well border border-line rounded-[10px] px-3 min-h-[38px] text-ink-muted">
                   <Search className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                   <input value={hist?.q ?? ''} onChange={e => loadHistory({ q: e.target.value, day: hist?.day ?? '' })} aria-label="Find a sale by name, item or sale number" className="flex-1 min-w-0 bg-transparent text-[13.5px] text-ink outline-none" />
                 </label>
