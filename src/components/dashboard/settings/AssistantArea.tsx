@@ -186,7 +186,7 @@ function NoteEdit({ note, onDone, onClose }: { note: Note | null; onDone: () => 
       <Field label="Question"><input className={FIELD} value={question} onChange={e => setQuestion(e.target.value)} maxLength={NOTE_QUESTION_CHARS} aria-label="Question" /></Field>
       <Field label="Answer"><textarea className={FIELD} rows={3} value={answer} onChange={e => setAnswer(e.target.value)} maxLength={NOTE_ANSWER_CHARS} aria-label="Answer" /></Field>
       <Choices name="Who it's for" value={audience} onChange={setAudience} options={AUDIENCES} />
-      {note && <div><button type="button" className={LINK + ' text-bad decoration-bad'} onClick={remove} disabled={removing}>{removing ? 'Removing…' : 'Remove this note'}</button></div>}
+      {note && <div><button type="button" className={LINK + ' !text-bad !decoration-bad'} onClick={remove} disabled={removing}>{removing ? 'Removing…' : 'Remove this note'}</button></div>}
       {err && <p role="alert" className="text-[13px] text-bad">{err}</p>}
     </EditPopup>
   );
