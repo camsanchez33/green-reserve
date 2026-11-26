@@ -13,7 +13,36 @@ import { isProposalCard, type ProposalCard } from '@/lib/birdie/proposal-types';
 import { ASK_EVENT, markBirdieReady } from '@/lib/birdie/ask';
 
 type Turn = { role: 'user' | 'assistant'; content: string; pending?: boolean; error?: boolean; status?: string; cards?: ProposalCard[] };
-type Meta = { enabled: boolean; greeting: string; chips: string[]; helpsWith: string };
+type Knows = { courseName: string; notes: number; sections: { key: string; label: string; count: string }[]; builtAt: string };
+type Meta = { enabled: boolean; greeting: string; chips: string[]; helpsWith: string; knows?: Knows | null };
+
+// ASSIST-1 "What it knows": what the assistant read about this course, and when that last changed. Times in the
+// browser's own clock, like the rest of the dashboard's "Updated" lines.
+const updatedAt = (iso: string) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const sameDay = d.toDateString() === new Date().toDateString();
+  return sameDay ? d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+};
+
+function KnowsPanel({ knows }: { knows: Knows }) {
+  const [open, setOpen] = useState(false);
+  const when = updatedAt(knows.builtAt);
+  return (
+    <div className="px-4 py-2.5 border-b border-line text-[12.5px] text-ink-soft">
+      <p>Knows {knows.courseName}&apos;s settings, rates, policies, closures, events and your {knows.notes === 1 ? '1 note' : `${knows.notes} notes`}.{when ? ` Updated ${when}.` : ''}</p>
+      <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open} aria-controls="assistant-knows" className="mt-1 text-[12.5px] font-medium text-pine hover:underline">What it knows</button>
+      {open && (
+        <ul id="assistant-knows" className="mt-1.5 space-y-1">
+          {knows.sections.map(s => (
+            <li key={s.key} className="flex items-baseline justify-between gap-3"><span className="text-ink">{s.label}</span><span className="text-ink-muted text-right">{s.count}</span></li>
+          ))}
+          <li className="flex items-baseline justify-between gap-3"><span className="text-ink">Live numbers</span><span className="text-ink-muted text-right">read when asked</span></li>
+        </ul>
+      )}
+    </div>
+  );
+}
 
 const OPEN_KEY = 'birdie:open';
 // Cam 2026-10-19: Birdie can be tucked into a small tab on the screen's edge and
@@ -199,9 +228,10 @@ export default function BirdieWidget() {
             </div>
             <button type="button" onClick={close} aria-label="Close" className="ml-auto text-ink-muted hover:text-ink transition-colors"><X className="w-4 h-4" /></button>
           </div>
+          {meta.knows && <KnowsPanel knows={meta.knows} />}
           <div ref={listRef} aria-live="polite" aria-atomic="false" className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-[200px]">
             <div className="text-sm text-ink">{meta.greeting}</div>
-            {turns.length === 0 && <div className="text-[12.5px] text-ink-soft">It reads your course&apos;s live numbers and can draft a change for you to confirm. It never changes anything by itself. Try one:</div>}
+            {turns.length === 0 && <div className="text-[12.5px] text-ink-soft">It reads your course&apos;s live numbers and can draft a change for you to save. It never changes anything by itself. Try one:</div>}
             {turns.length === 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {meta.chips.map(c => (

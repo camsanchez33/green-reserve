@@ -68,7 +68,8 @@ async function cleanup() {
   ok('golfer: no event closed to sign-up', !ga.text.includes('AlphaPrivateOuting') && ga.text.includes('AlphaOpenScramble'));
   ok('golfer: no member or resident rates', !ga.text.includes('$12.34'));
   ok('golfer: no dues', !ga.text.includes('$1200'));
-  ok('golfer: membership benefits stay', /AlphaGold: .*6 guest passes a year/.test(ga.text), ga.text.match(/AlphaGold.*$/m));
+  // GUEST-PASS-OFF (#529): guest passes are gone everywhere, so the benefit left to check is the booking window.
+  ok('golfer: membership benefits stay', /AlphaGold: .*book 14 days out/.test(ga.text) && !/guest pass/i.test(ga.text), ga.text.match(/AlphaGold.*$/m));
   for (const t of [sa.text, ga.text]) ok('no organiser contact in any brief', !/Pat Organiser|pat@private|999-0000/.test(t));
   ok('no email address in any brief', ![sa.text, ga.text].some(t => /[\w.+-]+@[\w-]+\.\w+/.test(t)));
 

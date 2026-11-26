@@ -62,7 +62,7 @@ const routeSrc = readFileSync(new URL('../src/app/api/birdie/chat/route.ts', imp
 const reads = [...ctxSrc.matchAll(/prisma\.(\w+)\.(findUnique|findFirst|findMany|count|aggregate)\(\{([\s\S]*?)\n  \}\)|prisma\.(\w+)\.(count)\(\{([^}]*\}[^)]*)\)/g)].map(m => m[0]);
 check('context: every read is scoped', reads.length > 0 && reads.every(r => /courseId|where: \{ id: courseId/.test(r)), `${reads.length} reads`);
 check('context: no unscoped findMany', !/prisma\.\w+\.findMany\(\s*\)/.test(ctxSrc));
-check('route: the course id comes from the session', /operatorCourseContext\(session\.courseId\)/.test(routeSrc));
+check('route: the course id comes from the session', /getCourseBrief\(session\.courseId, 'staff'\)/.test(routeSrc) && !/getCourseBrief\((?!session\.courseId)/.test(routeSrc));
 check('route: the request body is only ever read for messages', !/body[?]?\.(courseId|course)\b/.test(routeSrc));
 check('route: the cap is taken before the body is parsed', routeSrc.indexOf('checkCaps(') < routeSrc.indexOf('req.json()'));
 
@@ -81,7 +81,7 @@ check('tools: no tool writes', !/prisma\.\w+\.(create|update|upsert|delete)/.tes
 const toolReads = [...toolsSrc.matchAll(/prisma\.(\w+)\.(findMany|findFirst|findUnique|count)\(\{[\s\S]*?where: \{([^}]*)\}/g)];
 check('tools: every direct read filters on ctx.courseId', toolReads.length > 0 && toolReads.every(m => m[3].includes('courseId: ctx.courseId')), `${toolReads.length} reads`);
 check('tools: analytics and schedules go through the session course', /computeAnalytics\(ctx\.courseId/.test(toolsSrc) && /listSchedules\(ctx\.courseId\)/.test(toolsSrc));
-check('route: tool calls run with the session context', /runReadTool\(tu\.name, tu\.input, toolCtx\)/.test(routeSrc) && /courseId: session\.courseId, timezone/.test(routeSrc));
+check('route: tool calls run with the session context', /runReadTool\(name, input, toolCtx\)/.test(routeSrc) && /runProposeTool\(name, input, toolCtx\)/.test(routeSrc) && /courseId: session\.courseId, timezone/.test(routeSrc));
 (async () => {
 const denied: ToolContext = { courseId: 'not-a-real-course', timezone: 'America/New_York', can: () => false };
 const deniedAll = await Promise.all(['get_analytics', 'get_schedules', 'get_tee_sheet'].map(n => runReadTool(n, { from: '2026-01-01', to: '2026-01-31' }, denied)));

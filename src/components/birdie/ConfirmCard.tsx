@@ -85,7 +85,7 @@ export function ConfirmCard({ card }: { card: ProposalCard }) {
           <div className="mt-2.5 flex items-center gap-3">
             <button type="button" onClick={confirm} disabled={state.kind === 'applying'}
               className="px-3 py-1.5 rounded-md bg-pine hover:bg-pine-hover disabled:opacity-50 text-white text-[12.5px] font-semibold transition-colors">
-              {state.kind === 'applying' ? 'Saving…' : state.kind === 'error' ? 'Try again' : 'Confirm'}
+              {state.kind === 'applying' ? 'Saving…' : state.kind === 'error' ? 'Try again' : 'Save'}
             </button>
             {state.kind !== 'applying' && (
               <button type="button" onClick={() => setState({ kind: 'dismissed' })} className="text-[12.5px] text-ink-soft hover:text-ink transition-colors">Not now</button>

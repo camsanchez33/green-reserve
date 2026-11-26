@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { birdieEnabled, birdieUsageToday, PLATFORM_PER_DAY, BIRDIE_MODEL } from '@/lib/birdie/guardrails';
+import { birdieEnabled, birdieUsageToday, PLATFORM_PER_DAY } from '@/lib/birdie/guardrails';
+import { ASSISTANT_MODEL } from '@/lib/assistant/prompt';
 import { prisma } from '@/lib/prisma';
 import { calcomStatus } from '@/lib/calcom';
 import { resolveAdminSession, requireRole, MANAGER_PLUS, areaGate } from '@/lib/admin-session';
@@ -67,7 +68,7 @@ export async function GET(req: NextRequest) {
   // pretending the generic dashboard is a deep link.
   const vercelProjectUrl = env.ADMIN_VERCEL_PROJECT_URL || '';
 
-  const birdie = { enabled: birdieEnabled(), keySet: !!process.env.ANTHROPIC_API_KEY, flag: process.env.BIRDIE_ENABLED === 'true', todayReplies: await birdieUsageToday(), dailyCap: PLATFORM_PER_DAY, model: BIRDIE_MODEL };
+  const birdie = { enabled: birdieEnabled(), keySet: !!process.env.ANTHROPIC_API_KEY, flag: process.env.BIRDIE_ENABLED === 'true', todayReplies: await birdieUsageToday(), dailyCap: PLATFORM_PER_DAY, model: ASSISTANT_MODEL };
   const calcom = calcomStatus();
   const twilio = twilioStatus(env);
   const commitSha = (env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 7);

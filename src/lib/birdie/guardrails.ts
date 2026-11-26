@@ -2,13 +2,16 @@
 // controls as much as safety controls: the API key costs money.
 import { prisma } from '../prisma';
 import { rateLimit } from '../rate-limit';
+import { platformAllows, PLATFORM_PER_DAY as PERSONA_PER_DAY } from '../assistant/caps';
 
+/** The golfer-message draft (lib/notice-draft) only. The assistant itself runs on lib/assistant/prompt's ASSISTANT_MODEL (ASSIST-1). */
 export const BIRDIE_MODEL = 'claude-haiku-4-5';
 export const MAX_REPLY_TOKENS = 600;
 export const MAX_USER_CHARS = 1500;
 export const MAX_HISTORY_TURNS = 12;      // user+assistant messages kept from the client
 export const PER_SESSION_PER_HOUR = 20;
-export const PLATFORM_PER_DAY = 600;      // every persona, every course — the daily platform cap
+/** ASSIST-1: the dashboard assistant's platform cap per UTC day (lib/assistant/caps, per persona). */
+export const PLATFORM_PER_DAY = PERSONA_PER_DAY.operator;
 
 export function birdieEnabled(): boolean {
   return process.env.BIRDIE_ENABLED === 'true' && !!process.env.ANTHROPIC_API_KEY;
@@ -48,7 +51,7 @@ export async function checkCaps(courseKey: string): Promise<string | null> {
   if (!(await rateLimit(`birdie:course:${courseKey}`, PER_SESSION_PER_HOUR, 3600))) {
     return 'The assistant has answered a lot in the last hour — give it a little while, or write to us on Support.';
   }
-  if (!(await rateLimit(`birdie:day:${dayKey()}`, PLATFORM_PER_DAY, 86_400))) {
+  if (!(await platformAllows('operator'))) {
     return "The assistant is resting for today. Everything it can help with is a page away in the sidebar, or write to us on Support.";
   }
   return null;
@@ -57,17 +60,7 @@ export async function checkCaps(courseKey: string): Promise<string | null> {
 /** Today's platform-wide message count, for /admin/system. Reads the same counter the cap uses. */
 export async function birdieUsageToday(): Promise<number> {
   try {
-    const rows = await prisma.$queryRaw<{ count: number }[]>`SELECT "count" FROM "RateLimit" WHERE "key" = ${`birdie:day:${dayKey()}`}`;
+    const rows = await prisma.$queryRaw<{ count: number }[]>`SELECT "count" FROM "RateLimit" WHERE "key" = ${`birdie:platform:operator:${dayKey()}`}`;
     return Number(rows[0]?.count ?? 0);
   } catch { return 0; }
-}
-
-/** Conversations are ours to review: one structured line per reply. */
-export function logConversation(entry: {
-  persona: string; courseId: string; sessionKey: string; question: string; reply: string;
-  inputTokens?: number; outputTokens?: number; cacheRead?: number; stopReason?: string | null; ms: number;
-}) {
-  // The spec logs the conversation, minus nothing: a question is already capped
-  // at MAX_USER_CHARS and a reply at MAX_REPLY_TOKENS, so neither is unbounded.
-  console.log(JSON.stringify({ ev: 'birdie.reply', ...entry }));
 }
