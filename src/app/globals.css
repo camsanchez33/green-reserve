@@ -213,15 +213,15 @@ body {
 /* UI-STYLE: the sidebar is dark in BOTH looks. In Light it is the solid #1E1E1E rail, so its own text, lines and
    active fill take light-on-dark tokens; in Dark it is the glass rail and the dark tokens already apply. */
 @media screen {
-.op-look:has(.op-rail) .op-rail {
+.op-look:has(.op-rail) :is(.op-rail, .op-band) {
   --color-ink: #F2F2F2; --color-ink-soft: #CCCCCC; --color-ink-muted: #B0B0B0; --color-ink-faint: #B0B0B0;
-  --color-line: #303030; --color-line-soft: #2A2A2A; --color-rail-line: #303030; --color-white: #2C2C2C; --color-page: #2C2C2C; --color-paper: #2C2C2C;
+  --color-line: #303030; --color-line-soft: #2A2A2A; --color-rail-line: #303030; --color-white: #2C2C2C; --color-page: #2C2C2C; --color-paper: #363636;
   --color-pine: #F2F2F2; --color-pine-hover: #FFFFFF; --op-brand-green: #4CC183; --op-well: rgb(255 255 255 / .06);
   --op-panel: #2C2C2C; --op-panel-solid: #2C2C2C; --op-edge: rgb(255 255 255 / .10);
   color-scheme: dark; color: var(--color-ink);
 }
-.op-look:has(.op-rail) .op-rail .op-dark-only { display: inline-block; }
-.op-look:has(.op-rail) .op-rail .op-light-only { display: none; }
+.op-look:has(.op-rail) :is(.op-rail, .op-band) .op-dark-only { display: inline-block; }
+.op-look:has(.op-rail) :is(.op-rail, .op-band) .op-light-only { display: none; }
 }
 
 /* The material, on screen and rail pages only. One rule for both looks; the tokens above say solid (Light) or glass
@@ -258,6 +258,63 @@ body {
 @media screen and (min-width: 1280px) {
   .op-look:has(.op-rail) .fixed .tt-card.bg-white.shadow-card { background-color: var(--op-panel); -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur); }
 }
+}
+/* UI-STYLE (Cam 2026-11-26): the header band at the top of every dashboard page (computer) is the sidebar's own colour
+   and material, with a hairline under it. */
+@media screen {
+.op-look:has(.op-rail) .op-band { background-color: var(--op-rail-bg); -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur); box-shadow: 0 1px 0 var(--op-edge); position: relative; z-index: 20; }
+/* Search fields match their screen (Cam 2026-11-26): ONE shape (8px, 1px edge, no shadow) — a white field with a thin
+   border on Light, a dark glass field with a faint light edge on Dark, and the dark field in the sidebar-coloured band in
+   both. The hook is .ui-search on the field's visible box; the input inside it stays transparent. */
+.op-look:has(.op-rail) .ui-search {
+  background-color: #FFFFFF; border: 1px solid #D4D4D4; border-radius: 8px; box-shadow: none; color: var(--color-ink);
+  -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur);
+}
+.op-look[data-theme="dark"]:has(.op-rail) .ui-search { background-color: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .14); box-shadow: inset 0 1px 0 rgb(255 255 255 / .05); }
+.op-look:has(.op-rail) .op-band .ui-search { background-color: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .14); box-shadow: inset 0 1px 0 rgb(255 255 255 / .05); }
+.op-look:has(.op-rail) .ui-search:focus-within { border-color: var(--color-ink-muted); }
+.op-look:has(.op-rail) .ui-search input { background-color: transparent; }
+/* Admin is dark only: every search takes the dark glass field. */
+[data-admin-shell] .ui-search {
+  background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .14); border-radius: 8px; color: #EDEDED;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .05);
+}
+[data-admin-shell] .ui-search:focus-within { border-color: rgb(255 255 255 / .32); }
+[data-admin-shell] .ui-search input { background: transparent; color: inherit; }
+}
+/* UI-STYLE phone layouts (Cam 2026-11-26, the mockup's "On a phone"): same content and actions, sized for a thumb.
+   Both looks (the colours come from the tokens). Admin's phone rules are in admin-glass.module.css. */
+@media screen and (max-width: 767px) {
+  /* The tee sheet's day numbers fit across in one row (5, or 4 / 3 when fewer show). */
+  .op-look:has(.op-rail) .ui-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+  .op-look:has(.op-rail) .ui-stats:has(> :nth-child(4):last-child) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .op-look:has(.op-rail) .ui-stats:has(> :nth-child(3):last-child) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .op-look:has(.op-rail) .ui-stats > * { padding: 6px; min-width: 0; }
+  .op-look:has(.op-rail) .ui-stats > * > div:first-child { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .op-look:has(.op-rail) .ui-stats > * > div:nth-child(2) { font-size: 14px; white-space: nowrap; }
+  .op-look:has(.op-rail) .ui-stats > * > div:nth-child(2) span { font-size: 10px; }
+  .op-look:has(.op-rail) .ui-stats > * > div:nth-child(3) { font-size: 9.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* The page's primary action stays in reach: pinned above the tab bar. */
+  .op-look:has(.op-rail) .ui-fab {
+    position: fixed; right: 16px; bottom: calc(56px + env(safe-area-inset-bottom) + 12px); z-index: 25;
+    min-height: 44px; padding: 0 18px; border-radius: 12px; font-size: 14px;
+    background-color: var(--color-pine); color: var(--color-page); box-shadow: 0 6px 16px rgb(0 0 0 / .18);
+  }
+  /* A blur makes its panel the box a fixed child is placed in, so the panel holding the pinned action drops it on a phone
+     (over the flat page the blur showed nothing anyway). Same for a panel holding a dialog. */
+  .op-look:has(.op-rail) .bg-white.shadow-card:has(.ui-fab, [aria-modal="true"]) { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  /* 44px tap targets for every control on the page and in its pop-ups. */
+  .op-look:has(.op-rail) :is(main, .fixed.inset-0) :is(button, [role="tab"], select) { min-height: 44px; }
+  .op-look:has(.op-rail) :is(main, .fixed.inset-0) :is(button, a)[aria-label] { min-width: 44px; min-height: 44px; }
+  .op-look:has(.op-rail) :is(main, .fixed.inset-0) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) { min-height: 44px; }
+  .op-look:has(.op-rail) .ui-stats :is(button, a) { min-height: 0; min-width: 0; }
+  /* Dialogs open as sheets from the bottom: full width, rounded top, scrolling inside. Covers <Modal> (role="dialog") and the
+     hand-built centred pop-ups (a fixed backdrop centring one panel). */
+  :is(.op-look:has(.op-rail), [data-admin-shell]) :is(.fixed.inset-0:has(> [role="dialog"][aria-modal="true"]), .fixed.inset-0.flex.items-center.justify-center) { align-items: flex-end; justify-content: center; padding: 0; }
+  :is(.op-look:has(.op-rail), [data-admin-shell]) :is(.fixed.inset-0 > [role="dialog"][aria-modal="true"], .fixed.inset-0.flex.items-center.justify-center > .bg-white) {
+    width: 100%; max-width: none; height: auto; margin: 0; max-height: 92vh; overflow-y: auto;
+    border-radius: 14px 14px 0 0; padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
 }
 @media screen and (prefers-reduced-motion: reduce) { .op-look:has(.op-rail) .op-tab { transition: none; } }
 @media screen and (prefers-reduced-transparency: reduce) {

@@ -158,7 +158,10 @@ export async function GET(req: NextRequest) {
   if (searchParams.get('list')) {
     const f = searchParams.get('filter') ?? 'all';
     const filter = isListFilter(f) ? f : 'all';
-    if (filter === 'failed' && !seesMoney) return areaGate(session, 'money')!;
+    if (filter === 'failed') {
+      const noMoney = areaGate(session, 'money');
+      if (noMoney) return noMoney;
+    }
     const offset = Math.max(0, Math.min(1_000_000, Number.parseInt(searchParams.get('offset') ?? '0', 10) || 0));
     const lq = q.slice(0, 100);
     const [accounts, rows] = await Promise.all([

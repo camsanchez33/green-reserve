@@ -9,7 +9,7 @@ import { useAdminSession } from '@/lib/admin-session-context';
 import type { AdminArea } from '@/lib/admin-areas';
 import {
   LayoutGrid, MapPin, Inbox, ClipboardCheck, Calendar, Users, DollarSign, Receipt, LineChart, BarChart2,
-  MessageSquare, Megaphone, Activity, Settings, UserCheck, Target, ClipboardList, Lock, FileText, LogOut,
+  MessageSquare, Megaphone, Activity, Settings, UserCheck, Target, ClipboardList, Lock, FileText, LogOut, MoreHorizontal,
 } from 'lucide-react';
 
 // UI-STYLE (Cam 2026-11-26): one monochrome line icon per menu item, the same set and size as the course dashboard's.
@@ -197,13 +197,32 @@ export default function AdminSidebar({ active, pendingInquiries = 0 }: {
       </div>
     </aside>
 
+    {/* UI-STYLE (Cam 2026-11-26, the mockup's "On a phone"): below 900px a bottom tab bar replaces the ☰ menu —
+        Overview, Courses, Bookings and Golfers (each only where this login may open it), and More, which opens the full
+        menu above. Same pages, same gates; nothing new. */}
+    <nav className={g.tabbar} aria-label="Admin sections">
+      {(['overview', 'courses', 'bookings', 'golfers'] as AdminNavKey[]).map(k => {
+        const item = groups.flatMap(grp => grp.items).find(i => i.key === k && i.href);
+        if (!item?.href) return null;
+        return (
+          <Link key={k} href={item.href} aria-current={active === k ? 'page' : undefined} className={g.tab}>
+            <span aria-hidden="true" className={g.ic}>{ICONS[k]}</span>{k === 'courses' ? 'Courses' : item.label}
+          </Link>
+        );
+      })}
+      <button type="button" className={g.tab} aria-expanded={railOpen} aria-current={!['overview', 'courses', 'bookings', 'golfers'].includes(active) ? 'page' : undefined}
+        onClick={() => setRailOpen(o => !o)}>
+        <span aria-hidden="true" className={g.ic}><MoreHorizontal className={IC}/></span>More
+      </button>
+    </nav>
+
     <div className={g.top}>
       <button type="button" className={`${g.ibtn} ${g.menuBtn}`} aria-label="Menu" aria-expanded={railOpen} onClick={() => setRailOpen(o => !o)}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
       </button>
       {/* Platform activity mockup (Cam 2026-11-15): the search sits beside the bell, 34px tall; click or Ctrl K opens the palette. */}
       <span className={g.status} aria-hidden="true" />
-      <button type="button" onClick={openPalette} className={`${g.search} ${g.glass}`} aria-label="Search courses, golfers and payments, or ask anything" title="Search (Ctrl K)">
+      <button type="button" onClick={openPalette} className={`ui-search ${g.search} ${g.glass}`} aria-label="Search courses, golfers and payments, or ask anything" title="Search (Ctrl K)">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
         <kbd aria-hidden="true">Ctrl K</kbd>
       </button>

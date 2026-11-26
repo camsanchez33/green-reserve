@@ -89,7 +89,7 @@ export default function EventPlayers({ data, live, busy, act, payAct, canRecord,
   return (
     <div className="flex flex-col">
       <div className="print:hidden flex flex-wrap items-center gap-2 pt-3.5 pb-2.5">
-        <label className="flex items-center gap-2 border border-line bg-paper rounded-[10px] px-2.5 text-ink-muted max-md:flex-[1_1_100%] md:min-w-[220px]">
+        <label className="ui-search flex items-center gap-2 border border-line bg-paper rounded-[10px] px-2.5 text-ink-muted max-md:flex-[1_1_100%] md:min-w-[220px]">
           <SearchIcon />
           <input aria-label="Search players" value={q} onChange={ev => setQ(ev.target.value)} className="w-full bg-transparent border-0 outline-none py-[9px] text-[13.5px] text-ink" />
         </label>

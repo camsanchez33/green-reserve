@@ -101,7 +101,7 @@ export function StockTab({ refreshKey = 0, onChanged }: { refreshKey?: number; o
     <div className={'grid gap-4 lg:items-start ' + (panel?.kind === 'many' ? '' : 'lg:grid-cols-[minmax(0,1fr)_340px]')}>
       <Card className="p-4 min-w-0 relative z-10">
         <div className="flex flex-wrap items-center gap-2.5">
-          <label className="flex-1 min-w-0 flex items-center gap-2 bg-page op-well border border-line rounded-[10px] px-3 min-h-[38px] text-ink-muted">
+          <label className="ui-search flex-1 min-w-0 flex items-center gap-2 bg-page op-well border border-line rounded-[10px] px-3 min-h-[38px] text-ink-muted">
             <Search className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
             <input value={find} onChange={e => setFind(e.target.value)} aria-label="Find an item or barcode" className="flex-1 min-w-0 bg-transparent text-[13.5px] text-ink outline-none" />
           </label>

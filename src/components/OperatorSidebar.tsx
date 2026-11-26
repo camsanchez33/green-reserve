@@ -193,6 +193,13 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     <BirdieWidget />
     <AgreementNotice />
     <Toaster />
+    {/* UI-STYLE (Cam 2026-11-26): no search in the sidebar. On a computer the golfer search sits in a header band at the top
+        of EVERY dashboard page, in the sidebar's own colour (globals.css .op-band). It is in the page's flow above <main>, so
+        it stays put while the page scrolls. On a phone the search stays in the More menu. */}
+    <div className="op-band hidden md:flex shrink-0 items-center px-6 py-2.5 print:hidden">
+      <div className="w-[min(420px,100%)]"><OperatorSearch /></div>
+    </div>
+
     {/* SD-2: below md the 224px rail is gone. A slim strip carries identity,
         the course switcher and sign-out; the tabs live in a bottom bar. */}
     <header className="md:hidden bg-white border-b border-line px-4 py-2.5 flex items-center gap-3">
@@ -288,8 +295,6 @@ export default function OperatorSidebar({ active, onAlertClick }: {
           <div className="text-[12px] text-ink-muted truncate">{meta}</div>
         </div>
       </div>
-      {/* HOME-3 (Cam 2026-11-12): Home carries the one search at its top; every other page keeps it here. */}
-      {active !== 'home' && <OperatorSearch />}
       {/* UI-STYLE (Cam 2026-11-26): small group labels, even spacing, one monochrome line icon per item (all 16px), and the
           current page marked by a lighter fill, a left bar and bold text (globals.css .op-rail .op-tab). */}
       <nav aria-label="Dashboard" className="flex flex-col gap-[18px] text-[14px]">

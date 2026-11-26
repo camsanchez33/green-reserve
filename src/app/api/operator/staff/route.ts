@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import { randomBytes } from 'crypto';
-import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { securityEvent } from '@/lib/security-events';
-import { normalizePermissions, presetFor, PRESETS } from '@/lib/staff-permissions';
+import { presetFor } from '@/lib/staff-permissions';
 import { resolveMemberPermissions } from '@/lib/team-access';
 import { removePerson, setAccess, setActive, updateDetails } from '@/lib/team';
 import { jsonBody, teamOwner, teamResponse } from '@/lib/team-route';
@@ -16,8 +12,8 @@ import { jsonBody, teamOwner, teamResponse } from '@/lib/team-route';
 // StaffPermissionChange per person whose keys change, and securityEvent when
 // sign-in is affected.
 
-// ── Kept for Settings → Staff & permissions (StaffPermissions.tsx) until the Team
-// page (#460) replaces it; delete GET and POST with that component. Owner only.
+// ── The old list (GET), owner only. Its old Add (POST) is gone (audit 2026-11-24 L9); PATCH and DELETE
+// are Team's.
 
 /** The old screen's list: the old shape, people removed on Team left out. */
 export async function GET(req: NextRequest) {
@@ -50,45 +46,9 @@ export async function GET(req: NextRequest) {
   }));
 }
 
-const PRESET_KEYS = new Set<string>(PRESETS.map(p => p.key));
-
-/**
- * The old screen's Add: a temporary password shown once to the owner, as before
- * Team. Now audited (TeamChange, securityEvent). Team's Invite (POST /staff/invite)
- * replaces it and never makes a temporary password.
- */
-export async function POST(req: NextRequest) {
-  const g = await teamOwner(req, { write: true }); if ('error' in g) return g.error;
-  const { ctx } = g;
-  const body = await jsonBody(req);
-  const name = typeof body.name === 'string' ? body.name.trim().slice(0, 120) : '';
-  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase().slice(0, 200) : '';
-  if (!name || !email) return NextResponse.json({ error: 'Name and email required' }, { status: 400 });
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: 'That email doesn’t look right.' }, { status: 400 });
-  if (await prisma.courseStaff.findUnique({ where: { email } })) return NextResponse.json({ error: 'Email already in use' }, { status: 409 });
-  // New staff default to Front desk (STAFF_POLICY_SPEC A3).
-  const keys = Array.isArray(body.permissions)
-    ? normalizePermissions(body.permissions.filter((k): k is string => typeof k === 'string'))
-    : normalizePermissions(PRESETS.find(p => p.key === (typeof body.preset === 'string' && PRESET_KEYS.has(body.preset) ? body.preset : 'front_desk'))!.keys);
-  const tempPassword = randomBytes(6).toString('hex');
-  const owner = await prisma.courseOperator.findUnique({ where: { id: ctx.operatorId }, select: { name: true } });
-  let staffId: string;
-  try {
-    staffId = await prisma.$transaction(async tx => {
-      const staff = await tx.courseStaff.create({
-        data: { courseId: ctx.courseId, email, name, password: await bcrypt.hash(tempPassword, 12), role: 'staff', permissions: keys, preset: presetFor(keys), permissionsSetAt: new Date(), passwordSetAt: new Date() },
-      });
-      await tx.staffPermissionChange.create({ data: { courseId: ctx.courseId, staffId: staff.id, changedBy: ctx.operatorId, before: [], after: keys } });
-      await tx.teamChange.create({ data: { courseId: ctx.courseId, actorId: ctx.operatorId, actorName: owner?.name ?? '', action: 'invite', targetType: 'person', targetId: staff.id, targetName: name, detail: 'added in Settings with a temporary password', after: keys, affected: 1 } });
-      return staff.id;
-    });
-  } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return NextResponse.json({ error: 'Email already in use' }, { status: 409 });
-    throw e;
-  }
-  await securityEvent(req, { kind: 'access_changed', surface: 'course', email, accountId: staffId, detail: 'staff login added in Settings' });
-  return NextResponse.json({ success: true, id: staffId, tempPassword });
-}
+// Audit 2026-11-24 L9: the old screen's Add (POST, a temporary password shown once) is gone. Nothing
+// calls it since Team's Invite (POST /staff/invite, lib/team.ts invitePerson) replaced it, and it had no
+// cap, so a course login could use it to test which emails are logins anywhere on the platform.
 
 // PATCH { id, roleId?, permissions? | areas?, active?, name?, phone? }
 //   roleId moves them to that role (their own changes are cleared unless permissions/areas come too);

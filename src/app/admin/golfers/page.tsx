@@ -151,7 +151,7 @@ function Everyone({ onOpen }: { onOpen: (l: Line) => void }) {
             <p>Sorted by last played. Open someone to see where they’ve played, every booking, payment and receipt. Their course handles refunds and cancellations.</p>
           </div>
           <div className={gs.tools}>
-            <label className={gs.sr}><SearchIcon /><input value={q} onChange={e => setQ(e.target.value)} aria-label="Search golfers by name, email or phone" type="search" autoComplete="off" /></label>
+            <label className={`ui-search ${gs.sr}`}><SearchIcon /><input value={q} onChange={e => setQ(e.target.value)} aria-label="Search golfers by name, email or phone" type="search" autoComplete="off" /></label>
             <button type="button" className={`${gs.ibtn} ${filter !== 'all' ? gs.fon : ''}`} onClick={() => setFilterOpen(true)} aria-label={filter === 'all' ? 'Filter' : `Filter: ${FILTERS.find(f => f[0] === filter)?.[1]}`} title="Filter">
               <FilterIcon />{filter !== 'all' && <i className={gs.fdot} />}
             </button>

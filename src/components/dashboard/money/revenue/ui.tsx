@@ -162,7 +162,7 @@ export const ROW_SEL = ' !bg-ink/10';
 /** The search box, no placeholder words. */
 export function Search({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
   return (
-    <label className="op-well flex items-center gap-2 h-[38px] flex-[0_1_240px] max-md:flex-auto bg-ink/5 border border-line rounded-[10px] px-[11px] text-ink-muted">
+    <label className="ui-search op-well flex items-center gap-2 h-[38px] flex-[0_1_240px] max-md:flex-auto bg-ink/5 border border-line rounded-[10px] px-[11px] text-ink-muted">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
       <input value={value} onChange={e => onChange(e.target.value)} aria-label={label} className="flex-1 min-w-0 bg-transparent border-0 outline-none text-[13.5px] text-ink py-2" />
     </label>

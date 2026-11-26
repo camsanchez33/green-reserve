@@ -6,6 +6,7 @@ import {
   SIGNIN_COOKIE, MAX_CODE_ATTEMPTS, cookieOptions,
   codeMatches, readChallenge, verifyAttemptKey, CODE_TTL_SECONDS,
 } from '@/lib/inquiry-signin';
+import { securityEvent } from '@/lib/security-events';
 
 // SD-11 step 3. A correct code proves the person reads the address on file.
 // It does NOT sign them in — see the note at the top of lib/inquiry-signin.ts.
@@ -15,6 +16,8 @@ const GENERIC = 'That code is not right, or it has expired. Check the email, or 
 
 export async function POST(req: NextRequest) {
   if (!(await rateLimit(`signin-verify:${evidentiaryIp(req)}`, 20, 3600))) {
+    // Audit 2026-11-24 L2: refusals here are security events, as at every other door.
+    await securityEvent(req, { kind: 'rate_limited', surface: 'course', detail: 'inquiry sign-in code check' });
     return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 });
   }
 
@@ -22,7 +25,10 @@ export async function POST(req: NextRequest) {
   // Expired, forged, or never issued all read the same. A distinct "no
   // challenge" message would tell someone probing the route whether their
   // earlier request had found a real course.
-  if (!challenge) return NextResponse.json({ error: GENERIC }, { status: 400 });
+  if (!challenge) {
+    await securityEvent(req, { kind: 'second_factor_failed', surface: 'course', detail: 'inquiry sign-in code, no valid challenge' });
+    return NextResponse.json({ error: GENERIC }, { status: 400 });
+  }
 
   // REVIEW FIX (cfeb2e1 audit): the attempt counter used to live INSIDE the
   // token, re-signed on each miss. That stops someone editing it down and does
@@ -34,6 +40,7 @@ export async function POST(req: NextRequest) {
   const cap = await rateLimitCount(verifyAttemptKey(challenge.cid), MAX_CODE_ATTEMPTS, CODE_TTL_SECONDS);
   const attemptsLeft = Math.max(0, MAX_CODE_ATTEMPTS - cap.used);
   if (!cap.allowed) {
+    await securityEvent(req, { kind: 'second_factor_failed', surface: 'course', detail: 'inquiry sign-in code, no tries left' });
     const dead = NextResponse.json({ error: 'Too many wrong codes. Send yourself a new one.' }, { status: 429 });
     dead.cookies.set(SIGNIN_COOKIE, '', { ...cookieOptions, maxAge: 0 });
     return dead;
@@ -45,6 +52,7 @@ export async function POST(req: NextRequest) {
   if (code.length !== 6 || !codeMatches(challenge.cid, code, challenge.codeMac)) {
     // The count the limiter already had. Without it the lockout arrived with no
     // warning it was coming.
+    await securityEvent(req, { kind: 'second_factor_failed', surface: 'course', detail: 'inquiry sign-in code, wrong code' });
     return NextResponse.json({ error: GENERIC, attemptsLeft }, { status: 400 });
   }
 

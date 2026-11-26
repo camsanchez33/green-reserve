@@ -6,7 +6,8 @@ import { prisma } from './prisma';
 export async function rateLimit(key: string, limit: number, windowSeconds: number): Promise<boolean> {
   // Keys that gate money (BIRDIE B1) fail CLOSED — a broken counter must not
   // uncap paid API spend. Everything else (login, forms) still fails open.
-  const failClosed = key.startsWith('birdie:') || key.startsWith('change-pw:'); // audit 2026-11-24 M4: a broken counter must not remove the guess cap
+  // Audit 2026-11-24 M4: so does the change-password guess cap; M11: so do the golfer send caps (each text is Twilio money).
+  const failClosed = key.startsWith('birdie:') || key.startsWith('change-pw:') || key.startsWith('send:');
   try {
     const rows = await prisma.$queryRaw<{ count: number }[]>`
       INSERT INTO "RateLimit" ("key", "count", "windowStart")
@@ -58,7 +59,14 @@ export async function rateLimitCount(key: string, limit: number, windowSeconds: 
   }
 }
 
+/**
+ * The connection's address for per-IP limits. Audit 2026-11-24 L14: the header the platform sets comes
+ * first (Vercel: x-vercel-forwarded-for, then x-real-ip), so a client can't pick its own bucket by sending
+ * an X-Forwarded-For; the left-most X-Forwarded-For hop is only the fallback off the platform (local runs).
+ */
 export function clientIp(req: Request): string {
+  const platform = req.headers.get('x-vercel-forwarded-for') || req.headers.get('x-real-ip');
+  if (platform) return platform.split(',')[0].trim();
   const fwd = req.headers.get('x-forwarded-for');
   return fwd ? fwd.split(',')[0].trim() : 'unknown';
 }
