@@ -17,8 +17,8 @@ import { GOLFER_PERSONA, GOLFER_MAX_TOKENS, golferCourseBlock, sanitizeGolferHis
 // It is OFF until the course turns it on, off everywhere with ASSISTANT_OFF=golfer, and fails closed without
 // ANTHROPIC_API_KEY. Caps, cheapest first: per IP per hour, then the course's own day (Cam: 300 at most), then the
 // platform's golfer budget — past either day cap the golfer gets the course's hand-off line instead of a model call.
-// The model never writes policy or the hand-off line: it answers with a marker and golferReply() puts the exact text in. Logs carry tokens and how the turn ended, never the
-// question or the answer.
+// The model never writes policy, the hand-off line or the manage-booking line: it answers with a marker and
+// golferReply() puts the exact text in. Logs carry tokens and how the turn ended, never the question or the answer.
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
   if (!brief) return NextResponse.json({ error: 'Questions are not available on this page.' }, { status: 404 });
 
   const started = Date.now();
-  // persona (frozen) → course block: tone, hand-off line, brief (breakpoint). No volatile text, no tools.
+  // persona (frozen, breakpoint) → course block: name, tone, brief (breakpoint). No volatile text, no tools.
   const system = systemBlocks(GOLFER_PERSONA, golferCourseBlock(c.name, c.settings.tone, brief.text), '');
   let msg: Anthropic.Beta.BetaMessage;
   try {
@@ -86,9 +86,9 @@ export async function POST(req: NextRequest) {
       model: ASSISTANT_MODEL, max_tokens: GOLFER_MAX_TOKENS, system, messages: history,
       output_config: { effort: ASSISTANT_EFFORT },
       betas: [FALLBACK_BETA], fallbacks: 'default',
-    }, { timeout: 20_000 });
+    }, { timeout: 12_000, maxRetries: 0 });
   } catch (err) {
-    console.error('[assistant] golfer call failed:', err instanceof Anthropic.APIError ? `${err.status} ${err.name}` : err instanceof Error ? err.name : 'error');
+    console.error('[assistant] golfer call failed:', err instanceof Anthropic.APIError ? `${err.status ?? 'no-status'} ${err.constructor.name}` : err instanceof Error ? err.constructor.name : 'error');
     return NextResponse.json({ reply: c.unknownLine, handOff: true });
   }
   const text = msg.content.filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === 'text').map(b => b.text).join('').trim();
