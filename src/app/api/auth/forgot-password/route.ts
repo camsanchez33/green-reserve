@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { randomBytes } from 'crypto';
 import { sendOperatorPasswordResetEmail } from '@/lib/email';
 import { signStaffResetToken } from '@/lib/auth';
+import { hashToken } from '@/lib/token-hash';
 import { rateLimit, evidentiaryIp } from '@/lib/rate-limit';
 
 // RV-1 (review 2026-09-29): this had no rate limit, so anyone could loop a
@@ -19,7 +20,7 @@ async function sendReset(email: string) {
   if (operator) {
     const resetToken = randomBytes(32).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-    await prisma.courseOperator.update({ where: { id: operator.id }, data: { resetToken, resetTokenExpiry } });
+    await prisma.courseOperator.update({ where: { id: operator.id }, data: { resetToken: hashToken(resetToken), resetTokenExpiry } }); // M9: only the hash is stored
     await sendOperatorPasswordResetEmail({
       operatorName: operator.name,
       operatorEmail: operator.email,

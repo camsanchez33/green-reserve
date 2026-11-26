@@ -5,16 +5,21 @@ import { validatePasswordStrength } from '@/lib/password';
 import { sendAdminPasswordChangedNotification } from '@/lib/email';
 import bcrypt from 'bcryptjs';
 import { passwordChanged } from '@/lib/admin-password';
+import { tokenMatches, hashToken } from '@/lib/token-hash';
+import { securityEvent } from '@/lib/security-events';
 
 export async function POST(req: NextRequest) {
-  const { token, password } = await req.json();
-  if (!token || !password)
+  const { token, password } = ((await req.json().catch(() => null)) ?? {}) as { token?: unknown; password?: unknown };
+  if (typeof token !== 'string' || typeof password !== 'string' || !token || !password)
     return NextResponse.json({ error: 'token and password required' }, { status: 400 });
   const passwordError = validatePasswordStrength(String(password));
   if (passwordError) return NextResponse.json({ error: passwordError }, { status: 400 });
 
   const payload = await verifyAdminSetPasswordToken(token);
-  if (!payload) return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 });
+  if (!payload) {
+    await securityEvent(req, { kind: 'signin_failed', surface: 'admin', detail: 'set password, bad or expired link' });
+    return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 });
+  }
 
   const admin = await prisma.adminUser.findUnique({ where: { id: payload.adminId } });
   if (!admin) return NextResponse.json({ error: 'Account not found' }, { status: 404 });
@@ -29,9 +34,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'This account has been deactivated — contact an owner to have it re-enabled.' }, { status: 403 });
   }
 
-  // Single-use: token stored in DB must match
-  if (admin.setPasswordToken !== token)
+  // Single-use: the hash stored in the DB must match (audit 2026-11-24 M9: hashed, and compared in constant time).
+  if (!tokenMatches(token, admin.setPasswordToken)) {
+    await securityEvent(req, { kind: 'signin_failed', surface: admin.role === 'owner' ? 'owner' : 'admin', email: admin.email, accountId: admin.id, detail: 'set password, link already used or replaced' });
     return NextResponse.json({ error: 'Token already used or invalid' }, { status: 400 });
+  }
 
   const now = new Date();
   if (admin.setPasswordTokenExpiry && admin.setPasswordTokenExpiry < now)
@@ -42,8 +49,9 @@ export async function POST(req: NextRequest) {
   const isReset = !admin.mustChangePassword;
 
   const passwordHash = await bcrypt.hash(String(password), 12);
-  await prisma.adminUser.update({
-    where: { id: admin.id },
+  // M9: conditional on the link still being there, so two submits of one link can't both land.
+  const { count } = await prisma.adminUser.updateMany({
+    where: { id: admin.id, setPasswordToken: hashToken(token) },
     data: {
       passwordHash,
       passwordChangedAt: now,
@@ -62,6 +70,7 @@ export async function POST(req: NextRequest) {
       // First-time activation still works: employees are created active.
     },
   });
+  if (count === 0) return NextResponse.json({ error: 'Token already used or invalid' }, { status: 400 });
 
   await passwordChanged(req, admin, isReset ? 'reset with Forgot password' : 'set in place of a temporary password');
   // The owner's change is emailed by passwordChanged() (with device and place), so not twice.

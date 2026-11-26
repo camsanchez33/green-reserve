@@ -11,8 +11,10 @@
 // The link reuses the reset-password columns (resetToken / resetTokenExpiry):
 // 32 random bytes, single use (cleared on use), expiring after SETUP_LINK_DAYS.
 // A later setup or forgot-password email replaces it, so only the newest works.
+// Audit 2026-11-24 M9: the column holds a SHA-256 of the token, never the token (lib/token-hash).
 import { randomBytes } from 'crypto';
 import { prisma } from './prisma';
+import { hashToken } from './token-hash';
 
 export const SETUP_LINK_DAYS = 7;
 
@@ -21,7 +23,7 @@ export async function issueSetupLink(operatorId: string): Promise<string> {
   const token = randomBytes(32).toString('hex');
   await prisma.courseOperator.update({
     where: { id: operatorId },
-    data: { resetToken: token, resetTokenExpiry: new Date(Date.now() + SETUP_LINK_DAYS * 86_400_000) },
+    data: { resetToken: hashToken(token), resetTokenExpiry: new Date(Date.now() + SETUP_LINK_DAYS * 86_400_000) },
   });
   return `${process.env.NEXT_PUBLIC_URL || ''}/dashboard/reset-password?token=${token}&setup=1`;
 }
