@@ -77,7 +77,7 @@ async function touchPersonActive(staffId: string, last: Date | null, now = new D
 /**
  * Audit 2026-11-24 L1/M4: the gr_operator session, but only while it is still live — the login exists,
  * a staff login is still on, and the token's sessionVersion matches the row (a password change, reset,
- * sign-out, disable or remove bumps it). For the few routes that need no course (an owner with none
+ * disable or remove bumps it). For the few routes that need no course (an owner with none
  * yet, the course switcher, the verify email); every other route uses resolveDashboardSession, which
  * checks the same. getOperatorSession() alone only checks the signature, so a killed cookie still worked.
  */
