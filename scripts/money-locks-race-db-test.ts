@@ -3,6 +3,7 @@
 //    check-in's conditional write is not proof of a cancel; the reader settles its own twins).
 //  - A paid, still-confirmed round: a check-in during the cancel's refund is refused (both claim the round).
 //  - A paid round cancels right after paying (its own charge's lock doesn't count); a failed cancel lets go.
+//  - A charge whose reply was lost, found on Stripe: the round can be checked in or cancelled at once.
 //  - L5: a refund the Stripe webhook recorded first is adopted by the admin refund (its reason, its email).
 // Real database; Stripe is stubbed. Run: npx tsx scripts/money-locks-race-db-test.ts
 let failed = 0;
@@ -149,6 +150,57 @@ async function cardChargeLosesToCancel() {
   await cleanup();
 }
 
+async function lostReply() {
+  const { prisma } = await import('../src/lib/prisma');
+  const { stripe } = await import('../src/lib/stripe');
+  const { performCheckIn } = await import('../src/lib/checkin-booking');
+  const { performCancellation } = await import('../src/lib/cancel-booking');
+  const TAG = 'rvwlost';
+  process.env.RESEND_API_KEY = '';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const s = stripe as any;
+  const created = Math.floor((Date.now() - 6 * 60_000) / 1000); // the first attempt charged six minutes ago
+  let ids: string[] = [];
+  s.paymentIntents.search = async (p: { query: string }) => { const id = /bookingId'\]:'([^']+)'/.exec(p.query)![1]; return { data: ids.includes(id) ? [{ id: `pi_${TAG}_${id.slice(-4)}`, amount: 4000, status: 'succeeded', created, application_fee_amount: 0 }] : [] }; };
+  s.paymentIntents.create = async () => { throw new Error('must not charge again'); };
+  s.paymentMethods.create = async () => ({ id: 'pm_clone' });
+  s.refunds.create = async (p: { amount?: number }) => ({ id: `re_${TAG}_${Math.random().toString(36).slice(2, 8)}`, amount: p.amount ?? 4000 });
+  s.refunds.list = async () => ({ data: [] });
+  const cleanup = async () => {
+    const cs = (await prisma.course.findMany({ where: { slug: { startsWith: TAG } }, select: { id: true } })).map((c: { id: string }) => c.id);
+    await prisma.moneyMove.deleteMany({ where: { courseId: { in: cs } } });
+    await prisma.paymentEvent.deleteMany({ where: { booking: { courseId: { in: cs } } } });
+    await prisma.bookingEvent.deleteMany({ where: { courseId: { in: cs } } });
+    await prisma.booking.deleteMany({ where: { courseId: { in: cs } } });
+    await prisma.teeTime.deleteMany({ where: { courseId: { in: cs } } });
+    await prisma.course.deleteMany({ where: { id: { in: cs } } });
+    await prisma.courseOperator.deleteMany({ where: { email: { startsWith: TAG } } });
+  };
+  await cleanup();
+  const op = await prisma.courseOperator.create({ data: { name: 'x', email: `${TAG}@t.local`, password: 'x' } });
+  const c = await prisma.course.create({ data: { name: 'Lost', slug: `${TAG}-a`, operatorId: op.id, address: '1', city: 'X', state: 'NJ', zipCode: '0', holes: 18, timezone: 'UTC', stripeAccountId: 'acct_lost', stripeAccountActive: true } });
+  const mk = async (time: string) => {
+    const t = await prisma.teeTime.create({ data: { courseId: c.id, date: '2030-06-01', time, holes: 18, greenFeeCents: 4000, playersAvailable: 4, playersBooked: 1 } });
+    // The dead first attempt left its claim six minutes ago (stale, so a retry may take it over).
+    const b = await prisma.booking.create({ data: { teeTimeId: t.id, courseId: c.id, golferName: 'Pat', golferEmail: `${TAG}+g@t.local`, players: 1, greenFeeTotal: 4000, cartFeeTotal: 0, accessFeeTotal: 0, totalAmount: 4000, status: 'confirmed', paymentStatus: 'card_on_file', stripeCustomerId: 'cus_x', stripePaymentMethodId: 'pm_x', shopLockedAt: new Date(Date.now() - 6 * 60_000) } });
+    ids.push(b.id); return b;
+  };
+  const STAFF = { type: 'staff' as const, id: null };
+  const a = await mk('09:00');
+  const first = await performCheckIn(a.id, STAFF);
+  const mid = await prisma.booking.findUniqueOrThrow({ where: { id: a.id } });
+  const second = await performCheckIn(a.id, STAFF);
+  const end = await prisma.booking.findUniqueOrThrow({ where: { id: a.id } });
+  ok('lost reply: the earlier charge is recorded as paid and the claim let go', 'error' in first && mid.paymentStatus === 'paid' && mid.shopLockedAt === null, { first, mid: { p: mid.paymentStatus, l: mid.shopLockedAt } });
+  ok('lost reply: "refresh and check in without a card" then works at once', 'success' in second && end.status === 'completed' && end.paymentStatus === 'paid', second);
+  const b = await mk('09:10');
+  await performCheckIn(b.id, STAFF);
+  const cancel = await performCancellation(b.id, { type: 'system' }, { waiveFee: true, courseCalledOff: 'weather' });
+  const endB = await prisma.booking.findUniqueOrThrow({ where: { id: b.id } });
+  ok('lost reply: the recorded round can be cancelled (and refunded) at once', 'success' in cancel && endB.status === 'cancelled', cancel);
+  await cleanup();
+}
+
 async function webhookFirst() {
   const { prisma } = await import('../src/lib/prisma');
   const { stripe } = await import('../src/lib/stripe');
@@ -185,6 +237,7 @@ async function webhookFirst() {
   await readerTwin();
   await paidCancel();
   await cardChargeLosesToCancel();
+  await lostReply();
   await webhookFirst();
   const { prisma } = await import('../src/lib/prisma');
   await prisma.$disconnect();

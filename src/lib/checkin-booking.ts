@@ -389,7 +389,7 @@ async function chargeBooking(
             : matchesBase
               ? preCart
               : shopExtra > 0 ? {} : { totalAmount: prior.amount };
-          await prisma.booking.update({ where: { id: bookingId }, data: { roundPaymentIntentId: prior.id, roundChargedCents: prior.amount, paymentStatus: 'paid', paidAt: new Date(prior.created * 1000), checkInFailReason: '', ...money } });
+          await prisma.booking.update({ where: { id: bookingId }, data: { roundPaymentIntentId: prior.id, roundChargedCents: prior.amount, paymentStatus: 'paid', paidAt: new Date(prior.created * 1000), checkInFailReason: '', ...money, shopLockedAt: null } }); // M1 review: this attempt's claim ends here (its lock would be later than paidAt, so the round could be neither checked in nor cancelled for 5 minutes); the items stay frozen by the paid status
           // LEDGER-1: the earlier charge is money that moved; the PaymentIntent id dedupes it.
           await recordMove({ courseId: booking.courseId, what: 'round', direction: 'in', method: 'card', account: 'course', amountCents: prior.amount, platformFeeCents: prior.application_fee_amount ?? 0, stripeId: prior.id, bookingId, actor: actor.type, at: new Date(prior.created * 1000), note: 'found on Stripe after a lost reply' });
           return { error: 'This round was already charged on an earlier attempt (the confirmation was lost in transit). It is now recorded as paid — refresh and check in without a card.', status: 409 } as const;
@@ -519,10 +519,13 @@ async function chargeBooking(
       // (reader-rounds finalize: a twin that recorded the same tap, or a refund for a round no longer playing),
       // so only a card charge made by THIS attempt is ever refunded here, and only when it wasn't recorded.
       const now = await prisma.booking.findUnique({ where: { id: bookingId }, select: { status: true, paymentStatus: true, roundPaymentIntentId: true } });
-      if (claimRound) await unlock();
-      if (now?.roundPaymentIntentId === paymentIntentId && now?.paymentStatus === 'paid') return { error: 'Already checked in', status: 409 } as const;
+      // Let go of the claim without ever skipping the ledger or the refund below on a database error.
+      const letGo = async () => { if (claimRound) await unlock().catch(err => console.error(JSON.stringify({ ev: 'checkin.unlock.fail', bookingId, error: err instanceof Error ? err.message : String(err) }))); };
+      if (now?.roundPaymentIntentId === paymentIntentId && now?.paymentStatus === 'paid') { await letGo(); return { error: 'Already checked in', status: 409 } as const; }
       const chargedNow = !!paymentIntentId && chargedCents != null && !alreadyPaid && !opts?.cardPresent;
+      const what = now?.status === 'cancelled' ? 'This booking was cancelled' : 'This booking changed';
       if (!chargedNow) {
+        await letGo();
         console.error(JSON.stringify({ ev: 'checkin.record.missed', bookingId, status: now?.status, cardPresent: !!opts?.cardPresent }));
         return { error: now?.status === 'cancelled' ? 'This booking was cancelled — nothing was charged here.' : 'This booking changed while it was being checked in — refresh and look again.', status: 409 } as const;
       }
@@ -531,14 +534,18 @@ async function chargeBooking(
       try {
         const refund = await refundOnConnectedAccount({ paymentIntentId: paymentIntentId as string, connectedAccountId: booking.course.stripeAccountId as string, idempotencyKey: `checkin-race-${bookingId}-${paymentIntentId}` });
         await recordMove({ courseId: booking.courseId, what: 'round', direction: 'out', method: 'card', account: 'course', amountCents: refund.amount, platformFeeCents: feeBackCents(refund.amount, chargedCents as number, roundApplicationFeeCents(booking)), stripeId: refund.id, bookingId, actor: actor.type, note: 'given back: the booking was cancelled while it was charged' });
+        // On the golfer's payment timeline too, like the cancel and cron refunds.
+        await prisma.paymentEvent.create({ data: { bookingId, kind: 'refund', amountCents: refund.amount, stripeId: refund.id, actor: 'system', detail: `${what} while the card was being charged — the charge was given back` } }).catch(() => {});
+        await letGo();
         console.error(JSON.stringify({ ev: 'checkin.record.missed', bookingId, refunded: true }));
-        return { error: 'This booking was cancelled while the card was being charged, so the charge was given back.', status: 409 } as const;
+        return { error: `${what} while the card was being charged, so the charge was given back.`, status: 409 } as const;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         console.error(JSON.stringify({ ev: 'checkin.race_refund.fail', bookingId, paymentIntentId, error: msg }));
         // On admin Problems (refund_failed), with the charge's id so a later refund in Stripe attaches to it.
         await prisma.paymentEvent.create({ data: { bookingId, kind: 'refund_failed', amountCents: chargedCents as number, stripeId: paymentIntentId as string, actor: 'system', detail: `Charged while the booking was cancelled; the refund failed — refund it in Stripe: ${msg}` } }).catch(() => {});
-        return { error: 'This booking was cancelled while the card was being charged, and the refund did not go through — refund it in Stripe.', status: 409 } as const;
+        await letGo();
+        return { error: `${what} while the card was being charged, and the refund did not go through — refund it in Stripe.`, status: 409 } as const;
       }
     }
     // An already-paid round's check-in lets go of its claim (a new charge's lock is left, as before: it is earlier than paidAt).
