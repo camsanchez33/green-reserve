@@ -27,6 +27,7 @@ const nextServer = require('next/server');
 nextServer.after = (task: unknown) => { void Promise.resolve(typeof task === 'function' ? (task as () => unknown)() : task).catch(() => {}); };
 
 import { prisma } from '../src/lib/prisma';
+import { hashToken } from '../src/lib/token-hash';
 import { signToken, signStaffToken } from '../src/lib/auth';
 import { liveOperatorSession } from '../src/lib/session';
 import { signAdminToken, resolveAdminSession, endEmployeeSession } from '../src/lib/admin-session';
@@ -184,11 +185,11 @@ const cookieOut = (res: Response, name: string) => {
   jar = { admin_session: empTok2 };
   ok('M5 (set-up) a fresh employee cookie is live', !!(await resolveAdminSession()));
   const link = await signAdminSetPasswordToken({ adminId: emp.id, email: emp.email });
-  await prisma.adminUser.update({ where: { id: emp.id }, data: { setPasswordToken: link, setPasswordTokenExpiry: new Date(Date.now() + 3600_000) } });
+  await prisma.adminUser.update({ where: { id: emp.id }, data: { setPasswordToken: hashToken(link), setPasswordTokenExpiry: new Date(Date.now() + 3600_000) } });
   const sp = await setPassword(req('/api/admin/set-password', { token: link, password: 'Another-strong-pw-77!' }, {}));
   ok('M5 set-password ends the employee\'s cookies', sp.status === 200 && (await resolveAdminSession()) === null, sp.status);
   const ownerLink = await signAdminSetPasswordToken({ adminId: owner.id, email: owner.email });
-  await prisma.adminUser.update({ where: { id: owner.id }, data: { setPasswordToken: ownerLink, setPasswordTokenExpiry: new Date(Date.now() + 3600_000) } });
+  await prisma.adminUser.update({ where: { id: owner.id }, data: { setPasswordToken: hashToken(ownerLink), setPasswordTokenExpiry: new Date(Date.now() + 3600_000) } });
   const osp = await setPassword(req('/api/admin/set-password', { token: ownerLink, password: 'Another-strong-pw-77!' }, {}));
   ok('M5 the owner\'s set-password ends every owner session', osp.status === 200 && (await prisma.ownerSession.count({ where: { adminId: owner.id, revokedAt: null } })) === 0, osp.status);
 
