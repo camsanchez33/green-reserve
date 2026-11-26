@@ -88,8 +88,9 @@ for (const it of items) {
   check(`${it.key} (${it.href}) is shown only to roles its API lets in${extra.length ? ` — not ${extra.join(', ')}` : ''}`, extra.length === 0);
 }
 check('every gated page is in the rail', Object.keys(GATE).every(k => items.some(i => i.key === k)));
-// ADMIN-C (Cam 2026-10-22): one outline icon per section, inline and decorative — never a lucide import here.
-check('rail icons are inline and hidden from screen readers (ADMIN-C)', !/from 'lucide-react'/.test(rail) && /aria-hidden="true"/.test(rail));
+// UI-STYLE (Cam 2026-11-26, approved; replaces ADMIN-C's inline icons): one line icon per item, the dashboard's lucide set
+// and size, decorative and hidden from screen readers.
+check('rail icons are the dashboard\'s line set and hidden from screen readers (UI-STYLE)', /from 'lucide-react'/.test(rail) && rail.includes('<span aria-hidden="true" className={g.ic}>{ICONS[item.key]}</span>'));
 
 const route = readFileSync('src/app/api/admin/search/route.ts', 'utf8');
 const palette = readFileSync('src/components/admin/CommandPalette.tsx', 'utf8');
