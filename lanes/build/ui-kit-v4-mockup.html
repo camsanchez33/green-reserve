@@ -1,0 +1,306 @@
+<!doctype html><html lang="en" data-look="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UI Kit v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@500;600&family=Libre+Franklin:wght@400;500;600&display=swap">
+<style>
+:root{--page:#141414;--pn:#262626;--pn2:#2D2D2D;--glass:rgb(38 38 38/.78);--ink:#EDEDED;--soft:#C3C3C3;--muted:#919191;--hair:rgb(255 255 255/.09);--band:#1E1E1E;--band-ink:#F2F2F2;--band-muted:#B0B0B0;
+ --field:rgb(255 255 255/.07);--field-h:rgb(255 255 255/.10);--acc:#5FB88A;--brand:#346B4F;--ok:#7BD9A4;--warn:#F2C46B;--bad:#FF9A8A;--rain:#8EC5FF;--ntl:#8A8D89;
+ --sel:rgb(255 255 255/.10);--track:rgb(255 255 255/.22);--knob-off:#D6D6D6;--scrim:rgb(0 0 0/.55);--on:#EDEDED;--knob:#141414;--shadow:0 6px 18px rgb(0 0 0/.35);--raise:0 8px 22px rgb(0 0 0/.32),inset 0 1px 0 rgb(255 255 255/.07);
+ --f-head:"EB Garamond",Garamond,"Times New Roman",serif;--f-body:"Libre Franklin","Helvetica Neue",Arial,sans-serif;--ease:cubic-bezier(.2,.8,.2,1);--spring:cubic-bezier(.34,1.35,.5,1);color-scheme:dark}
+:root[data-look="light"]{--page:#F2F2F2;--pn:#FFFFFF;--pn2:#FFFFFF;--glass:rgb(255 255 255/.82);--ink:#161616;--soft:#444;--muted:#6B6B6B;--hair:#E2E2E2;
+ --field:#EDEDED;--field-h:#E6E6E6;--acc:#346B4F;--ok:#1F6B43;--warn:#8A520F;--bad:#A3452F;--rain:#2D6FB0;--ntl:#6B6E6A;--sel:#E9E9E9;--track:#CFCFCF;--knob-off:#fff;--scrim:rgb(0 0 0/.35);--on:#161616;--knob:#FFFFFF;
+ --shadow:0 6px 18px rgb(0 0 0/.14);--raise:0 8px 22px rgb(0 0 0/.10),0 0 0 1px #DCDCDC;color-scheme:light}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--ink);font:400 14px/1.5 var(--f-body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button,input,select{font-family:inherit}h1,h2,h3,p{margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px}
+.top{position:sticky;top:0;z-index:30;background:var(--band);color:var(--band-ink);border-bottom:1px solid rgb(255 255 255/.08)}
+.top .wrap{display:flex;align-items:center;gap:12px 16px;padding-block:12px;flex-wrap:wrap}
+.top h1{font:600 24px/1.15 var(--f-head)}.top .note{color:var(--band-muted);font-size:13px;flex:1 1 220px;min-width:0}
+.look{display:inline-flex;background:rgb(255 255 255/.08);border-radius:8px;padding:2px}
+.look button{border:0;background:transparent;color:#B0B0B0;height:30px;padding:0 14px;border-radius:6px;cursor:pointer;font-weight:500;font-size:14px;transition:background-color 120ms var(--ease)}
+.look button[aria-pressed=true]{background:rgb(255 255 255/.16);color:#F2F2F2}
+main{padding-block:32px 96px;display:grid;gap:64px}
+.part{display:grid;gap:14px;min-width:0}
+.part-head{display:flex;align-items:baseline;gap:12px}.num{font:600 13px/1 var(--f-body);color:var(--muted);min-width:18px}
+.part h2{font:600 28px/1.15 var(--f-head)}.cap{color:var(--soft);max-width:80ch}
+.ctrls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* buttons 3C */
+.btn{height:36px;padding:0 14px;border-radius:8px;border:1px solid transparent;font:500 14px/1 var(--f-body);display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;white-space:nowrap;background:transparent;color:var(--ink);transition:transform 120ms var(--ease),background-color 120ms var(--ease),filter 120ms var(--ease)}
+.btn:active{transform:scale(.97)}.btn.sm{height:32px;padding:0 12px;font-size:13px}.btn.lg{height:48px;font-size:16px;padding:0 20px}
+.btn.pri{background:var(--brand);color:#fff;box-shadow:inset 0 1px 0 rgb(255 255 255/.22),inset 0 -1px 0 rgb(0 0 0/.25),0 1px 2px rgb(0 0 0/.25)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.sec{border-color:color-mix(in srgb,var(--ink) 28%,transparent)}.btn.sec:hover{background:var(--sel)}
+.btn.quiet{color:var(--soft)}.btn.quiet:hover{color:var(--ink);background:var(--sel)}
+.btn[disabled]{opacity:.45;cursor:default;transform:none}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* status 10C */
+.stt{font-size:13px;font-weight:500;white-space:nowrap;color:var(--c,var(--soft));display:inline-block}
+.s-paid,.s-in{--c:var(--ok)}.s-unpaid,.s-failed{--c:var(--bad)}.s-noshow{--c:var(--warn)}.s-rain{--c:var(--rain)}.s-member{--c:var(--soft)}.s-refund{--c:var(--ntl)}
+.stt.tag{padding:2px 8px;border-radius:6px;background:color-mix(in srgb,var(--bad) 18%,transparent)}
+/* panels 4B */
+.panel{background:var(--pn);border-radius:10px;box-shadow:0 0 0 1px var(--hair);min-width:0}
+.panel.feat{background:var(--pn2);box-shadow:var(--raise)}
+.glass{background:var(--glass);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);box-shadow:0 0 0 1px var(--hair),var(--shadow)}
+.card{padding:16px;display:grid;gap:12px;align-content:start}
+.card h3,.ph h3{font:600 20px/1.2 var(--f-head)}
+.ph{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--hair);flex-wrap:wrap}
+.page-t{font:600 32px/1.1 var(--f-head)}
+/* app frame */
+.desk{border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px var(--hair);background:var(--page);min-width:0}
+.ribbon{background:#1E1E1E;color:#F2F2F2;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-weight:600;font-size:14px}
+.ribbon span{color:#B0B0B0;font-weight:400}
+.dbody{display:grid;grid-template-columns:208px minmax(0,1fr)}
+.side{padding:12px;display:grid;gap:2px;align-content:start;border-right:1px solid var(--hair);background:var(--pn)}
+.nv{display:flex;align-items:center;gap:10px;height:40px;padding:0 10px;border-radius:8px;color:var(--soft);cursor:default}
+.nv.on{background:var(--sel);color:var(--ink);font-weight:500}.nv.on .i{fill:currentColor;fill-opacity:.4}
+.dmain{padding:24px;display:grid;gap:20px;align-content:start;min-width:0}
+.dmain>.hd{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.dmain .date{color:var(--muted);margin-top:4px}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.kpi{padding:16px;display:grid;gap:6px}.kpi .l{color:var(--muted);font-size:13px}
+.kpi .n{font:600 32px/1.1 var(--f-body);font-variant-numeric:tabular-nums}.kpi .d{font-size:13px;color:var(--ok)}
+.two{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);gap:16px;align-items:start}
+/* rows 11C + tee sheet */
+.trow{position:relative;display:grid;grid-template-columns:64px minmax(0,1fr) 104px auto;gap:4px 12px;align-items:center;min-height:56px;padding:8px 16px;border-bottom:1px solid var(--hair)}
+.trow:last-child{border-bottom:0}
+.trow .stt{justify-self:start}
+.trow time{font-weight:600;font-variant-numeric:tabular-nums}
+.who{min-width:0;display:grid}.who b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.who span{font-size:13px;color:var(--muted)}
+.trow.p-bad{box-shadow:inset 3px 0 0 var(--bad);background:color-mix(in srgb,var(--bad) 7%,transparent)}
+.trow.p-rain{box-shadow:inset 3px 0 0 var(--rain);background:color-mix(in srgb,var(--rain) 8%,transparent)}
+.acts{display:flex;gap:6px;justify-content:flex-end;min-width:0}
+.compact .trow{grid-template-columns:64px minmax(0,1fr) 104px}
+.trow.lit::after{content:"";position:absolute;inset:0;background:var(--ok);opacity:0;pointer-events:none;animation:light 1500ms ease-out 1}
+@keyframes light{12%{opacity:.24}100%{opacity:0}}
+.stt.turn{animation:turn 640ms var(--spring) 1}
+@keyframes turn{from{transform:scale(.85);opacity:.5}55%{transform:scale(1.14);opacity:1}to{transform:scale(1)}}
+.badge{min-width:18px;height:18px;padding:0 5px;border-radius:6px;background:var(--brand);color:#fff;font-size:12px;line-height:18px;text-align:center;font-weight:600}
+/* tabs 9B */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--hair)}
+.tabs button{border:0;background:transparent;color:var(--muted);height:40px;padding:0 16px;font-size:14px;font-weight:500;cursor:pointer;transition:color 120ms var(--ease),box-shadow 200ms var(--ease);margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}.tabs button[aria-selected=true]{color:var(--ink);box-shadow:inset 0 -2px 0 var(--acc)}
+/* fields 7C */
+.fld{display:grid;gap:6px}.fld label{font-size:13px;color:var(--soft)}
+.inp{width:100%;height:44px;border-radius:8px;background:var(--field);border:1px solid transparent;color:var(--ink);font:400 14px var(--f-body);padding:0 12px;outline:0;appearance:none;-webkit-appearance:none;transition:border-color 120ms var(--ease),background-color 120ms var(--ease)}
+.inp:focus,.inp.is-f{border-color:var(--acc);background:var(--pn)}
+.err .inp{border-color:var(--bad)}.em{font-size:12px;color:var(--bad)}
+select.inp{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 19px,calc(100% - 13px) 19px;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
+/* switch 8A + steppers */
+.sw{appearance:none;-webkit-appearance:none;width:40px;height:24px;border-radius:8px;background:var(--track);position:relative;cursor:pointer;margin:0;flex:none;transition:background-color 200ms var(--ease)}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:6px;background:var(--knob-off);transition:transform 200ms var(--ease),background-color 200ms var(--ease)}
+.sw:checked{background:var(--on)}.sw:checked::after{transform:translateX(16px);background:var(--knob)}
+.lbl{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.step{display:inline-flex;align-items:center;background:var(--field);border-radius:8px}
+.step button{width:44px;height:44px;border:0;background:transparent;color:var(--ink);display:grid;place-items:center;cursor:pointer;border-radius:8px;transition:transform 120ms var(--ease)}
+.step button:active{transform:scale(.92)}.step output{min-width:36px;text-align:center;font-weight:500;font-variant-numeric:tabular-nums}
+.seg{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.seg button{height:48px;border-radius:8px;border:1px solid transparent;background:var(--field);color:var(--ink);font:500 16px var(--f-body);cursor:pointer;transition:transform 120ms var(--ease),border-color 120ms var(--ease),background-color 120ms var(--ease)}
+.seg button:active{transform:scale(.96)}
+.seg button[aria-pressed=true]{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 20%,transparent)}
+/* dropdown + dialog + toast (glass) */
+.menu-w{position:relative}
+.menu{position:absolute;right:0;top:calc(100% + 6px);z-index:15;min-width:220px;padding:8px;border-radius:10px;display:grid;gap:2px;transform-origin:top right;animation:panel 200ms var(--ease) both}
+.menu[hidden]{display:none}.menu label{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer}.menu label:hover{background:var(--sel)}
+.menu input{accent-color:var(--brand);width:16px;height:16px;margin:0}
+@keyframes panel{from{opacity:0;transform:translateY(-6px) scale(.97)}}
+.ov{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px}
+.ov[hidden]{display:none}.scrim{position:absolute;inset:0;background:var(--scrim);animation:fade 200ms var(--ease) both}
+@keyframes fade{from{opacity:0}}
+.dlg{position:relative;width:min(440px,100%);border-radius:10px;padding:20px;display:grid;gap:16px;animation:dlg 380ms var(--spring) both}
+@keyframes dlg{from{opacity:0;transform:translateY(16px) scale(.94)}}
+.dlg h3{font:600 24px/1.2 var(--f-head)}.dlg .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+.dlg .r2{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}
+.tl{position:fixed;top:64px;right:16px;z-index:60;pointer-events:none;display:grid;gap:8px;max-width:calc(100vw - 32px)}
+.toast{display:flex;align-items:center;gap:12px;padding:10px 10px 10px 14px;border-radius:8px;border-left:3px solid var(--c,var(--ok));font-size:14px;pointer-events:auto;animation:panel 200ms var(--ease) both;transform-origin:top right}
+.toast.out{opacity:0;transform:translateY(-6px);transition:opacity 200ms var(--ease),transform 200ms var(--ease)}
+.toast.bad{--c:var(--bad)}
+.stat-toast{width:max-content;max-width:100%;animation:none}
+/* phones 14C */
+.stage{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;gap:12px}
+.phone{position:relative;width:min(100%,360px);height:720px;border-radius:28px;background:var(--page);box-shadow:0 0 0 1px var(--hair),0 0 0 6px color-mix(in srgb,var(--ink) 9%,transparent);overflow:hidden;display:flex;flex-direction:column;isolation:isolate}
+.pscroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:20px 16px 16px}
+.golf{font-size:16px}.golf .page-t{font-size:30px}
+.golf .block{display:grid;gap:10px;margin-top:20px}.golf .block>.lb{font-weight:500}
+.dpick{display:flex;align-items:center;justify-content:space-between;background:var(--field);border-radius:8px;height:48px;padding:0 4px;margin-top:16px}
+.dpick button{width:44px;height:44px;border:0;background:transparent;color:var(--ink);display:grid;place-items:center;cursor:pointer;border-radius:8px}
+.times{display:grid;gap:0;border-radius:10px;overflow:hidden;background:var(--pn);box-shadow:0 0 0 1px var(--hair)}
+.times button{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 8px;min-height:56px;padding:6px 16px;border:0;border-bottom:1px solid var(--hair);background:transparent;color:var(--ink);font:500 16px var(--f-body);cursor:pointer;text-align:left;transition:background-color 120ms var(--ease)}
+.times button:last-child{border-bottom:0}.times small{font-size:13px;color:var(--muted);font-weight:400;grid-column:1}.times em{font-style:normal;color:var(--soft);font-size:14px;grid-row:1/3;grid-column:2}
+.times button[aria-pressed=true]{box-shadow:inset 3px 0 0 var(--acc);background:color-mix(in srgb,var(--acc) 14%,transparent)}
+.times button[disabled]{color:var(--muted);cursor:default}
+.bar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:var(--pn);border-top:1px solid var(--hair);font-size:14px}
+.bar b{display:block;font-weight:500;font-size:15px}.bar span{color:var(--muted);font-size:13px}
+.sheet{position:absolute;inset:0;z-index:5;background:var(--pn);display:grid;align-content:center;justify-items:center;gap:14px;padding:24px;text-align:center;border-radius:28px 28px 0 0;animation:sheet 380ms var(--spring) both}
+.sheet[hidden]{display:none}
+@keyframes sheet{from{transform:translateY(100%)}}
+.sheet .ring{fill:none;stroke:var(--ok);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:0}
+.sheet.go .ring.c{animation:draw 480ms var(--ease) 380ms 1 both}.sheet.go .ring.k{animation:draw 340ms var(--ease) 800ms 1 both}
+@keyframes draw{from{stroke-dashoffset:100}}
+.sheet .sh{font:600 30px/1.15 var(--f-head)}.sheet .big{font:600 44px/1.1 var(--f-body);font-variant-numeric:tabular-nums}
+.sheet.go .sh{animation:fadeup 300ms var(--ease) 900ms 1 both}.sheet.go .big{animation:settle 620ms var(--spring) 1000ms 1 both}.sheet.go .sd,.sheet.go .sb{animation:fadeup 300ms var(--ease) 1250ms 1 both}
+@keyframes fadeup{from{opacity:0;transform:translateY(8px)}}
+@keyframes settle{from{opacity:0;transform:translateY(-16px) scale(1.12)}50%{opacity:1}}
+.sheet .sd{color:var(--soft);font-size:15px}.sheet .sb{display:grid;gap:8px;width:100%;margin-top:10px}
+.shead{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.tabbar{flex:none;display:grid;grid-template-columns:repeat(4,1fr);background:var(--pn);border-top:1px solid var(--hair);padding:6px 4px 10px}
+.tabbar div{display:grid;justify-items:center;gap:2px;font-size:12px;color:var(--muted);padding:6px 0;cursor:default}
+.tabbar .on{color:var(--ink);font-weight:500}.tabbar .on .i{fill:currentColor;fill-opacity:.4}.tabbar .i{width:22px;height:22px}
+.fab{position:absolute;right:16px;bottom:84px;z-index:4;height:52px;padding:0 18px;border-radius:10px;border:1px solid rgb(255 255 255/.2);background:rgb(52 107 79/.88);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;font:500 15px var(--f-body);display:flex;align-items:center;gap:8px;cursor:pointer;box-shadow:inset 0 1px 0 rgb(255 255 255/.25),0 8px 20px rgb(0 0 0/.35);transition:transform 120ms var(--ease)}
+.fab:active{transform:scale(.95)}
+.chips{display:flex;gap:8px;margin:12px 0 4px}
+/* kit */
+.kit{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px}
+.kit .card>.k{font-size:13px;color:var(--muted)}
+.states{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px}
+.empty{display:grid;gap:12px;justify-items:start}.empty p{color:var(--soft)}
+.sk{display:grid;gap:0}.sk .r{display:grid;grid-template-columns:64px 1fr 80px;gap:12px;align-items:center;height:56px;border-bottom:1px solid var(--hair)}.sk .r:last-child{border:0}
+.sk i{display:block;height:12px;border-radius:6px;background:var(--field-h);animation:pulse 1000ms ease-in-out infinite alternate}
+.sk .r div{display:grid;gap:6px}.sk .r div i:last-child{width:60%;height:10px}
+@keyframes pulse{from{opacity:.4}to{opacity:1}}
+.pad{padding:16px}
+@media (max-width:900px){.two{grid-template-columns:1fr}}
+@media (max-width:760px){
+ .dbody{grid-template-columns:1fr}.side{display:none}.dmain{padding:16px}.kpis{grid-template-columns:1fr}.page-t{font-size:30px}
+ .trow{grid-template-columns:52px minmax(0,1fr) auto}.trow .acts{grid-column:2/-1;justify-content:flex-start}
+ .compact .trow{grid-template-columns:52px minmax(0,1fr) auto}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important}}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+<symbol id="cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+<symbol id="users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6M18 14.3c2.2.7 3.5 2.6 3.5 5.7"/></symbol>
+<symbol id="chart" viewBox="0 0 24 24"><path d="M5 20v-7M12 20V5M19 20v-10"/></symbol>
+<symbol id="card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol>
+<symbol id="set" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></symbol>
+<symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+<symbol id="filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+<symbol id="cl" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+<symbol id="cr" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+<symbol id="flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+<symbol id="menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+</defs></svg>
+<header class="top"><div class="wrap"><h1>UI Kit v4</h1><span class="note">The chosen system on real screens.</span><div class="look" role="group" aria-label="Look"><button type="button" data-look="dark" aria-pressed="true">Dark</button><button type="button" data-look="light" aria-pressed="false">Light</button></div></div></header>
+<div class="tl" id="tl" aria-live="polite"></div>
+<main class="wrap">
+
+<section class="part"><div class="part-head"><span class="num">1</span><h2>Course dashboard</h2></div><p class="cap">Home in the sidebar layout: three KPIs with revenue raised, today's sheet with mixed states, and one card with its own primary.</p>
+<div class="desk"><div class="ribbon">Pine Hollow Golf Club<span>Thursday, Nov 26</span></div><div class="dbody">
+<nav class="side" aria-label="Sections"><div class="nv on"><svg class="i"><use href="#home"/></svg>Home</div><div class="nv"><svg class="i"><use href="#cal"/></svg>Tee sheet</div><div class="nv"><svg class="i"><use href="#users"/></svg>Members</div><div class="nv"><svg class="i"><use href="#card"/></svg>Payments</div><div class="nv"><svg class="i"><use href="#chart"/></svg>Reports</div><div class="nv"><svg class="i"><use href="#set"/></svg>Settings</div></nav>
+<div class="dmain"><div class="hd"><div><h3 class="page-t">Today</h3><p class="date">Thursday, November 26</p></div><button class="btn pri" type="button" data-toast="Booking started">New booking</button></div>
+<div class="kpis"><div class="panel kpi"><span class="l">Rounds today</span><span class="n">38</span><span class="d">6 more than last Thursday</span></div><div class="panel feat kpi"><span class="l">Revenue</span><span class="n">$84,260</span><span class="d">Up 12 percent this month</span></div><div class="panel kpi"><span class="l">Open slots</span><span class="n">11</span><span class="d" style="color:var(--warn)">4 before noon</span></div></div>
+<div class="two"><div class="panel"><div class="ph"><h3>Today's tee sheet</h3><a class="btn sec sm" href="#s2" style="text-decoration:none">Open tee sheet</a></div><div id="r1"></div></div>
+<div class="panel card"><h3>Waitlist</h3><p style="color:var(--soft)">Three golfers want a time before 9:00 and two slots just opened.</p><div class="ctrls"><button class="btn pri" type="button" data-toast="Offer sent to 3 golfers">Offer open slots</button></div></div></div>
+</div></div></div></section>
+
+<section class="part" id="s2"><div class="part-head"><span class="num">2</span><h2>Tee sheet</h2></div><p class="cap">Day, week and month tabs, one Filter button, roomy rows with a second line, a centred edit dialog, a toast and the Checked in moment.</p>
+<div class="desk"><div class="ribbon">Pine Hollow Golf Club<span>Thursday, Nov 26</span></div><div class="dbody">
+<nav class="side" aria-label="Sections"><div class="nv"><svg class="i"><use href="#home"/></svg>Home</div><div class="nv on"><svg class="i"><use href="#cal"/></svg>Tee sheet</div><div class="nv"><svg class="i"><use href="#users"/></svg>Members</div><div class="nv"><svg class="i"><use href="#card"/></svg>Payments</div><div class="nv"><svg class="i"><use href="#chart"/></svg>Reports</div><div class="nv"><svg class="i"><use href="#set"/></svg>Settings</div></nav>
+<div class="dmain"><div class="hd"><h3 class="page-t">Tee sheet</h3><div class="ctrls"><button class="btn quiet" type="button" id="toastBtn">Show toast</button><div class="menu-w"><button class="btn sec" type="button" id="fbtn" aria-expanded="false" aria-haspopup="true"><svg class="i"><use href="#filter"/></svg>Filter <span class="badge" id="fcount">1</span></button>
+<div class="menu glass" id="fmenu" hidden><label><input type="checkbox" id="f-past" checked>Hide past times</label><label><input type="checkbox" id="f-prob">Problems only</label></div></div><button class="btn pri" type="button" id="replayCI">Replay Check in</button></div></div>
+<div class="tabs" role="tablist" id="tabs"><button role="tab" aria-selected="true" data-v="day">Day</button><button role="tab" aria-selected="false" data-v="week">Week</button><button role="tab" aria-selected="false" data-v="month">Month</button></div>
+<div class="panel"><div id="r2"></div></div></div></div></div></section>
+
+<section class="part"><div class="part-head"><span class="num">3</span><h2>Golfer booking</h2></div><p class="cap">Phone, 16px body. Pick players and a time, tap Book, and the confirmation sheet draws the check and settles the tee time.</p>
+<div class="stage"><div class="phone golf" id="gp"><div class="pscroll"><h3 class="page-t">Pine Hollow Golf Club</h3>
+<div class="dpick"><button type="button" id="dprev" aria-label="Previous day"><svg class="i"><use href="#cl"/></svg></button><b style="font-weight:500" id="dlab">Sat, Nov 28</b><button type="button" id="dnext" aria-label="Next day"><svg class="i"><use href="#cr"/></svg></button></div>
+<div class="block"><span class="lb">Players</span><div class="seg" id="seg"><button type="button" aria-pressed="false">1</button><button type="button" aria-pressed="false">2</button><button type="button" aria-pressed="false">3</button><button type="button" aria-pressed="true">4</button><button type="button" aria-pressed="false">More</button></div></div>
+<div class="block"><span class="lb">Times</span><div class="times" id="times">
+<button type="button" aria-pressed="false"><span>7:30 AM</span><small>4 spots open</small><em>$62</em></button>
+<button type="button" aria-pressed="true"><span>8:10 AM</span><small>4 spots open</small><em>$62</em></button>
+<button type="button" aria-pressed="false"><span>8:20 AM</span><small>2 spots open</small><em>$62</em></button>
+<button type="button" disabled><span>8:30 AM</span><small>Full</small><em>&nbsp;</em></button>
+<button type="button" aria-pressed="false"><span>9:00 AM</span><small>4 spots open</small><em>$58</em></button>
+<button type="button" aria-pressed="false"><span>9:10 AM</span><small>3 spots open</small><em>$58</em></button></div></div></div>
+<div class="bar"><div><b id="bt">Sat, Nov 28 at 8:10 AM</b><span id="bs">4 players, booking fee $6.00</span></div><button class="btn pri lg" type="button" id="book">Book</button></div>
+<div class="sheet" id="sheet" hidden role="dialog" aria-label="Booking confirmed"><svg width="72" height="72" viewBox="0 0 48 48" aria-hidden="true"><circle class="ring c" cx="24" cy="24" r="21" pathLength="100"/><path class="ring k" d="M14 25l7 7 13-15" pathLength="100"/></svg><div class="sh">Booking confirmed</div><div class="big" id="cbig">8:10 AM</div><div class="sd" id="csd">Sat, Nov 28 at Pine Hollow, 4 players</div><div class="sb"><button class="btn pri lg" type="button" id="cdone">Done</button><button class="btn sec lg" type="button">Add to calendar</button></div></div></div>
+<button class="btn sec" type="button" id="replayBook">Replay Booking confirmed</button></div></section>
+
+<section class="part"><div class="part-head"><span class="num">4</span><h2>Staff phone</h2></div><p class="cap">Tee sheet on a phone with the four-item tab bar and the floating Add button.</p>
+<div class="stage"><div class="phone"><div class="pscroll compact" style="padding-inline:0"><div style="padding:0 16px"><div class="shead"><h3 class="page-t" style="font-size:28px">Tee sheet</h3><span style="color:var(--muted);font-size:13px;padding-bottom:4px">Thu, Nov 26</span></div></div><div style="margin-top:12px;border-top:1px solid var(--hair)" id="r4"></div></div>
+<button class="fab" type="button" data-toast="New booking started"><svg class="i"><use href="#plus"/></svg>Add</button>
+<nav class="tabbar" aria-label="Main"><div class="on"><svg class="i"><use href="#cal"/></svg>Sheet</div><div><svg class="i"><use href="#flag"/></svg>Check in</div><div><svg class="i"><use href="#users"/></svg>Members</div><div><svg class="i"><use href="#menu"/></svg>More</div></nav></div></div></section>
+
+<section class="part"><div class="part-head"><span class="num">5</span><h2>Kit reference</h2></div><p class="cap">Every control in one place, in the current look.</p>
+<div class="kit">
+<div class="panel card"><span class="k">Buttons</span><div class="ctrls"><button class="btn pri" type="button">Save</button><button class="btn sec" type="button">Edit</button><button class="btn quiet" type="button">Cancel</button><button class="btn pri" type="button" disabled>Disabled</button></div></div>
+<div class="panel card"><span class="k">Fields</span><div class="fld"><label>Guest name</label><input class="inp is-f" value="Riley Chen"></div><div class="fld err"><label>Email</label><input class="inp" value="riley@"><span class="em">Enter a full email address.</span></div></div>
+<div class="panel card"><span class="k">Switch and stepper</span><div class="lbl"><span>Cart included</span><input class="sw" type="checkbox" checked aria-label="Cart included"></div><div class="lbl"><span>Send reminder</span><input class="sw" type="checkbox" aria-label="Send reminder"></div><div class="lbl"><span>Players</span><div class="step" data-step><button type="button" data-d="-1" aria-label="Fewer"><svg class="i"><use href="#minus"/></svg></button><output>3</output><button type="button" data-d="1" aria-label="More"><svg class="i"><use href="#plus"/></svg></button></div></div></div>
+<div class="panel card"><span class="k">Tabs</span><div class="tabs" id="kt"><button aria-selected="true">Day</button><button aria-selected="false">Week</button><button aria-selected="false">Month</button></div></div>
+<div class="panel card"><span class="k">Status words</span><div class="states"><span class="stt s-paid">Paid</span><span class="stt s-unpaid tag">Unpaid</span><span class="stt s-in">Checked in</span><span class="stt s-noshow">No-show</span><span class="stt s-rain">Rain hold</span><span class="stt s-member">Member</span><span class="stt s-refund">Refunded</span><span class="stt s-failed tag">Failed</span></div></div>
+<div class="panel card"><span class="k">Toast</span><div class="toast glass stat-toast"><span>Booking saved</span><button class="btn quiet sm" type="button">Undo</button></div><div class="toast glass stat-toast bad"><span>Payment failed for Dana Ortiz</span></div></div>
+<div class="panel card"><span class="k">Empty state</span><div class="empty"><p>No bookings on this day yet.</p><button class="btn pri" type="button">Add a booking</button></div></div>
+<div class="panel card"><span class="k">Loading</span><div class="sk"><div class="r"><i></i><div><i></i><i></i></div><i></i></div><div class="r"><i></i><div><i></i><i></i></div><i></i></div><div class="r"><i></i><div><i></i><i></i></div><i></i></div></div></div>
+</div></section>
+</main>
+
+<div class="ov" id="dov" hidden><div class="scrim" data-close></div><div class="dlg glass" role="dialog" aria-modal="true" aria-labelledby="dt"><h3 id="dt">Edit booking</h3>
+<div class="fld"><label for="dn">Guest name</label><input class="inp" id="dn"></div>
+<div class="r2"><div class="fld"><label for="dtm">Tee time</label><select class="inp" id="dtm"></select></div><div class="step" data-step><button type="button" data-d="-1" aria-label="Fewer players"><svg class="i"><use href="#minus"/></svg></button><output id="dp">2</output><button type="button" data-d="1" aria-label="More players"><svg class="i"><use href="#plus"/></svg></button></div></div>
+<div class="lbl"><label for="dc">Cart</label><input class="sw" type="checkbox" id="dc"></div>
+<div class="foot"><button class="btn quiet" type="button" data-close>Cancel</button><button class="btn pri" type="button" id="dsave">Save</button></div></div></div>
+
+<script>
+(function(){
+var $=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))},$1=function(s,r){return (r||document).querySelector(s)};
+function sv(f){try{f()}catch(e){}}
+/* look */
+$('.look button').forEach(function(b){b.addEventListener('click',function(){document.documentElement.dataset.look=b.dataset.look;$('.look button').forEach(function(x){x.setAttribute('aria-pressed',x===b)})})});
+/* toast */
+var tl=$1('#tl');
+function toast(msg,bad){var t=document.createElement('div');t.className='toast glass'+(bad?' bad':'');t.innerHTML='<span></span><button class="btn quiet sm" type="button">Undo</button>';t.firstChild.textContent=msg;tl.appendChild(t);
+ var gone=function(){t.classList.add('out');setTimeout(function(){t.remove()},220)};t.lastChild.addEventListener('click',gone);setTimeout(gone,4200)}
+$('[data-toast]').forEach(function(b){b.addEventListener('click',function(){toast(b.dataset.toast)})});
+$1('#toastBtn').addEventListener('click',function(){toast('Booking saved')});
+/* data + rows */
+var ST={paid:['Paid',''],unpaid:['Unpaid','tag'],in:['Checked in',''],noshow:['No-show',''],rain:['Rain hold',''],member:['Member',''],refund:['Refunded',''],failed:['Failed','tag']};
+var CLS={paid:'s-paid',unpaid:'s-unpaid',in:'s-in',noshow:'s-noshow',rain:'s-rain',member:'s-member',refund:'s-refund',failed:'s-failed'};
+var BASE=[{t:'7:00 AM',n:'Riley Chen',p:4,c:'2 carts',s:'paid'},{t:'7:10 AM',n:'Morgan Ellis',p:3,c:'walking',s:'in'},{t:'7:20 AM',n:'Patel party',p:4,c:'1 cart',s:'unpaid'},{t:'7:30 AM',n:'Hollis Park',p:2,c:'1 cart',s:'member'},{t:'7:40 AM',n:'Course hold, front nine wet',p:0,c:'',s:'rain'},{t:'7:50 AM',n:'Dana Ortiz',p:2,c:'1 cart',s:'failed'},{t:'8:00 AM',n:'Sam Reyes',p:1,c:'walking',s:'noshow'},{t:'8:10 AM',n:'Jo Whitfield',p:2,c:'2 carts',s:'refund'}];
+function clone(a){return a.map(function(x){return Object.assign({},x)})}
+function sub(r){return r.s==='rain'?'Back in play at 8:30':r.p+(r.p===1?' player':' players')+' · '+r.c}
+function pc(s){return s==='unpaid'||s==='failed'?' p-bad':s==='rain'?' p-rain':''}
+function stt(s){return '<span class="stt '+CLS[s]+' '+ST[s][1]+'">'+ST[s][0]+'</span>'}
+function rows(el,data,n,act){el.innerHTML=data.slice(0,n||99).map(function(r,i){var a='';if(act){a='<div class="acts">'+(/paid|unpaid|member/.test(r.s)?'<button class="btn pri sm" type="button" data-ci="'+i+'">Check in</button>':'')+(r.s==='rain'||r.s==='refund'?'':'<button class="btn sec sm" type="button" data-ed="'+i+'">Edit</button>')+'</div>'}
+ return '<div class="trow'+pc(r.s)+'" data-i="'+i+'"><time>'+r.t.replace(' AM','')+'</time><div class="who"><b>'+r.n+'</b><span>'+sub(r)+'</span></div>'+stt(r.s)+a+'</div>'}).join('')}
+var d1=[BASE[0],BASE[1],BASE[2],BASE[3],BASE[4],BASE[5]];rows($1('#r1'),d1);
+rows($1('#r4'),BASE,7);
+var d2=clone(BASE),r2=$1('#r2');
+function draw2(){rows(r2,d2,99,true);filt()}
+function checkIn(i,quiet){var r=d2[i];r.s='in';var row=$1('.trow[data-i="'+i+'"]',r2);row.classList.remove('p-bad','p-rain');var old=$1('.stt',row);var n=document.createElement('span');n.className='stt s-in turn';n.textContent='Checked in';old.replaceWith(n);var b=$1('[data-ci]',row);if(b)b.remove();row.classList.remove('lit');void row.offsetWidth;row.classList.add('lit');if(!quiet)toast(r.n+' checked in')}
+r2.addEventListener('click',function(e){var c=e.target.closest('[data-ci]'),d=e.target.closest('[data-ed]');if(c)checkIn(+c.dataset.ci);if(d)openDlg(+d.dataset.ed)});
+$1('#replayCI').addEventListener('click',function(){d2=clone(BASE);draw2();setTimeout(function(){checkIn(0,true)},250)});
+/* tabs + skeleton + empty */
+var SK='<div class="sk pad">'+'<div class="r"><i></i><div><i></i><i></i></div><i></i></div>'.repeat(4)+'</div>';
+var tabT;$('#tabs button').forEach(function(b){b.addEventListener('click',function(){$('#tabs button').forEach(function(x){x.setAttribute('aria-selected',x===b)});r2.innerHTML=SK;clearTimeout(tabT);tabT=setTimeout(function(){if(b.dataset.v==='month')r2.innerHTML='<div class="pad empty" style="padding:24px 16px"><p>No rounds are scheduled this month.</p><button class="btn pri" type="button" data-toast="New booking started">Add a booking</button></div>',$1('[data-toast]',r2).addEventListener('click',function(){toast('New booking started')});else draw2()},650)})});
+$('#kt').forEach(function(t){t.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;$('button',t).forEach(function(x){x.setAttribute('aria-selected',x===b)})})});
+/* filter */
+var fb=$1('#fbtn'),fm=$1('#fmenu');
+function filt(){var n=$('#fmenu input:checked').length,prob=$1('#f-prob').checked;$1('#fcount').textContent=n;$1('#fcount').style.display=n?'':'none';$('.trow',r2).forEach(function(r){r.style.display=prob&&!r.classList.contains('p-bad')?'none':''})}
+fb.addEventListener('click',function(e){e.stopPropagation();var h=fm.hidden;fm.hidden=!h;fb.setAttribute('aria-expanded',h)});
+fm.addEventListener('click',function(e){e.stopPropagation()});fm.addEventListener('change',filt);
+document.addEventListener('click',function(){fm.hidden=true;fb.setAttribute('aria-expanded','false')});
+/* steppers */
+$('[data-step]').forEach(function(s){var o=$1('output',s);s.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;o.textContent=Math.max(1,Math.min(8,+o.textContent+ +b.dataset.d))})});
+/* dialog */
+var dov=$1('#dov'),cur=-1,lastF=null;
+var tms=['7:00 AM','7:10 AM','7:20 AM','7:30 AM','7:40 AM','7:50 AM','8:00 AM','8:10 AM'];$1('#dtm').innerHTML=tms.map(function(t){return '<option>'+t+'</option>'}).join('');
+function openDlg(i){cur=i;lastF=document.activeElement;var r=d2[i];$1('#dn').value=r.n;$1('#dtm').value=r.t;$1('#dp').textContent=r.p||1;$1('#dc').checked=!/walking/.test(r.c);dov.hidden=false;var d=$1('.dlg',dov);d.style.animation='none';void d.offsetWidth;d.style.animation='';setTimeout(function(){$1('#dn').focus()},30)}
+function closeDlg(){dov.hidden=true;if(lastF)sv(function(){lastF.focus()})}
+$('[data-close]',dov).forEach(function(b){b.addEventListener('click',closeDlg)});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!dov.hidden)closeDlg()});
+$1('#dsave').addEventListener('click',function(){var r=d2[cur];r.n=$1('#dn').value||r.n;r.t=$1('#dtm').value;r.p=+$1('#dp').textContent;r.c=$1('#dc').checked?(r.p>2?Math.ceil(r.p/2)+' carts':'1 cart'):'walking';draw2();closeDlg();toast('Booking saved')});
+draw2();
+/* golfer booking */
+var days=['Fri, Nov 27','Sat, Nov 28','Sun, Nov 29','Mon, Nov 30'],di=1,pl=4,tm='8:10 AM';
+function bar(){$1('#dlab').textContent=days[di];$1('#bt').textContent=days[di]+' at '+tm;$1('#bs').textContent=pl+(pl===1?' player':' players')+', booking fee $'+(pl*1.5).toFixed(2)}
+$1('#dprev').addEventListener('click',function(){di=(di+3)%4;bar()});$1('#dnext').addEventListener('click',function(){di=(di+1)%4;bar()});
+$1('#seg').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var k=$('#seg button');k.forEach(function(x){x.setAttribute('aria-pressed',x===b)});var i=k.indexOf(b);pl=i===4?5:i+1;bar()});
+$1('#times').addEventListener('click',function(e){var b=e.target.closest('button');if(!b||b.disabled)return;$('#times button').forEach(function(x){x.setAttribute('aria-pressed',x===b)});tm=$1('span',b).textContent;bar()});
+var sh=$1('#sheet');
+function confirm_(){$1('#cbig').textContent=tm;$1('#csd').textContent=days[di]+' at Pine Hollow, '+pl+(pl===1?' player':' players');sh.hidden=false;sh.classList.remove('go');sh.style.animation='none';void sh.offsetWidth;sh.style.animation='';sh.classList.add('go')}
+$1('#book').addEventListener('click',confirm_);$1('#replayBook').addEventListener('click',confirm_);$1('#cdone').addEventListener('click',function(){sh.hidden=true});
+bar();
+})();
+</script></body></html>
