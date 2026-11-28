@@ -7,7 +7,7 @@ import React from 'react';
 // there on purpose. Any other attribute (id, onClick, style, ref) passes through.
 // FLOW-1 (Cam 2026-10-01): a soft sheet (shadow-card = 1px ring at 6% + a
 // 0 1px 2px lift), not a ruled box — boxes-in-boxes read as "clunky".
-export const CARD = 'bg-white rounded-lg shadow-card';
+export const CARD = 'bg-white rounded-[10px] shadow-card';
 
 export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   function Card({ className = '', ...rest }, ref) {

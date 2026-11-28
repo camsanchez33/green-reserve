@@ -196,7 +196,16 @@ export default function OperatorSidebar({ active, onAlertClick }: {
     {/* UI-STYLE (Cam 2026-11-26): no search in the sidebar. On a computer the golfer search sits in a header band at the top
         of EVERY dashboard page, in the sidebar's own colour (globals.css .op-band). It is in the page's flow above <main>, so
         it stays put while the page scrolls. On a phone the search stays in the More menu. */}
-    <div className="op-band hidden md:flex shrink-0 items-center px-6 py-2.5 print:hidden">
+    <div className="op-band hidden md:flex shrink-0 items-center px-6 print:hidden">
+      {/* UI-KIT-4 (Cam 2026-11-26, the v4 ribbon): the course's logo and name sit on the left of the 48px ribbon. */}
+      <div className="op-band-id" title={meta}>
+        {identity.logoUrl ? (
+          <Image src={identity.logoUrl} unoptimized alt="" width={24} height={24} className="w-6 h-6 rounded-md object-contain shrink-0" />
+        ) : (
+          <span aria-hidden="true" className="w-6 h-6 rounded-md shrink-0 flex items-center justify-center text-white text-[10px] font-bold" style={{ backgroundColor: brandColor }}>{initials(name)}</span>
+        )}
+        <span>{name || 'Your course'}</span>
+      </div>
       <div className="w-[min(420px,100%)]"><OperatorSearch /></div>
     </div>
 
@@ -283,18 +292,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
         sign-out at the foot. The course's colour marks the active tab. Pages
         keep their own wrappers; .op-look in globals.css makes room for the
         rail. Below md the strip and bottom bar above are unchanged. */}
-    <aside className="op-rail hidden md:flex fixed inset-y-0 left-0 z-30 w-[var(--op-rail-w)] flex-col gap-4 bg-rail border-r border-rail-line px-3 py-4 overflow-y-auto">
-      <div className="flex items-center gap-2.5 px-1.5 min-w-0" title={meta}>
-        {identity.logoUrl ? (
-          <Image src={identity.logoUrl} unoptimized alt="" width={34} height={34} className="w-[34px] h-[34px] rounded-md object-contain shrink-0" />
-        ) : (
-          <span aria-hidden="true" className="w-[34px] h-[34px] rounded-md shrink-0 flex items-center justify-center text-white text-[13px] font-bold" style={{ backgroundColor: brandColor }}>{initials(name)}</span>
-        )}
-        <div className="min-w-0 leading-tight">
-          <div className="font-serif text-[16px] text-ink leading-tight line-clamp-2 break-words">{name || 'Your course'}</div>
-          <div className="text-[12px] text-ink-muted truncate">{meta}</div>
-        </div>
-      </div>
+    <aside className="op-rail hidden md:flex fixed inset-y-0 left-0 z-30 w-[var(--op-rail-w)] flex-col gap-4 bg-rail border-r border-rail-line px-3 pt-3 pb-4 overflow-y-auto">
       {/* UI-STYLE (Cam 2026-11-26): small group labels, even spacing, one monochrome line icon per item (all 16px), and the
           current page marked by a lighter fill, a left bar and bold text (globals.css .op-rail .op-tab). */}
       <nav aria-label="Dashboard" className="flex flex-col gap-[18px] text-[14px]">
@@ -311,7 +309,7 @@ export default function OperatorSidebar({ active, onAlertClick }: {
                     key={item.key}
                     onClick={() => { if (confirmLeave()) router.push(item.href); }}
                     aria-current={isActive ? 'page' : undefined}
-                    className={'op-tab flex items-center gap-2.5 text-left px-2.5 py-[7px] min-h-[34px] rounded-[7px] ' + (isActive ? 'text-ink font-semibold' : 'text-ink-soft font-medium')}
+                    className={'op-tab flex items-center gap-2.5 text-left px-2.5 py-[7px] min-h-[40px] rounded-lg ' + (isActive ? 'text-ink font-semibold' : 'text-ink-soft font-medium')}
                   >
                     <span aria-hidden="true" className="op-ic shrink-0 flex">{item.icon}</span>
                     <span className="flex-1">{item.label}</span>
@@ -341,12 +339,12 @@ export default function OperatorSidebar({ active, onAlertClick }: {
         )}
         {/* SD-8b: Settings passes no onAlertClick, so this navigates (guarded). */}
         {access.can('sheet.course_alert') && <button onClick={() => { if (onAlertClick) { onAlertClick(); return; } if (confirmLeave()) router.push('/dashboard'); }}
-          className="op-tab flex items-center gap-2.5 text-left px-2.5 py-[7px] min-h-[34px] rounded-[7px] text-ink-soft font-medium"><span aria-hidden="true" className="op-ic shrink-0 flex"><AlertTriangle className="w-4 h-4"/></span>Course alert</button>}
+          className="op-tab flex items-center gap-2.5 text-left px-2.5 py-[7px] min-h-[40px] rounded-lg text-ink-soft font-medium"><span aria-hidden="true" className="op-ic shrink-0 flex"><AlertTriangle className="w-4 h-4"/></span>Course alert</button>}
         {slug && (
-          <a href={'/courses/' + slug} target="_blank" rel="noopener" className="op-tab flex items-center gap-2.5 px-2.5 py-[7px] min-h-[34px] rounded-[7px] text-ink-soft font-medium"><span aria-hidden="true" className="op-ic shrink-0 flex"><ExternalLink className="w-4 h-4"/></span>Your booking page<span className="sr-only"> (opens in a new tab)</span></a>
+          <a href={'/courses/' + slug} target="_blank" rel="noopener" className="op-tab flex items-center gap-2.5 px-2.5 py-[7px] min-h-[40px] rounded-lg text-ink-soft font-medium"><span aria-hidden="true" className="op-ic shrink-0 flex"><ExternalLink className="w-4 h-4"/></span>Your booking page<span className="sr-only"> (opens in a new tab)</span></a>
         )}
-        <button onClick={logout} className="op-tab flex items-center gap-2.5 text-left px-2.5 py-[7px] min-h-[34px] rounded-[7px] text-ink-soft font-medium"><span aria-hidden="true" className="op-ic shrink-0 flex"><LogOut className="w-4 h-4"/></span>Sign out</button>
-        <InstallApp buttonClassName="op-tab flex items-center gap-2.5 text-left px-2.5 py-[7px] min-h-[34px] rounded-[7px] text-ink-soft font-medium" textClassName="px-2.5 py-2 text-[12px] leading-snug text-ink-muted" />
+        <button onClick={logout} className="op-tab flex items-center gap-2.5 text-left px-2.5 py-[7px] min-h-[40px] rounded-lg text-ink-soft font-medium"><span aria-hidden="true" className="op-ic shrink-0 flex"><LogOut className="w-4 h-4"/></span>Sign out</button>
+        <InstallApp buttonClassName="op-tab flex items-center gap-2.5 text-left px-2.5 py-[7px] min-h-[40px] rounded-lg text-ink-soft font-medium" textClassName="px-2.5 py-2 text-[12px] leading-snug text-ink-muted" />
         <div className="px-1 pt-2"><ThemeSwitch /></div>
         {/* LOGO-2 (Cam 2026-10-20): "Powered by" and the GreenReserve lockup stay with the course's name. */}
         {/* CHARCOAL-1 (Cam 2026-11-12, the approved Home): "Powered by GreenReserve", GreenReserve in our green. */}

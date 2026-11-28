@@ -89,7 +89,7 @@ export function Modal({
   const width = size === 'sm' ? 'max-w-sm' : size === 'lg' ? 'max-w-xl' : 'max-w-md';
   const heading = titleNode
     ? <div id={titleId}>{titleNode}</div>
-    : <h2 id={titleId} className={'text-sm font-medium mb-3 ' + (danger ? 'text-bad' : 'text-ink')}>{title}</h2>;
+    : <h2 id={titleId} className={'font-serif text-[24px] leading-tight mb-3 ' + (danger ? 'text-bad' : 'text-ink')}>{title}</h2>;
 
   if (variant === 'drawer') {
     return (
@@ -110,7 +110,7 @@ export function Modal({
     // reason or a confirm-by-typing field that a stray click would throw away.
     <div className="fixed inset-0 bg-ink/30 flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div ref={panel} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}
-        className={`bg-white rounded-lg border border-line w-full ${width} ${pad} my-auto outline-none ${className}`}>
+        className={`bg-white rounded-[10px] w-full ${width} ${pad} my-auto outline-none ${className}`}>
         {heading}
         {children}
       </div>
@@ -123,14 +123,14 @@ export function ModalActions({ onCancel, onConfirm, confirmLabel, disabled, dang
 }) {
   return (
     <div className="flex items-center justify-end gap-2 mt-4">
-      <button type="button" onClick={onCancel} className="text-xs text-ink-muted hover:text-ink px-3 py-1.5 transition-colors">{cancelLabel}</button>
+      <button type="button" onClick={onCancel} className="text-[13px] font-medium text-ink-soft hover:text-ink hover:bg-ink/10 h-9 px-3.5 rounded-lg transition-colors">{cancelLabel}</button>
       <button
         type="button"
         onClick={onConfirm}
         disabled={disabled || working}
         className={
-          'text-xs font-medium px-3 py-1.5 rounded-md text-white transition-colors disabled:opacity-40 ' +
-          (danger ? 'bg-bad hover:bg-bad/90' : 'bg-pine hover:bg-pine-hover')
+          'text-[13px] font-medium h-9 px-3.5 rounded-lg text-white transition-colors disabled:opacity-40 ' +
+          (danger ? 'bg-bad hover:bg-bad/90' : 'bg-brand hover:brightness-110')
         }
       >
         {working ? 'Working…' : confirmLabel}

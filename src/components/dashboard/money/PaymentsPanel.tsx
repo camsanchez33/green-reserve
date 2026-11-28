@@ -118,7 +118,7 @@ export function PaymentsPanel({ bookings, dateFilter, onClearDate, initialFilter
                       <span className="tabular-nums text-ink-soft">{fmtTime(b.teeTime.time)}</span>
                       <span className="min-w-0 truncate"><span className="font-medium">{b.golferName}</span><span className="text-ink-muted"> · {b.players} player{b.players !== 1 ? 's' : ''}</span></span>
                       <span className="tabular-nums text-right font-medium">{usd(share(b))}</span>
-                      <span className="col-span-3 sm:col-span-1 inline-flex items-center gap-1.5"><StatusDot status={s.tone} />{s.label}</span>
+                      <span className="col-span-3 sm:col-span-1 inline-flex items-center gap-1.5"><StatusDot status={s.tone} label={s.label} /></span>
                       {canRefund && b.paymentStatus === 'paid' && <div className="col-span-3 sm:col-span-4"><RefundForm bookingId={b.id} kind="round" onDone={m => onRefunded?.(m)} /></div>}
                     </li>
                   ))}

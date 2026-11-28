@@ -21,18 +21,18 @@ export function SlidingTabs<K extends string>({ tabs, value, onChange, look = 'l
     window.addEventListener('resize', place);
     return () => window.removeEventListener('resize', place);
   }, [value, keys]);
-  const pill = look === 'pill';
+  void look; // UI-KIT-4: every tab bar is the underline (2px green); `look` stays so call sites need no edit
   return (
     <div role="tablist" aria-label={label}
-      className={'relative inline-flex max-w-full overflow-x-auto whitespace-nowrap ' + (pill ? 'gap-1 p-1 rounded-[7px] bg-white shadow-card ' : 'gap-6 border-b border-line ') + className}>
+      className={'relative inline-flex max-w-full overflow-x-auto whitespace-nowrap gap-1 border-b border-line ' + className}>
       {box && (
         <span aria-hidden="true"
-          className={'absolute transition-[left,top,width,height] duration-200 ease-out motion-reduce:transition-none ' + (pill ? 'rounded-[5px] bg-page' : 'h-0.5 bg-fairway')}
-          style={pill ? box : { left: box.left, width: box.width, bottom: 0 }} />
+          className="absolute h-0.5 bg-[var(--op-focus,var(--color-fairway))] transition-[left,width] duration-200 ease-[cubic-bezier(.2,.8,.2,1)] motion-reduce:transition-none"
+          style={{ left: box.left, width: box.width, bottom: -1 }} />
       )}
       {tabs.map(([k, l]) => (
         <button key={k} ref={el => { refs.current[k] = el; }} type="button" role="tab" aria-selected={value === k} onClick={() => onChange(k)}
-          className={'relative z-10 shrink-0 transition-colors ' + (pill ? 'px-3.5 min-h-[34px] rounded-[5px] text-[13.5px] ' : 'pb-2.5 text-[14px] ') + (value === k ? 'text-ink font-semibold' : 'text-ink-soft hover:text-ink') + ' ' + tabClassName}>{l}</button>
+          className={'relative z-10 shrink-0 h-10 px-4 text-[14px] font-medium transition-colors duration-[120ms] ' + (value === k ? 'text-ink' : 'text-ink-muted hover:text-ink') + ' ' + tabClassName}>{l}</button>
       ))}
     </div>
   );

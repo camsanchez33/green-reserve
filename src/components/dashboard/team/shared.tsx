@@ -70,8 +70,8 @@ export const sameKeys = (a: readonly PermissionKey[], b: readonly PermissionKey[
 function Switch({ on, disabled, label, onChange }: { on: boolean; disabled?: boolean; label: string; onChange: (v: boolean) => void }) {
   return (
     <button type="button" role="switch" aria-checked={on} aria-label={label} disabled={disabled} onClick={() => onChange(!on)}
-      className={'relative flex-none w-10 h-6 rounded-full transition-colors motion-reduce:transition-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ' + (on ? 'bg-ok' : 'bg-line')}>
-      <i aria-hidden="true" className={'absolute top-[3px] left-[3px] w-[18px] h-[18px] rounded-full transition-transform motion-reduce:transition-none ' + (on ? 'translate-x-4 bg-white' : 'bg-ink')} />
+      className={'relative flex-none w-10 h-6 rounded-lg transition-colors motion-reduce:transition-none disabled:opacity-50 ' + (on ? 'bg-[var(--op-on)]' : 'bg-[var(--op-track)]')}>
+      <i aria-hidden="true" className={'absolute top-[3px] left-[3px] w-[18px] h-[18px] rounded-md transition-transform motion-reduce:transition-none ' + (on ? 'translate-x-4 bg-[var(--op-knob)]' : 'bg-[var(--op-knob-off)]')} />
     </button>
   );
 }

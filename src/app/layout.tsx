@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { EB_Garamond, Libre_Franklin } from 'next/font/google';
 import './globals.css';
+import './ui-kit-v4.css'; // UI-KIT-4: the v4 shared parts, after the base rules so they win ties
 import Nav from '@/components/Nav';
 import Footer from '@/components/Footer';
 import MainOffset from '@/components/MainOffset';

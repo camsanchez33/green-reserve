@@ -75,7 +75,7 @@ export function CancellationsPanel({ bookings, course, initialQuery = '', canWai
                   <div className="min-w-0"><span className="font-medium text-ink">{b.golferName}</span><span className="text-ink-muted"> · {b.players} player{b.players !== 1 ? 's' : ''}</span></div>
                   <div className="text-ink-soft">{fmtDate(b.teeTime.date)} {fmtTime(b.teeTime.time)}{b.cancelledAt ? <span className="block text-[12.5px] text-ink-muted">cancelled {fmtStamp(b.cancelledAt)}{ahead ? ` · ${ahead}` : ''}</span> : null}</div>
                   <span className="inline-flex items-center gap-1.5 text-ink sm:justify-end">
-                    <StatusDot status={fee ? 'warn' : b.noFeeReason === 'charge_failed' ? 'bad' : 'neutral'} />{fee ? (b.noShowFeeKeptCents ? `${usd(b.noShowFeeKeptCents)} no-show fee kept` : `${usd(b.cancellationFeeTotal)} fee kept`) : b.paymentStatus === 'refunded' ? 'Fee refunded' : b.noFeeReason ? NO_FEE_LABEL[b.noFeeReason] : 'No fee'}
+                    <StatusDot status={fee ? 'warn' : b.noFeeReason === 'charge_failed' ? 'bad' : 'neutral'} label={fee ? (b.noShowFeeKeptCents ? `${usd(b.noShowFeeKeptCents)} no-show fee kept` : `${usd(b.cancellationFeeTotal)} fee kept`) : b.paymentStatus === 'refunded' ? 'Fee refunded' : b.noFeeReason ? NO_FEE_LABEL[b.noFeeReason] : 'No fee'} />
                   </span>
                   {canWaive && b.paymentStatus === 'cancellation_fee_charged' && <div className="sm:col-span-3"><RefundForm bookingId={b.id} kind="late_fee" onDone={m => onRefunded?.(m)} /></div>}
                 </li>
