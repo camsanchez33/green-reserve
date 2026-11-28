@@ -147,12 +147,12 @@ export function Field({ label, hint, children }: { label: string; hint?: ReactNo
   );
 }
 
-/** The on/off switch (the mockup's .sw). */
+/** The on/off switch (the v4 kit's .sw: a light on-colour, 40 by 24). */
 export function Switch({ on, onChange, label, disabled }: { on: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
   return (
     <button type="button" role="switch" aria-checked={on} aria-label={label} disabled={disabled} onClick={() => onChange(!on)}
-      className={'relative inline-block flex-none w-9 h-5 rounded-[10px] transition-colors motion-reduce:transition-none disabled:opacity-50 ' + (on ? 'bg-ink' : 'bg-line')}>
-      <i aria-hidden="true" className={'absolute left-0.5 top-0.5 w-4 h-4 rounded-full transition-transform motion-reduce:transition-none ' + (on ? 'translate-x-4 bg-page' : 'bg-ink-muted')} />
+      className={'relative inline-block flex-none w-10 h-6 rounded-lg transition-colors motion-reduce:transition-none disabled:opacity-50 ' + (on ? 'bg-[var(--op-on)]' : 'bg-[var(--op-track)]')}>
+      <i aria-hidden="true" className={'absolute left-[3px] top-[3px] w-[18px] h-[18px] rounded-md transition-transform motion-reduce:transition-none ' + (on ? 'translate-x-4 bg-[var(--op-knob)]' : 'bg-[var(--op-knob-off)]')} />
     </button>
   );
 }

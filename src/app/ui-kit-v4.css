@@ -1,0 +1,129 @@
+/* UI-KIT-4 phase 1 (Cam 2026-11-26, approved v4 mockup lanes/build/ui-kit-v4-mockup.html; docs/DECISIONS.md UI-KIT-4).
+   The shared parts, restyled: type scale, the brand primary, secondary buttons, fields, the switch, status words'
+   companions, dialogs and toasts. LOOK ONLY: nothing here (or in the components it styles) changes what a button, link or
+   form does. Loaded after globals.css (layout.tsx) so it wins ties.
+
+   Scope: the course dashboard (.op-look with the rail) and, since Cam 2026-11-28 ("the admin gets the SAME look as the
+   course dashboard, neutral charcoal 1A, not dark green"), the admin shell. Both read the --op-* tokens in globals.css
+   (the admin's are set below, in the Dark values; the admin has no Light). Screen only: print stays plain.
+   Motion: quick everywhere (--t-tap 120ms, --t-panel 200ms, --ease); the spring only on dialogs and sheets. */
+
+[data-admin-shell] {
+  color-scheme: dark;
+  --op-panel: #262626; --op-panel-solid: #262626; --op-panel-2: #2D2D2D; --op-rail-bg: #262626; --op-edge: rgb(255 255 255 / .09);
+  --op-brand: #346B4F; --op-focus: #5FB88A; --op-brand-green: #4CC183; --op-rain: #8EC5FF; --op-ntl: #8A8D89;
+  --op-well: rgb(255 255 255 / .05);
+  --op-field: rgb(255 255 255 / .07); --op-field-h: rgb(255 255 255 / .10); --op-sel: rgb(255 255 255 / .10);
+  --op-track: rgb(255 255 255 / .22); --op-knob-off: #D6D6D6; --op-on: #EDEDED; --op-knob: #141414;
+  --op-scrim: rgb(0 0 0 / .55);
+  --op-glass: rgb(38 38 38 / .78); --op-glass-shadow: 0 6px 18px rgb(0 0 0 / .35);
+  --op-raise: 0 8px 22px rgb(0 0 0 / .32), inset 0 1px 0 rgb(255 255 255 / .07);
+}
+
+@keyframes op-panel-in { from { opacity: 0; transform: translateY(-6px) scale(.97); } }
+@keyframes op-fade { from { opacity: 0; } }
+@keyframes op-dialog-in { from { opacity: 0; transform: translateY(16px) scale(.94); } }
+@keyframes op-sheet-in { from { opacity: 0; transform: translateY(32px); } }
+
+@media screen {
+:is(.op-look:has(.op-rail), [data-admin-shell]) {
+  font-size: 14px; line-height: 1.5;
+
+  /* ── Type scale: page title Garamond 32 (28 on a phone), card heading Garamond 20, body 14 ── */
+  h1.font-serif { font-size: 32px; line-height: 1.1; font-weight: 600; letter-spacing: -0.005em; }
+  :is(h2, h3):is([class*="text-[15px]"], [class*="text-[16px]"], [class*="text-[17px]"]):not(.font-serif):not(aside *, nav *, .op-band *, [role="dialog"] *, [role="menu"] *) {
+    font-family: var(--font-serif); font-size: 20px; line-height: 1.2; font-weight: 600; letter-spacing: -0.005em; font-variant-numeric: lining-nums;
+  }
+  [role="dialog"] :is(h2, h3):not(.sr-only) { font-family: var(--font-serif); font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: -0.005em; }
+
+  /* ── Panels: solid; a featured one is raised (v4 .panel.feat). Glass is only for what floats. ── */
+  .bg-white.shadow-card:not(.op-tab) { border-radius: var(--r-panel); background-color: var(--op-panel); box-shadow: 0 0 0 1px var(--op-edge); }
+  .bg-white.shadow-card.op-raised:not(.op-tab) { background-color: var(--op-panel-2); box-shadow: var(--op-raise); }
+  .op-glass {
+    background-color: var(--op-glass); -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3);
+    box-shadow: 0 0 0 1px var(--op-edge), var(--op-glass-shadow);
+  }
+
+  /* ── Buttons: primary is the brand green with a top highlight and a bottom edge; one filled primary per action area ── */
+  :is(button, a, [role="button"]):is(.bg-pine.text-white, .bg-ink.text-page) {
+    background-color: var(--op-brand); color: #FFFFFF; border: 1px solid transparent; border-radius: var(--r-ctl);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .22), inset 0 -1px 0 rgb(0 0 0 / .25), 0 1px 2px rgb(0 0 0 / .25);
+    transition: transform var(--t-tap) var(--ease), background-color var(--t-tap) var(--ease), filter var(--t-tap) var(--ease);
+  }
+  :is(button, a, [role="button"]):is(.bg-pine.text-white, .bg-ink.text-page):hover:not(:disabled) { background-color: var(--op-brand); filter: brightness(1.08); opacity: 1; }
+  :is(button, a, [role="button"]):is(.bg-pine.text-white, .bg-ink.text-page):active:not(:disabled) { transform: scale(.97); }
+  :is(button, a, [role="button"]):is(.bg-pine.text-white, .bg-ink.text-page):disabled { opacity: .45; cursor: default; }
+  /* Secondary: a transparent button with a visible edge; hover is the selected fill. A toggle keeps its own look. */
+  :is(button, a).border:is(.border-line, .border-line-strong):not([role="tab"], [role="switch"], [role="radio"], [role="checkbox"], [aria-pressed], [aria-selected], [aria-checked], .op-tab, .bg-pine, .ui-search, .op-keep-light *, .op-band *) {
+    border-color: color-mix(in srgb, var(--color-ink) 28%, transparent); border-radius: var(--r-ctl);
+    transition: transform var(--t-tap) var(--ease), background-color var(--t-tap) var(--ease), border-color var(--t-tap) var(--ease);
+  }
+  :is(button, a).border:is(.border-line, .border-line-strong):not([role="tab"], [role="switch"], [role="radio"], [role="checkbox"], [aria-pressed], [aria-selected], [aria-checked], .op-tab, .bg-pine, .ui-search, .op-keep-light *, .op-band *):hover:not(:disabled) { background-color: var(--op-sel); }
+  button:active:not(:disabled):is(.border-line, .bg-pine) { transform: scale(.97); }
+  :where(a, button, summary, [tabindex], input, select, textarea):focus-visible { outline-color: var(--op-focus); }
+
+  /* ── Fields: 44px, a soft fill, a green border on focus, red on error ── */
+  :is(input:is([type="text"], [type="email"], [type="tel"], [type="number"], [type="password"], [type="search"], [type="url"], [type="date"], [type="time"], [type="datetime-local"], [type="month"], :not([type])), select, textarea):not(.ui-search, .ui-search *, .op-band *, table *, .op-keep-light *, [class*="bg-transparent"], [class*="sr-only"], [role="combobox"]) {
+    min-height: 44px; border-radius: var(--r-ctl); background-color: var(--op-field); border: 1px solid transparent; color: var(--color-ink);
+    box-shadow: none; outline: 0; /* padding stays the page's own: some fields carry an icon inside */
+    transition: border-color var(--t-tap) var(--ease), background-color var(--t-tap) var(--ease);
+  }
+  :is(input, select, textarea):not(.ui-search, .ui-search *, .op-band *, table *, .op-keep-light *):is(:focus, :focus-visible):not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [class*="bg-transparent"]) {
+    border-color: var(--op-focus); background-color: var(--op-panel-solid); box-shadow: none; outline: 0;
+  }
+  :is(input, select, textarea)[aria-invalid="true"]:not(.ui-search, .ui-search *) { border-color: var(--color-bad); }
+  textarea:not(.ui-search, .ui-search *, .op-band *, .op-keep-light *) { padding-block: 10px; min-height: 88px; }
+  select:not(.ui-search, .ui-search *, .op-band *, table *, .op-keep-light *) {
+    appearance: none; -webkit-appearance: none; padding-right: 34px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%238A8A8A' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1.5 1.5 6 6l4.5-4.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; background-size: 12px 8px;
+  }
+  input[type="checkbox"], input[type="radio"] { accent-color: var(--op-brand); }
+
+  /* ── Switch: a light on-colour (v4 .sw). Every [role="switch"], whichever page draws it. ── */
+  [role="switch"] {
+    position: relative; display: inline-block; flex: none; width: 40px; height: 24px; min-height: 24px; padding: 0; border: 0; border-radius: 8px;
+    background-color: var(--op-track); transition: background-color var(--t-panel) var(--ease);
+  }
+  [role="switch"][aria-checked="true"] { background-color: var(--op-on); }
+  [role="switch"] > :first-child {
+    position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 6px; background-color: var(--op-knob-off);
+    translate: 0 0; transform: none; transition: translate var(--t-panel) var(--ease), background-color var(--t-panel) var(--ease);
+  }
+  [role="switch"][aria-checked="true"] > :first-child { translate: 16px 0; background-color: var(--op-knob); }
+  [role="switch"]:disabled { opacity: .5; }
+
+  /* ── Tabs: underline, 2px green (the line comes from SlidingTabs; a bare tablist gets the hairline) ── */
+  [role="tab"] { transition: color var(--t-tap) var(--ease); }
+
+  /* ── Dialogs: centred, glass, the spring. On a phone the same panel is a sheet from the bottom. ── */
+  .fixed.inset-0:has(> [role="dialog"][aria-modal="true"]:not(.h-full)) { background-color: var(--op-scrim); animation: op-fade var(--t-panel) var(--ease) both; }
+  [role="dialog"][aria-modal="true"]:not(.h-full) {
+    background-color: var(--op-glass); -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3);
+    border: 0; border-radius: var(--r-panel); box-shadow: 0 0 0 1px var(--op-edge), var(--op-glass-shadow);
+    animation: op-dialog-in var(--t-dialog) var(--spring) both;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  :is(.op-look:has(.op-rail), [data-admin-shell]) {
+    h1.font-serif { font-size: 28px; }
+    [role="dialog"][aria-modal="true"]:not(.h-full) { animation-name: op-sheet-in; border-radius: var(--r-panel) var(--r-panel) 0 0; }
+  }
+}
+
+@media screen and (prefers-reduced-motion: reduce) {
+  :is(.op-look:has(.op-rail), [data-admin-shell]) :is([role="dialog"], .fixed.inset-0, [role="switch"], [role="switch"] > *, button, input, select) { animation: none !important; transition: none !important; }
+}
+@media screen and (prefers-reduced-transparency: reduce) {
+  :is(.op-look:has(.op-rail), [data-admin-shell]) :is(.op-glass, [role="dialog"][aria-modal="true"]:not(.h-full)) {
+    background-color: var(--op-panel-solid); -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+}
+}
+
+/* The toast (src/components/dashboard/Toast.tsx): arrives with the panel motion; its glass is .op-glass above. */
+@media screen {
+  .op-toast { animation: op-panel-in var(--t-panel) var(--ease) both; transform-origin: top right; }
+}
+@media screen and (prefers-reduced-motion: reduce) { .op-toast { animation: none; } }

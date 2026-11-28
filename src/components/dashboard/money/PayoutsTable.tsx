@@ -64,7 +64,7 @@ export function PayoutsTable() {
                   <tr key={p.id}>
                     <td className="py-2.5 pr-4 text-ink tabular-nums">{fmtDay(p.arrivalDate)}</td>
                     <td className="py-2.5 pr-4 text-right tabular-nums font-medium text-ink">{usd(p.amountCents)}{p.currency !== 'usd' ? ` ${p.currency.toUpperCase()}` : ''}</td>
-                    <td className="py-2.5 text-ink"><span className="inline-flex items-center gap-1.5"><StatusDot status={s.tone} />{s.label}</span>{p.failureMessage && <span className="block text-[12.5px] text-bad">{p.failureMessage}</span>}</td>
+                    <td className="py-2.5 text-ink"><span className="inline-flex items-center gap-1.5"><StatusDot status={s.tone} label={s.label} /></span>{p.failureMessage && <span className="block text-[12.5px] text-bad">{p.failureMessage}</span>}</td>
                   </tr>
                 );
               })}

@@ -18,6 +18,8 @@
   --color-line-strong: #D3D5CD;
   --color-pine:        #173B2A;
   --color-pine-hover:  #0F2C1F;
+  /* UI-KIT-4: the primary button's green (the one filled action per area). */
+  --color-brand:       #346B4F;
   --color-ok:          #3D7A55;
   --color-bad:         #A3452F;
   --color-warn:        #9A5B13;
@@ -79,6 +81,11 @@
 }
 
 :root {
+  /* UI-KIT-4 motion and shape tokens: quick (tap 120ms, panel 200ms) everywhere; the spring only on dialogs, sheets and the
+     two signature moments. Radii: panels and dialogs 10px, controls 8px. */
+  --ease: cubic-bezier(.2, .8, .2, 1); --spring: cubic-bezier(.34, 1.35, .5, 1);
+  --t-tap: 120ms; --t-panel: 200ms; --t-dialog: 380ms;
+  --r-panel: 10px; --r-ctl: 8px;
   --green: #173B2A;
   --green-light: #0F2C1F;
   --gold: #c9a84c;
@@ -119,7 +126,7 @@ body {
    56px top bar (h-14), and the page using the rest of the screen. Inter is the
    admin's one face — titles included (the site's Garamond display face stays on
    the site) — loaded by app/admin/layout.tsx as --font-inter. */
-:root { --admin-sidebar-w: 15rem; --admin-topbar-h: 3.5rem; }
+:root { --admin-sidebar-w: 15rem; --admin-topbar-h: 3rem; } /* UI-KIT-4: the ribbon is 48px */
 .admin-content { margin-left: var(--admin-sidebar-w); padding-top: var(--admin-topbar-h); background: #FFFFFF; min-height: 100vh; }
 .admin-look { --font-sans: var(--font-inter), 'Helvetica Neue', Arial, sans-serif; font-family: var(--font-sans); }
 .admin-look .font-serif { font-family: var(--font-sans); font-weight: 700; letter-spacing: -0.02em; }
@@ -139,25 +146,33 @@ body {
 @media (min-width: 768px) { .op-look:has(.op-rail) { padding-left: var(--op-rail-w); } }
 /* Printing (event pairings, cart signs): the page alone — no rail, no bars, no gap where the rail was. */
 @media print { .op-look:has(.op-rail) { padding-left: 0; } .op-rail, .op-look nav[aria-label="Dashboard"], #op-more { display: none !important; } }
-/* UI-STYLE (Cam 2026-11-26, "Approved, build it"; lanes/build.md "UI style overhaul"): two styles, both neutral
-   (R=G=B, no colour cast), no shapes or gradients behind the page. This replaces GLASS-2's ribbons and LIGHT-PARITY's
-   "Light is glass too"; both looks still get every change (scripts/glass-test.ts).
-   LIGHT = SOLID — the switch, and what print always gets: white cards on a neutral grey page, no blur, and a dark
-   sidebar (the rail carries its own dark tokens below). */
+/* UI-KIT-4 (Cam 2026-11-26, approved v4 mockup lanes/build/ui-kit-v4-mockup.html; docs/DECISIONS.md UI-KIT-4) replaces
+   UI-STYLE's two materials: palette 1A, neutral (R=G=B) in both looks, no shapes or gradients behind the page.
+   LIGHT: a #F2F2F2 page, solid white panels with a #E2E2E2 hairline, a white sidebar, and a dark ribbon (the .op-band).
+   DARK: a #141414 page, solid #262626 panels with a faint white hairline. Glass is only for what floats (dialogs, toasts,
+   menus: --op-glass). Both looks get every change; scripts/glass-test.ts models the contrast from these tokens. */
 .op-look:has(.op-rail) {
   --color-page: #F2F2F2; --color-paper: #F7F7F7; --color-card: #FFFFFF; --color-white: #FFFFFF;
-  --color-rail: #1E1E1E; --color-rail-line: #303030;
-  --color-ink: #161616; --color-ink-soft: #3D3D3D; --color-ink-muted: #454545; --color-ink-faint: #474747;
-  --color-line: #D9D9D9; --color-line-soft: #E6E6E6; --color-line-strong: #C6C6C6;
-  --color-pine: #1E1E1E; --color-pine-hover: #000000; --color-pine-soft: #E6E6E6;
-  --color-ok: #1A5734; --color-warn: #6C4205; --color-bad: #872C1A;
-  /* The material: an opaque panel with a whisper of an edge, no blur. */
-  --op-panel: #FFFFFF; --op-panel-solid: #FFFFFF; --op-rail-bg: #1E1E1E; --op-edge: #E4E4E4;
-  --op-blur: none; --op-shadow: 0 1px 2px rgb(20 20 20 / .06);
+  --color-rail: #FFFFFF; --color-rail-line: #E2E2E2;
+  --color-ink: #161616; --color-ink-soft: #444444; --color-ink-muted: #6B6B6B; --color-ink-faint: #6B6B6B;
+  --color-line: #E2E2E2; --color-line-soft: #EAEAEA; --color-line-strong: #CFCFCF;
+  --color-pine: #161616; --color-pine-hover: #000000; --color-pine-soft: #E9E9E9;
+  --color-ok: #1F6B43; --color-warn: #8A520F; --color-bad: #A3452F;
+  /* The material: an opaque white panel with a hairline, no blur, no shadow. */
+  --op-panel: #FFFFFF; --op-panel-solid: #FFFFFF; --op-rail-bg: #FFFFFF; --op-edge: #E2E2E2;
+  --op-blur: none; --op-shadow: none;
   --op-well: #F7F7F7;
   --color-paid-fill: rgb(34 104 63 / .12); --color-owes-fill: rgb(138 83 9 / .12); --color-bad-fill: rgb(169 58 36 / .12);
-  --op-brand-green: #173B2A;
-  --op-heat0: rgb(0 0 0 / .04); --op-heat-ink3: var(--color-ink); --op-heat-ink4: #FFFFFF; --op-rain: #1F5FAF;
+  --op-brand-green: #346B4F;
+  --op-heat0: rgb(0 0 0 / .04); --op-heat-ink3: var(--color-ink); --op-heat-ink4: #FFFFFF; --op-rain: #2D6FB0;
+  /* v4 kit tokens (ui-kit-v4.css reads these): the brand button, a soft field, a selected row, the switch, glass, raised. */
+  --op-brand: #346B4F; --op-focus: #346B4F;
+  --op-field: #EDEDED; --op-field-h: #E6E6E6; --op-sel: #E9E9E9;
+  --op-track: #CFCFCF; --op-knob-off: #FFFFFF; --op-on: #161616; --op-knob: #FFFFFF;
+  --op-scrim: rgb(0 0 0 / .35);
+  --op-glass: rgb(255 255 255 / .82); --op-glass-shadow: 0 6px 18px rgb(0 0 0 / .14);
+  --op-raise: 0 8px 22px rgb(0 0 0 / .10), 0 0 0 1px #DCDCDC;
+  --op-ntl: #6B6E6A; --op-panel-2: #FFFFFF;
   background: var(--color-page); min-height: 100vh; color: var(--color-ink);
 }
 /* A golfer-page preview keeps the site's own colours (pine is green there) in Light too. */
@@ -170,30 +185,36 @@ body {
    lands on white paper. `bg-white` is a panel, so it takes the card colour; white TEXT on a solid fill takes
    the dark page colour, because in charcoal the fills are the bright tints. */
 @media screen {
-/* DARK = GLASS (Apple-style material): a flat neutral #141414 page; panels are a translucent dark fill that blurs and
-   saturates what sits behind them, a 1px white hairline at low alpha, a soft top highlight and a soft shadow. */
+/* DARK: a flat neutral #141414 page; panels are solid #262626 with a 1px white hairline at low alpha (UI-KIT-4). */
 .op-look[data-theme="dark"]:has(.op-rail) {
   --color-stripe: #635BFF;
   color-scheme: dark;
   --color-page: #141414; --color-paper: #1C1C1C; --color-card: #262626; --color-white: #262626;
-  --color-rail: #1C1C1C; --color-rail-line: #2E2E2E;
-  --color-ink: #EDEDED; --color-ink-soft: #C8C8C8; --color-ink-muted: #B8B8B8; --color-ink-faint: #B4B4B4;
-  --color-line: #383838; --color-line-soft: #303030; --color-line-strong: #464646;
+  --color-rail: #262626; --color-rail-line: rgb(255 255 255 / .09);
+  --color-ink: #EDEDED; --color-ink-soft: #C3C3C3; --color-ink-muted: #919191; --color-ink-faint: #919191;
+  --color-line: rgb(255 255 255 / .09); --color-line-soft: rgb(255 255 255 / .06); --color-line-strong: #464646;
   --color-pine: #EDEDED; --color-pine-hover: #FFFFFF; --color-pine-soft: #303030;
   --color-ok: #7BD9A4; --color-warn: #F2C46B; --color-bad: #FF9A8A;
   --color-ok-fill: #1E2E24; --color-mem-fill: #33302A; --color-paid-fill: #24402F; --color-owes-fill: #4A3A1A; --color-bad-fill: #4F2A23; --color-dash: #444444; --color-dot-neutral: #6A6A6A;
   --color-fairway: #3BAA6B;
-  --op-panel: rgb(38 38 38 / .62); --op-panel-solid: #262626; --op-rail-bg: rgb(28 28 28 / .70); --op-edge: rgb(255 255 255 / .10);
-  --op-blur: blur(30px) saturate(1.8); --op-shadow: inset 0 1px 0 rgb(255 255 255 / .07), 0 1px 2px rgb(0 0 0 / .30), 0 10px 30px rgb(0 0 0 / .28);
+  --op-panel: #262626; --op-panel-solid: #262626; --op-rail-bg: #262626; --op-edge: rgb(255 255 255 / .09);
+  --op-blur: none; --op-shadow: none;
   --op-well: rgb(255 255 255 / .05);
   --op-brand-green: #4CC183;
-  --op-heat0: rgb(255 255 255 / .05); --op-heat-ink3: #141414; --op-heat-ink4: #141414; --op-rain: #7DB8FF;
+  --op-heat0: rgb(255 255 255 / .05); --op-heat-ink3: #141414; --op-heat-ink4: #141414; --op-rain: #8EC5FF;
+  --color-brand: #346B4F; --op-brand: #346B4F; --op-focus: #5FB88A;
+  --op-field: rgb(255 255 255 / .07); --op-field-h: rgb(255 255 255 / .10); --op-sel: rgb(255 255 255 / .10);
+  --op-track: rgb(255 255 255 / .22); --op-knob-off: #D6D6D6; --op-on: #EDEDED; --op-knob: #141414;
+  --op-scrim: rgb(0 0 0 / .55);
+  --op-glass: rgb(38 38 38 / .78); --op-glass-shadow: 0 6px 18px rgb(0 0 0 / .35);
+  --op-raise: 0 8px 22px rgb(0 0 0 / .32), inset 0 1px 0 rgb(255 255 255 / .07);
+  --op-ntl: #8A8D89; --op-panel-2: #2D2D2D;
 }
 .op-look[data-theme="dark"]:has(.op-rail) .op-dark-only { display: inline-block; }
 .op-look[data-theme="dark"]:has(.op-rail) .op-light-only { display: none; }
 .op-look[data-theme="dark"]:has(.op-rail) .text-white { color: #FFFFFF; }
-.op-look[data-theme="dark"]:has(.op-rail) :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink, .bg-bad\/90).text-white,
-.op-look[data-theme="dark"]:has(.op-rail) :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink) .text-white { color: #141414; }
+.op-look[data-theme="dark"]:has(.op-rail) :is(.bg-ok, .bg-bad, .bg-warn, .bg-bad\/90, .bg-pine:not(button, a, [role="button"]), .bg-ink:not(button, a, [role="button"])).text-white,
+.op-look[data-theme="dark"]:has(.op-rail) :is(.bg-ok, .bg-bad, .bg-warn, .bg-pine:not(button, a, [role="button"]), .bg-ink:not(button, a, [role="button"])) .text-white { color: #141414; }
 .op-look[data-theme="dark"]:has(.op-rail) :is(.bg-ink\/20, .bg-ink\/30, .bg-ink\/40, .bg-black\/30, .bg-black\/50) { background-color: rgb(0 0 0 / .6); }
 .op-look[data-theme="dark"]:has(.op-rail) img:not([src*="/brand/"]) { filter: brightness(.92); }
 /* A preview of a golfer page (the booking page, an email) stays in the site's light look. */
@@ -210,23 +231,23 @@ body {
 .op-look[data-theme="dark"]:has(.op-rail) .op-keep-light :is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink).text-white { color: #FFFFFF; }
 }
 
-/* UI-STYLE: the sidebar is dark in BOTH looks. In Light it is the solid #1E1E1E rail, so its own text, lines and
-   active fill take light-on-dark tokens; in Dark it is the glass rail and the dark tokens already apply. */
+/* UI-KIT-4: the ribbon (.op-band, 48px across the top) is #1E1E1E in BOTH looks, so its own text, lines and fields take
+   light-on-dark tokens. The sidebar below it is a panel: white in Light, #262626 in Dark, on the shared tokens. */
 @media screen {
-.op-look:has(.op-rail) :is(.op-rail, .op-band) {
+.op-look:has(.op-rail) .op-band {
   --color-ink: #F2F2F2; --color-ink-soft: #CCCCCC; --color-ink-muted: #B0B0B0; --color-ink-faint: #B0B0B0;
-  --color-line: #303030; --color-line-soft: #2A2A2A; --color-rail-line: #303030; --color-white: #2C2C2C; --color-page: #2C2C2C; --color-paper: #363636;
+  --color-line: #303030; --color-line-soft: #2A2A2A; --color-white: #2C2C2C; --color-page: #2C2C2C; --color-paper: #363636;
   --color-pine: #F2F2F2; --color-pine-hover: #FFFFFF; --op-brand-green: #4CC183; --op-well: rgb(255 255 255 / .06);
-  --op-panel: #2C2C2C; --op-panel-solid: #2C2C2C; --op-edge: rgb(255 255 255 / .10);
+  --op-panel: #2C2C2C; --op-panel-solid: #2C2C2C; --op-edge: rgb(255 255 255 / .10); --op-rail-bg: #1E1E1E;
   color-scheme: dark; color: var(--color-ink);
 }
-.op-look:has(.op-rail) :is(.op-rail, .op-band) .op-dark-only { display: inline-block; }
-.op-look:has(.op-rail) :is(.op-rail, .op-band) .op-light-only { display: none; }
+.op-look:has(.op-rail) .op-band .op-dark-only { display: inline-block; }
+.op-look:has(.op-rail) .op-band .op-light-only { display: none; }
 }
 
-/* The material, on screen and rail pages only. One rule for both looks; the tokens above say solid (Light) or glass
-   (Dark). A pop-up window's panel and a golfer-page preview stay solid; anyone who asks for less transparency gets solid
-   panels. */
+/* The material, on screen and rail pages only. One rule for both looks; the tokens above set the colours. UI-KIT-4: panels
+   and tables are SOLID in both looks (10px, a hairline, no shadow); a featured card takes .op-raised; GLASS is only for what
+   floats: a pop-up window, a toast, a menu (ui-kit-v4.css). */
 @media screen {
 .op-look:has(.op-rail) { isolation: isolate; }
 .op-look:has(.op-rail) .min-h-screen.bg-page { background-color: transparent; }
@@ -235,21 +256,20 @@ body {
   -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur);
   box-shadow: 0 0 0 1px var(--op-edge), var(--op-shadow);
 }
-.op-look:has(.op-rail) .op-home .bg-white.shadow-card:not([role="radio"]) { border-radius: 14px; } /* HOME-3: Home's panels, as the mockup */
+.op-look:has(.op-rail) .bg-white.shadow-card:not(.op-tab):not([role="radio"]) { border-radius: 10px; } /* UI-KIT-4: the v4 panel radius, every panel */
 /* A well marked .op-well (a search box, a tile's or row's picture) is a quiet fill: the paper grey in Light, a faint lift
    in Dark. Opt-in on purpose: bg-page also draws selected states, chips and bubbles that must keep their grey (final
    review 2026-11-13). */
 .op-look:has(.op-rail) .op-well { background-color: var(--op-well); }
 .op-look:has(.op-rail) .op-rail { background-color: var(--op-rail-bg); -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur); box-shadow: 1px 0 0 var(--op-edge); }
-/* UI-STYLE (Cam 2026-11-26): the sidebar item. Hover is a faint lighter fill; the current page is a lighter fill, a 2px
-   left bar and bold text. The icon is a monochrome line icon in the text colour, a touch quieter until current. Both
-   looks (the sidebar is dark in both). */
-.op-look:has(.op-rail) .op-tab { transition: background-color .15s ease, color .15s ease; }
-.op-look:has(.op-rail) .op-tab:not([aria-current]):hover { background-color: rgb(255 255 255 / .06); color: #FFFFFF; }
-.op-look:has(.op-rail) .op-tab[aria-current="page"] { background-color: rgb(255 255 255 / .12); box-shadow: inset 2px 0 0 #EDEDED; color: #FFFFFF; font-weight: 600; }
+/* UI-KIT-4: the sidebar item is 40px; hover is a faint fill, the current page the --op-sel fill with ink text at weight 500
+   (v4 .nv.on, no left bar). The icon is a line icon in the text colour, a touch quieter until current. */
+.op-look:has(.op-rail) .op-tab { transition: background-color var(--t-tap) var(--ease), color var(--t-tap) var(--ease); min-height: 40px; padding-inline: 10px; border-radius: 8px; }
+.op-look:has(.op-rail) .op-tab:not([aria-current]):hover { background-color: color-mix(in srgb, var(--op-sel) 60%, transparent); color: var(--color-ink); }
+.op-look:has(.op-rail) .op-tab[aria-current="page"] { background-color: var(--op-sel); color: var(--color-ink); font-weight: 500; }
 .op-look:has(.op-rail) .op-tab .op-ic { opacity: .8; }
 .op-look:has(.op-rail) .op-tab[aria-current="page"] .op-ic { opacity: 1; }
-.op-look:has(.op-rail) .fixed.inset-0 .bg-white.shadow-card,
+/* A fixed panel (the phone More menu, the assistant) and a golfer-page preview stay solid; a pop-up window's panel is glass (ui-kit-v4.css). */
 .op-look:has(.op-rail) .fixed.bg-white.shadow-card,
 .op-look:has(.op-rail) .op-keep-light .bg-white.shadow-card { background-color: var(--color-white); -webkit-backdrop-filter: none; backdrop-filter: none; }
 /* TT-CARD (Cam 2026-11-12 mockup): where the time card sits BESIDE the sheet (xl and up, the sheet makes room for it) it
@@ -259,27 +279,31 @@ body {
   .op-look:has(.op-rail) .fixed .tt-card.bg-white.shadow-card { background-color: var(--op-panel); -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur); }
 }
 }
-/* UI-STYLE (Cam 2026-11-26): the header band at the top of every dashboard page (computer) is the sidebar's own colour
-   and material, with a hairline under it. */
+/* UI-KIT-4: the ribbon at the top of every dashboard page (computer): 48px, #1E1E1E in both looks, across the whole width
+   (it runs under the fixed sidebar, which starts below it), the course's name on the left and the golfer search beside the
+   page. In flow, so the page's own scroll box still fills the rest of the screen. */
 @media screen {
-.op-look:has(.op-rail) .op-band { background-color: var(--op-rail-bg); -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur); box-shadow: 0 1px 0 var(--op-edge); position: relative; z-index: 20; }
-/* Search fields match their screen (Cam 2026-11-26): ONE shape (8px, 1px edge, no shadow) — a white field with a thin
-   border on Light, a dark glass field with a faint light edge on Dark, and the dark field in the sidebar-coloured band in
-   both. The hook is .ui-search on the field's visible box; the input inside it stays transparent. */
+.op-look:has(.op-rail) .op-band { position: relative; z-index: 20; height: 48px; }
+/* The ribbon's colour is drawn full-width behind it (a fixed layer), so the page's own overflow box can't clip it. */
+.op-look:has(.op-rail) .op-band::before { content: ""; position: fixed; top: 0; left: 0; right: 0; height: 48px; z-index: -1; background-color: #1E1E1E; box-shadow: 0 1px 0 rgb(255 255 255 / .08); }
+.op-look:has(.op-rail) .op-band-id { position: fixed; left: 16px; top: 0; height: 48px; width: calc(var(--op-rail-w) - 24px); display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 14px; font-weight: 600; color: #F2F2F2; }
+.op-look:has(.op-rail) .op-band-id span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.op-look:has(.op-rail) .op-rail { top: 48px; }
+/* Search fields are v4 fields (UI-KIT-4): the soft fill, 8px, a transparent 1px edge that turns green on focus, no shadow;
+   in the ribbon the dark field. The hook is .ui-search on the field's visible box; the input inside it stays transparent. */
 .op-look:has(.op-rail) .ui-search {
-  background-color: #FFFFFF; border: 1px solid #D4D4D4; border-radius: 8px; box-shadow: none; color: var(--color-ink);
-  -webkit-backdrop-filter: var(--op-blur); backdrop-filter: var(--op-blur);
+  background-color: var(--op-field); border: 1px solid transparent; border-radius: 8px; box-shadow: none; color: var(--color-ink);
+  transition: border-color var(--t-tap) var(--ease), background-color var(--t-tap) var(--ease);
 }
-.op-look[data-theme="dark"]:has(.op-rail) .ui-search { background-color: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .14); box-shadow: inset 0 1px 0 rgb(255 255 255 / .05); }
-.op-look:has(.op-rail) .op-band .ui-search { background-color: rgb(255 255 255 / .06); border-color: rgb(255 255 255 / .14); box-shadow: inset 0 1px 0 rgb(255 255 255 / .05); }
-.op-look:has(.op-rail) .ui-search:focus-within { border-color: var(--color-ink-muted); }
+.op-look:has(.op-rail) .op-band .ui-search { background-color: rgb(255 255 255 / .07); border-color: transparent; }
+.op-look:has(.op-rail) .ui-search:focus-within { border-color: var(--op-focus); }
 .op-look:has(.op-rail) .ui-search input { background-color: transparent; }
-/* Admin is dark only: every search takes the dark glass field. */
+/* Admin is the same look as the course dashboard (Cam 2026-11-28): the same field. */
 [data-admin-shell] .ui-search {
-  background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .14); border-radius: 8px; color: #EDEDED;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / .05);
+  background: var(--op-field); border: 1px solid transparent; border-radius: 8px; color: var(--color-ink); box-shadow: none;
+  transition: border-color var(--t-tap) var(--ease), background-color var(--t-tap) var(--ease);
 }
-[data-admin-shell] .ui-search:focus-within { border-color: rgb(255 255 255 / .32); }
+[data-admin-shell] .ui-search:focus-within { border-color: var(--op-focus); }
 [data-admin-shell] .ui-search input { background: transparent; color: inherit; }
 }
 /* UI-STYLE phone layouts (Cam 2026-11-26, the mockup's "On a phone"): same content and actions, sized for a thumb.
@@ -297,14 +321,14 @@ body {
   /* The page's primary action stays in reach: pinned above the tab bar. */
   .op-look:has(.op-rail) .ui-fab {
     position: fixed; right: 16px; bottom: calc(56px + env(safe-area-inset-bottom) + 12px); z-index: 25;
-    min-height: 44px; padding: 0 18px; border-radius: 12px; font-size: 14px;
+    min-height: 44px; padding: 0 18px; border-radius: 8px; font-size: 14px;
     background-color: var(--color-pine); color: var(--color-page); box-shadow: 0 6px 16px rgb(0 0 0 / .18);
   }
   /* A blur makes its panel the box a fixed child is placed in, so the panel holding the pinned action drops it on a phone
      (over the flat page the blur showed nothing anyway). Same for a panel holding a dialog. */
   .op-look:has(.op-rail) .bg-white.shadow-card:has(.ui-fab, [aria-modal="true"]) { -webkit-backdrop-filter: none; backdrop-filter: none; }
   /* 44px tap targets for every control on the page and in its pop-ups. */
-  .op-look:has(.op-rail) :is(main, .fixed.inset-0) :is(button, [role="tab"], select) { min-height: 44px; }
+  .op-look:has(.op-rail) :is(main, .fixed.inset-0) :is(button:not([role="switch"]), [role="tab"], select) { min-height: 44px; }
   .op-look:has(.op-rail) :is(main, .fixed.inset-0) :is(button, a)[aria-label] { min-width: 44px; min-height: 44px; }
   .op-look:has(.op-rail) :is(main, .fixed.inset-0) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) { min-height: 44px; }
   .op-look:has(.op-rail) .ui-stats :is(button, a) { min-height: 0; min-width: 0; }
@@ -313,7 +337,7 @@ body {
   :is(.op-look:has(.op-rail), [data-admin-shell]) :is(.fixed.inset-0:has(> [role="dialog"][aria-modal="true"]), .fixed.inset-0.flex.items-center.justify-center) { align-items: flex-end; justify-content: center; padding: 0; }
   :is(.op-look:has(.op-rail), [data-admin-shell]) :is(.fixed.inset-0 > [role="dialog"][aria-modal="true"], .fixed.inset-0.flex.items-center.justify-center > .bg-white) {
     width: 100%; max-width: none; height: auto; margin: 0; max-height: 92vh; overflow-y: auto;
-    border-radius: 14px 14px 0 0; padding-bottom: max(20px, env(safe-area-inset-bottom));
+    border-radius: 10px 10px 0 0; padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
 }
 @media screen and (prefers-reduced-motion: reduce) { .op-look:has(.op-rail) .op-tab { transition: none; } }

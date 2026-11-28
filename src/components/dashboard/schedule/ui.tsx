@@ -44,8 +44,8 @@ export function CardHead({ title, line, children }: { title: string; line?: stri
 export function Switch({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
   return (
     <button type="button" role="switch" aria-checked={checked} aria-label={label} disabled={disabled} onClick={() => onChange(!checked)}
-      className={'relative inline-block w-9 h-5 rounded-full transition-colors motion-reduce:transition-none disabled:opacity-60 ' + (checked ? 'bg-ink' : 'bg-line')}>
-      <span className={'absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-transform motion-reduce:transition-none ' + (checked ? 'translate-x-4 bg-page' : 'bg-ink-muted')} />
+      className={'relative inline-block flex-none w-10 h-6 rounded-lg transition-colors motion-reduce:transition-none disabled:opacity-50 ' + (checked ? 'bg-[var(--op-on)]' : 'bg-[var(--op-track)]')}>
+      <span className={'absolute left-[3px] top-[3px] w-[18px] h-[18px] rounded-md transition-transform motion-reduce:transition-none ' + (checked ? 'translate-x-4 bg-[var(--op-knob)]' : 'bg-[var(--op-knob-off)]')} />
     </button>
   );
 }

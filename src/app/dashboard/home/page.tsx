@@ -71,15 +71,15 @@ function vsLastWeek(now: number, then: number) {
   return <><span className={d > 0 ? 'text-ok' : 'text-warn'}>{d > 0 ? '+' : '−'}{Math.abs(d)}</span> <span className="text-ink-muted">vs last week</span></>;
 }
 
-function Number_({ label, value, tone = 'text-ink', sub, title, href }: { label: string; value: string; tone?: string; sub?: React.ReactNode; title?: string; href?: string }) {
+function Number_({ label, value, tone = 'text-ink', sub, title, href, raised }: { label: string; value: string; tone?: string; sub?: React.ReactNode; title?: string; href?: string; raised?: boolean }) {
   const body = <>
-    <span className="text-[12.5px] font-medium text-ink-muted" title={title}>{label}</span>
-    <span className={'text-[26px] font-semibold tabular-nums leading-tight ' + tone}>{value}</span>
-    {sub && <span className="text-[12.5px]">{sub}</span>}
+    <span className="text-[13px] text-ink-muted" title={title}>{label}</span>
+    <span className={'text-[32px] font-semibold tabular-nums leading-[1.1] ' + tone}>{value}</span>
+    {sub && <span className="text-[13px]">{sub}</span>}
   </>;
   return href
-    ? <Link href={href} className="bg-white shadow-card rounded-lg p-4 flex flex-col gap-1 min-w-0 hover:opacity-90">{body}</Link>
-    : <Card className="p-4 flex flex-col gap-1 min-w-0">{body}</Card>;
+    ? <Link href={href} className={'bg-white shadow-card rounded-[10px] p-4 flex flex-col gap-1.5 min-w-0 hover:opacity-90' + (raised ? ' op-raised' : '')}>{body}</Link>
+    : <Card className={'p-4 flex flex-col gap-1.5 min-w-0' + (raised ? ' op-raised' : '')}>{body}</Card>;
 }
 
 /** Today by hour (Cam 2026-11-12): every bar the same height, filled by share — played green, playing amber,
@@ -232,7 +232,7 @@ export default function DashboardHome() {
                   : home.fillPct.today === home.fillPct.lastWeek ? <span className="text-ink-muted">Same as last week</span>
                   : <><span className={home.fillPct.today > home.fillPct.lastWeek ? 'text-ok' : 'text-warn'}>{home.fillPct.today > home.fillPct.lastWeek ? 'Up' : 'Down'} {Math.abs(home.fillPct.today - home.fillPct.lastWeek)}%</span> <span className="text-ink-muted">vs last week</span></>} />
               {home.money && <>
-                <Number_ label="Collected today" value={usd0(home.money.paidCents)} tone="text-ok" title={`${usd(home.money.paidCents)} · ${home.money.paidGroups} group${home.money.paidGroups === 1 ? '' : 's'}`} />
+                <Number_ label="Collected today" value={usd0(home.money.paidCents)} tone="text-ok" raised title={`${usd(home.money.paidCents)} · ${home.money.paidGroups} group${home.money.paidGroups === 1 ? '' : 's'}`} />
                 <Number_ label="Not paid yet" value={usd0(home.money.outstandingCents)} tone={home.money.outstandingCents ? 'text-bad' : 'text-ink'} href="/dashboard/money?tab=payments&show=unpaid"
                   title={`${usd(home.money.outstandingCents)} · ${home.money.outstandingGroups} group${home.money.outstandingGroups === 1 ? '' : 's'}${home.money.lateGroups ? `, ${home.money.lateGroups} past their time` : ''}`} />
               </>}

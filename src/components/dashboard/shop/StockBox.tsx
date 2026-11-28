@@ -14,11 +14,11 @@ const initials = (name: string) => name.split(/\s+/).filter(w => /^[A-Za-z0-9]/.
 
 function Stepper({ value, onChange, min = 0, label }: { value: number; onChange: (n: number) => void; min?: number; label: string }) {
   return (
-    <div className="flex items-center gap-1 bg-page border border-line rounded-[10px] p-[3px]">
-      <button type="button" onClick={() => onChange(Math.max(min, value - 1))} aria-label={`One less: ${label}`} className="w-8 h-8 rounded-[8px] text-[17px] text-ink hover:bg-line">−</button>
+    <div className="flex items-center gap-1 bg-[var(--op-field)] rounded-lg">
+      <button type="button" onClick={() => onChange(Math.max(min, value - 1))} aria-label={`One less: ${label}`} className="w-11 h-11 rounded-lg text-[17px] text-ink hover:bg-ink/10 active:scale-[.92] transition-transform duration-[120ms]">−</button>
       <input value={value} onChange={e => { const n = Number(e.target.value.replace(/\D/g, '')); onChange(Number.isFinite(n) ? Math.max(min, Math.min(99999, n)) : min); }}
         inputMode="numeric" aria-label={label} className="w-12 bg-transparent text-center text-[15px] font-semibold text-ink tabular-nums outline-none" />
-      <button type="button" onClick={() => onChange(Math.min(99999, value + 1))} aria-label={`One more: ${label}`} className="w-8 h-8 rounded-[8px] text-[17px] text-ink hover:bg-line">+</button>
+      <button type="button" onClick={() => onChange(Math.min(99999, value + 1))} aria-label={`One more: ${label}`} className="w-11 h-11 rounded-lg text-[17px] text-ink hover:bg-ink/10 active:scale-[.92] transition-transform duration-[120ms]">+</button>
     </div>
   );
 }

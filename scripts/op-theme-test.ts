@@ -25,7 +25,7 @@ ok('bg-white is a panel in dark (card colour), dark knows its own scheme', dark.
 // Final review 2026-11-02: a dark dashboard printed near-white text on white paper.
 const screenAt = css.indexOf('@media screen {');
 ok('dark mode is screen-only — print always gets the light tokens', screenAt > 0 && [...css.matchAll(/\[data-theme="dark"\]/g)].every(m => m.index! > screenAt && m.index! < css.indexOf('/* FB-2:')));
-ok('white text on a solid fill turns dark in dark mode', css.includes(':is(.bg-pine, .bg-ok, .bg-bad, .bg-warn, .bg-ink) .text-white { color: #141414; }'));
+ok('white text on a solid fill turns dark in dark mode', css.includes('.bg-pine:not(button, a, [role="button"]), .bg-ink:not(button, a, [role="button"])) .text-white { color: #141414; }'));
 
 const layout = read('src/app/dashboard/layout.tsx');
 ok('the layout reads the cookie into data-theme', layout.includes('readOpTheme((await cookies()).get(OP_THEME_COOKIE)?.value)') && layout.includes('data-theme={theme}'));

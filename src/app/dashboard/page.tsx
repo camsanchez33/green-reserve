@@ -1060,12 +1060,12 @@ function DashboardPageInner() {
                   {step === 1 && (
                     <div className="mt-4">
                       <p className="text-[15px] font-semibold text-ink">How many are here?</p>
-                      <div className="mt-3 flex items-center justify-center gap-3" role="group" aria-label={`How many of ${b.golferName}'s group are here`}>
+                      <div className="mt-3 mx-auto w-max flex items-center justify-center gap-1 rounded-lg bg-[var(--op-field)]" role="group" aria-label={`How many of ${b.golferName}'s group are here`}>
                         <button type="button" aria-label="One fewer" disabled={herePlayers <= 1} onClick={() => setHere(h => ({ ...h, [b.id]: Math.max(1, herePlayers - 1) }))}
-                          className="w-11 h-11 rounded-[7px] border border-line bg-white text-[18px] text-ink hover:bg-paper disabled:opacity-40">−</button>
+                          className="w-11 h-11 rounded-lg text-[18px] text-ink hover:bg-ink/10 active:scale-[.92] transition-transform duration-[120ms] disabled:opacity-40">−</button>
                         <span className="min-w-[6rem] text-center text-[16px] tabular-nums text-ink" aria-live="polite"><b className="text-[24px]">{herePlayers}</b> of {b.players}</span>
                         <button type="button" aria-label="One more" disabled={herePlayers >= b.players} onClick={() => setHere(h => ({ ...h, [b.id]: Math.min(b.players, herePlayers + 1) }))}
-                          className="w-11 h-11 rounded-[7px] border border-line bg-white text-[18px] text-ink hover:bg-paper disabled:opacity-40">+</button>
+                          className="w-11 h-11 rounded-lg text-[18px] text-ink hover:bg-ink/10 active:scale-[.92] transition-transform duration-[120ms] disabled:opacity-40">+</button>
                       </div>
                       {rest > 0 && <p className={'mt-2 text-center text-[12.5px] ' + (restSplit ? 'text-ink-muted' : 'text-warn')}>{restSplit ? `The other ${rest} ${rest === 1 ? 'stays' : 'stay'} booked.` : `The other ${rest} won’t be charged.`}</p>}
                       <button type="button" onClick={() => go(b.checkInFailReason ? 3 : 2)} className={next + ' mt-4'}>Next</button>
@@ -1707,12 +1707,12 @@ function DashboardPageInner() {
                   return (
                     <div className="w-full flex items-center justify-between gap-3">
                       <span className="text-[13px] text-ink-soft">Open seats{closed > 0 ? <span className="text-ink-muted"> · {closed} closed</span> : ''}</span>
-                      <div className="flex items-center gap-1" role="group" aria-label="Open seats on this time">
+                      <div className="flex items-center gap-1 rounded-lg bg-[var(--op-field)]" role="group" aria-label="Open seats on this time">
                         <button type="button" aria-label="Close a seat" disabled={slotBusy === panelSlot.id || open <= 0} onClick={() => setSeatsClosed(panelSlot, closed + 1)}
-                          className="w-9 h-9 rounded-[7px] border border-line text-[16px] text-ink hover:bg-paper disabled:opacity-40">−</button>
+                          className="w-9 h-9 rounded-lg text-[16px] text-ink hover:bg-ink/10 active:scale-[.92] transition-transform duration-[120ms] disabled:opacity-40">−</button>
                         <span className="min-w-[4.5rem] text-center text-[14px] tabular-nums text-ink" aria-live="polite"><b>{open}</b> of {freeSeats}</span>
                         <button type="button" aria-label="Reopen a seat" disabled={slotBusy === panelSlot.id || closed <= 0} onClick={() => setSeatsClosed(panelSlot, closed - 1)}
-                          className="w-9 h-9 rounded-[7px] border border-line text-[16px] text-ink hover:bg-paper disabled:opacity-40">+</button>
+                          className="w-9 h-9 rounded-lg text-[16px] text-ink hover:bg-ink/10 active:scale-[.92] transition-transform duration-[120ms] disabled:opacity-40">+</button>
                       </div>
                     </div>
                   );
